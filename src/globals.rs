@@ -1,17 +1,3 @@
-pub struct Options {
-    pub decimals: i32,
-    pub opt2: i32,
-    pub opt3: i32,
-    pub opt4: i32
-}
-
-pub static mut OPTS:Options = Options {
-    decimals: 3,
-    opt2: 0,
-    opt3: 0,
-    opt4: 0
-};
-
 /*pub static mut ANGLES:[(f32, f32); 360000] = [(0., 0.); 360000];
 
 const fn comp_angles() -> [(f32, f32); 360000] {
