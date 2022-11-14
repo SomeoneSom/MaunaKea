@@ -14,3 +14,4 @@ reqwest = {version = "0.11.12", features = ["blocking"]}
 colored = "2.0.0"
 winapi = "0.3.9"
 kernel32-sys = "0.2.2"
+bitvec = "1.0.1"

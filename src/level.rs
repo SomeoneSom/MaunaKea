@@ -3,49 +3,67 @@ use std::io::stdout;
 
 use colored::Colorize;
 use regex::Regex;
+use bitvec::prelude as bv;
 
 use crate::colliders::{Death, Collider, Circle, Rect, Player};
 use crate::algorithm::Algorithm;
 
 #[derive(Default)]
 pub struct Level {
+    bounds:Rect,
+    death2:Vec<bv::BitVec>,
     death:Vec<Death>,
+    solids: Vec<bv::BitVec>,
     player:Player
 }
 
 impl Level {
     pub fn new() -> Self {
         Self {
+            bounds: Rect::default(),
+            death2: Vec::new(),
             death: Vec::new(),
+            solids: Vec::new(),
             player: Player::new((0., 0.), (0., 0.))
         }
     }
 
     pub fn load(&mut self, info_path:String) -> () {
         let re = Regex::new(&(r"(.*)(Pos:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*) (Speed:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*)(.*)".to_owned() +
-        r" LightningUL:(.*)"/* + r" LightningDR:(.*)" +
+        r"LightningUL:(.*)Bounds: \{(.*)\}"/* + r" LightningDR:(.*)" +
         r" SpikeUL:(.*) SpikeDR:(.*) SpikeDir:(.*)" +
         r" Wind:(.*) WTPos:(.*) WTPattern:(.*) WTWidth:(.*) WTHeight(.*)" +
-        r" StarJumpUL:(.*) JThruUL:(.*?) Bounds:(.*)"*/)).unwrap();
+        r" StarJumpUL:(.*) JThruUL:(.*?)"*/)).unwrap();
         let data = &std::fs::read_to_string(info_path).expect("Failed to read infodump file! Somehow uncaught");
         let caps = re.captures(data).unwrap();
-        self.death = self.load_spinners(caps.get(4).unwrap().as_str().to_owned());
-        self.player = self.load_player(caps.get(2).unwrap().as_str().to_owned(), caps.get(3).unwrap().as_str().to_owned());
+        self.load_bounds(caps.get(6).unwrap().as_str().to_owned());
+        self.death2 = vec![bv::bitvec![0; (self.bounds.dr.0 - self.bounds.ul.0) as usize];
+            (self.bounds.dr.1 - self.bounds.ul.1) as usize];
+        self.solids = self.death2.clone();
+        self.load_spinners(caps.get(4).unwrap().as_str().to_owned());
+        self.load_player(caps.get(2).unwrap().as_str().to_owned(), caps.get(3).unwrap().as_str().to_owned());
+        //println!("X:{} Y:{} Width:{} Height:{}", self.bounds.ul.0, self.bounds.ul.1, self.bounds.dr.0, self.bounds.dr.1);
     }
 
-    //TODO: prob make a seperate function to parse pairs
-    fn load_player(&self, position:String, speed:String) -> Player {
+    #[inline]
+    fn parse_f32(caps: &regex::Captures, num: usize) -> f32 {
+        return caps.get(num).unwrap().as_str().parse::<f32>().unwrap();
+    }
+
+    fn get_pair(string:&str) -> (f32, f32) {
         let re = Regex::new(r"(-?\d+\.?\d*), (-?\d+\.?\d*)").unwrap();
-        let caps1 = re.captures(position.as_str()).unwrap();
-        let caps2 = re.captures(speed.as_str()).unwrap();
-        let pair1:(f32, f32) = (caps1.get(1).unwrap().as_str().parse::<f32>().unwrap(),
-            caps1.get(2).unwrap().as_str().parse::<f32>().unwrap());
-        let pair2:(f32, f32) = (caps2.get(1).unwrap().as_str().parse::<f32>().unwrap(),
-            caps2.get(2).unwrap().as_str().parse::<f32>().unwrap());
-        Player::new(pair2, pair1)
+        let caps = re.captures(string).unwrap();
+        return (Self::parse_f32(&caps, 1), Self::parse_f32(&caps, 2));
     }
 
-    fn load_spinners(&self, data:String) -> Vec<Death> {
+    fn load_bounds(&mut self, bounds:String) -> () {
+        let re = Regex::new(r"X:(-*\d*) Y:(-*\d*) Width:(-*\d*) Height:(-*\d*)").unwrap();
+        let caps = re.captures(&bounds).unwrap();
+        self.bounds = Rect::new_xywh(Self::parse_f32(&caps, 1), Self::parse_f32(&caps, 2), 
+            Self::parse_f32(&caps, 3), Self::parse_f32(&caps, 4));
+    }
+
+    fn load_spinners(&mut self, data:String) -> () {
         let re = Regex::new(r"(-?\d+\.?\d*), (-?\d+\.?\d*)").unwrap();
         let mut split:Vec<&str> = data.split("[").collect();
         split.remove(0);
@@ -83,7 +101,13 @@ impl Level {
             stdout().flush();
         }*/
         println!("");
-        ret
+        self.death = ret;
+    }
+
+    fn load_player(&mut self, position:String, speed:String) -> () {
+        let pair1:(f32, f32) = Self::get_pair(position.as_str());
+        let pair2:(f32, f32) = Self::get_pair(speed.as_str());
+        self.player = Player::new(pair2, pair1);
     }
 
     pub fn run_alg(&mut self, checkpoints:String) -> () {
