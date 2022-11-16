@@ -155,154 +155,6 @@ impl Circle {
     }
 }
 
-/*pub struct Collider {
-    shape:Shapes
-}
-
-impl Collider {
-    pub fn new_rect(rect:Rect) -> Self {
-        Self {
-            shape: Shapes::Rectangular(rect)
-        }
-    }
-
-    pub fn new_circ(circle:Circle) -> Self {
-        Self {
-            shape: Shapes::Circular(circle)
-        }
-    }
-
-    pub fn collide_check(self, collider:Collider) -> bool {
-        if matches!(collider.shape, Shapes::Circular(_)) && matches!(self.shape, Shapes::Circular(_)) {
-            return Self::coll_circ_to_circ(self, collider);
-        } else if matches!(collider.shape, Shapes::Circular(_)) && matches!(self.shape, Shapes::Rectangular(_)) {
-            return Self::coll_rect_to_circ(self, collider);
-        } else if matches!(collider.shape, Shapes::Rectangular(_)) && matches!(self.shape, Shapes::Circular(_)) {
-            return Self::coll_rect_to_circ(collider, self);
-        } else {
-            return Self::coll_rect_to_rect(self, collider);
-        }
-    }
-
-    fn coll_circ_to_circ(circ_a:Collider, circ_b:Collider) -> bool {
-        let circ1:Circle = if let Shapes::Circular(c) = circ_a.shape {c} else {unreachable!()};
-        let circ2:Circle = if let Shapes::Circular(c) = circ_b.shape {c} else {unreachable!()};
-        let distance:f32 = (circ1.origin.0 - circ2.origin.0).powi(2) + (circ1.origin.1 - circ2.origin.1).powi(2);
-        return distance < (circ1.radius + circ2.radius).powi(2);
-    }
-
-    fn coll_rect_to_circ(rect:Collider, circ:Collider) -> bool {
-        return true;
-    }
-
-    fn coll_rect_to_rect(rect_a:Collider, rect_b:Collider) -> bool {
-        return true;
-    }
-}*/
-
-trait Entity {
-    fn on_enter(&self, player: &mut Player, axes: Axes) -> ();
-    fn on_exit(&self, player: &mut Player, axes: Axes) -> ();
-}
-
-//woo boilerplate
-pub struct Solid {
-    colliders: Vec<Collider>,
-}
-
-impl Solid {
-    fn new() -> Self {
-        Self {
-            colliders: Vec::new(),
-        }
-    }
-}
-
-impl Entity for Solid {
-    fn on_enter(&self, player: &mut Player, axes: Axes) -> () {}
-    //should never exit
-    fn on_exit(&self, _player: &mut Player, _axes: Axes) -> () {
-        panic!("Tried to exit a Solid, something wrong with the simulator code.");
-    }
-}
-
-pub struct SemiSolid {
-    direction: Direction,
-    colliders: Vec<Collider>,
-}
-
-impl SemiSolid {
-    fn new(dir: Direction) -> Self {
-        Self {
-            direction: dir,
-            colliders: Vec::new(),
-        }
-    }
-}
-
-impl Entity for SemiSolid {
-    fn on_enter(&self, player: &mut Player, axes: Axes) -> () {}
-    fn on_exit(&self, player: &mut Player, axes: Axes) -> () {}
-}
-
-pub struct Death {
-    colliders: Vec<Collider>,
-}
-
-impl Death {
-    pub fn new(colliders: Vec<Collider>) -> Self {
-        Self {
-            colliders: colliders,
-        }
-    }
-}
-//Death gets no Entity implementation because its unnecessary
-
-pub struct Spike {
-    direction: Direction,
-    colliders: Vec<Collider>,
-}
-
-impl Spike {
-    fn new(dir: Direction) -> Self {
-        Self {
-            direction: dir,
-            colliders: Vec::new(),
-        }
-    }
-}
-
-impl Entity for Spike {
-    //kill player IF not moving with them
-    fn on_enter(&self, player: &mut Player, _axes: Axes) -> () {
-        if !(self.direction == Direction::Left && player.speed.0 < 0.
-            || self.direction == Direction::Up && player.speed.1 < 0.
-            || self.direction == Direction::Right && player.speed.0 > 0.
-            || self.direction == Direction::Down && player.speed.1 > 0.)
-        {
-            player.die();
-        }
-    }
-    fn on_exit(&self, _player: &mut Player, _axes: Axes) -> () {}
-}
-
-pub struct Trigger {
-    colliders: Vec<Collider>,
-}
-
-impl Trigger {
-    fn new() -> Self {
-        Self {
-            colliders: Vec::new(),
-        }
-    }
-}
-
-impl Entity for Trigger {
-    fn on_enter(&self, player: &mut Player, axes: Axes) -> () {}
-    fn on_exit(&self, player: &mut Player, axes: Axes) -> () {}
-}
-
 #[derive(Default)]
 pub struct Player {
     pub speed: (f32, f32),
@@ -328,24 +180,12 @@ impl Player {
     }
 
     pub fn sim_frame(
-        &mut self, angle: i32, bounds: &Rect, static_death: &Vec<bv::BitVec>, death: &Vec<Death>,
-        checkpoint: &Rect,
+        &mut self, angle: i32, bounds: &Rect, static_death: &Vec<bv::BitVec>, checkpoint: &Rect,
     ) -> f32 {
         let temp_speed: (f32, f32) = self.speed.clone();
         let temp_hurtbox = self.hurtbox.clone();
         let temp_hitbox = self.hitbox.clone();
         self.move_self(angle);
-        //TODO: make it so that you dont have to do all these collision checks
-        for d in death {
-            for c in &d.colliders {
-                if self.hurtbox.collide_check(c) {
-                    self.speed = temp_speed;
-                    self.hurtbox = temp_hurtbox;
-                    self.hitbox = temp_hitbox;
-                    return 9999999.;
-                }
-            }
-        }
         let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
         let left: i32 = (hurtbox_rect.ul.0 - bounds.ul.0).round() as i32;
         let right: i32 = (hurtbox_rect.dr.0 - bounds.dr.0).round() as i32;

@@ -6,15 +6,14 @@ use colored::Colorize;
 use regex::Regex;
 
 use crate::algorithm::Algorithm;
-use crate::colliders::{Circle, Collider, Death, Player, Rect};
+use crate::colliders::{Circle, Collider, Player, Rect};
 use image::{ImageBuffer, Rgb, RgbImage};
 
 #[derive(Default)]
 pub struct Level {
     bounds: Rect,
     static_death: Vec<bv::BitVec>,
-    death: Vec<Death>,
-    solids: Vec<bv::BitVec>,
+    static_solids: Vec<bv::BitVec>,
     player: Player,
 }
 
@@ -23,8 +22,7 @@ impl Level {
         Self {
             bounds: Rect::default(),
             static_death: Vec::new(),
-            death: Vec::new(),
-            solids: Vec::new(),
+            static_solids: Vec::new(),
             player: Player::new((0., 0.), (0., 0.)),
         }
     }
@@ -46,7 +44,7 @@ impl Level {
             bv::bitvec![0; (self.bounds.dr.0 - self.bounds.ul.0) as usize];
             (self.bounds.dr.1 - self.bounds.ul.1) as usize
         ];
-        self.solids = self.static_death.clone();
+        self.static_solids = self.static_death.clone();
         self.load_spinners(caps.get(4).unwrap().as_str().to_owned());
         /*let mut img: RgbImage =
             ImageBuffer::new(self.death2[0].len() as u32, self.death2.len() as u32);
@@ -268,7 +266,6 @@ impl Level {
                 &mut self.player,
                 &self.bounds,
                 &self.static_death,
-                &self.death,
                 &checks[i as usize],
             );
             if inp == -1 {
