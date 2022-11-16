@@ -354,6 +354,9 @@ impl Player {
         for x in left..right {
             for y in up..down {
                 if static_death[y as usize][x as usize] {
+                    self.speed = temp_speed;
+                    self.hurtbox = temp_hurtbox;
+                    self.hitbox = temp_hitbox;
                     return 9999999.;
                 }
             }
