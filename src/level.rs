@@ -12,7 +12,7 @@ use image::{ImageBuffer, Rgb, RgbImage};
 #[derive(Default)]
 pub struct Level {
     bounds: Rect,
-    death2: Vec<bv::BitVec>,
+    static_death: Vec<bv::BitVec>,
     death: Vec<Death>,
     solids: Vec<bv::BitVec>,
     player: Player,
@@ -22,7 +22,7 @@ impl Level {
     pub fn new() -> Self {
         Self {
             bounds: Rect::default(),
-            death2: Vec::new(),
+            static_death: Vec::new(),
             death: Vec::new(),
             solids: Vec::new(),
             player: Player::new((0., 0.), (0., 0.)),
@@ -42,19 +42,13 @@ impl Level {
             .expect("Failed to read infodump file! Somehow uncaught");
         let caps = re.captures(data).unwrap();
         self.load_bounds(caps.get(6).unwrap().as_str().to_owned());
-        self.death2 = vec![
+        self.static_death = vec![
             bv::bitvec![0; (self.bounds.dr.0 - self.bounds.ul.0) as usize];
             (self.bounds.dr.1 - self.bounds.ul.1) as usize
         ];
-        self.solids = self.death2.clone();
-        /*let mut test:Vec<bv::BitVec> = vec![bv::bitvec![0; 17]; 17];
-        Self::grift_circle(&mut test, (12. , 12.), 6.);
-        Self::grift_circle(&mut test, (2. , 2.), 6.);
-        for i in 0..15 {
-            println!("{:?}", test[i]);
-        }*/
+        self.solids = self.static_death.clone();
         self.load_spinners(caps.get(4).unwrap().as_str().to_owned());
-        let mut img: RgbImage =
+        /*let mut img: RgbImage =
             ImageBuffer::new(self.death2[0].len() as u32, self.death2.len() as u32);
         let (width, height) = img.dimensions();
         for y in 0..height {
@@ -66,7 +60,7 @@ impl Level {
                 }
             }
         }
-        img.save("death2.png").unwrap();
+        img.save("death2.png").unwrap();*/
         self.load_player(
             caps.get(2).unwrap().as_str().to_owned(),
             caps.get(3).unwrap().as_str().to_owned(),
@@ -213,7 +207,6 @@ impl Level {
         split.remove(0);
         let to: i32 = split.len() as i32;
         let mut i = 0;
-        let mut ret: Vec<Death> = Vec::new();
         print!(
             "{}{}{}",
             "Loading spinners... ".bright_green().bold().italic(),
@@ -221,19 +214,24 @@ impl Level {
             to
         );
         stdout().flush();
+        //this lets us just reuse the same circle bitvec over and over and over
+        //instead of generating new ones each time
+        let mut circle: Vec<bv::BitVec> = vec![bv::bitvec![0; 12]; 12];
+        Self::grift_circle(&mut circle, (6., 6.), 6.);
         for p in split {
             print!(
                 "{}",
                 "\u{8}".repeat((i).to_string().len() + to.to_string().len() + 1)
             );
             let pair: (f32, f32) = Self::get_pair(p);
-            ret.push(Death::new(vec![
-                Collider::Circular(Circle::new(6., pair)),
-                Collider::Rectangular(Rect::new((pair.0 - 9., pair.1 - 3.), (pair.0 + 7., pair.1))),
-            ]));
-            Self::grift_circle(&mut self.death2, pair, 6.);
             Self::grift_bv(
-                &mut self.death2,
+                &mut self.static_death,
+                &circle,
+                (pair.0 - 6.) as i32,
+                (pair.1 - 6.) as i32,
+            );
+            Self::grift_bv(
+                &mut self.static_death,
                 &vec![bv::bitvec![1; 16]; 4],
                 pair.0 as i32 - 8 + self.bounds.ul.0 as i32,
                 pair.1 as i32 + 5 + self.bounds.ul.1 as i32,
@@ -243,7 +241,6 @@ impl Level {
             i += 1;
         }
         println!("");
-        self.death = ret;
     }
 
     fn load_player(&mut self, position: String, speed: String) -> () {
@@ -267,7 +264,13 @@ impl Level {
         let mut frame: i32 = 1;
         while i < checks.len() as i32 {
             println!("Frame: {}, Checkpoint: {}", frame, i);
-            let inp: i32 = Algorithm::sim_frame(&mut self.player, &self.death, &checks[i as usize]);
+            let inp: i32 = Algorithm::sim_frame(
+                &mut self.player,
+                &self.bounds,
+                &self.static_death,
+                &self.death,
+                &checks[i as usize],
+            );
             if inp == -1 {
                 flag = true;
                 break;

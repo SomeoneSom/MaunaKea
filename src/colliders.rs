@@ -1,5 +1,7 @@
 use crate::level::Level;
 
+use bitvec::prelude as bv;
+
 #[derive(PartialEq)]
 pub enum Direction {
     Left,
@@ -325,7 +327,10 @@ impl Player {
         }
     }
 
-    pub fn sim_frame(&mut self, angle: i32, death: &Vec<Death>, checkpoint: &Rect) -> f32 {
+    pub fn sim_frame(
+        &mut self, angle: i32, bounds: &Rect, static_death: &Vec<bv::BitVec>, death: &Vec<Death>,
+        checkpoint: &Rect,
+    ) -> f32 {
         let temp_speed: (f32, f32) = self.speed.clone();
         let temp_hurtbox = self.hurtbox.clone();
         let temp_hitbox = self.hitbox.clone();
@@ -334,20 +339,21 @@ impl Player {
         for d in death {
             for c in &d.colliders {
                 if self.hurtbox.collide_check(c) {
-                    /*if matches!(c, Collider::Rectangular(_)) {
-                        let rect4 = if let Collider::Rectangular(rec) = c {rec} else {unreachable!()};
-                        println!("died to Rect, UL: {},{} , DR: {},{} , PUL: {},{} , PDR: {},{}",
-                        rect4.ul.0, rect4.ul.1, rect4.dr.0, rect4.dr.1,
-                        rect3.ul.0, rect3.ul.1, rect3.dr.0, rect3.dr.1);
-                    } else {
-                        let circ = if let Collider::Circular(cir) = c {cir} else {unreachable!()};
-                        println!("died to Circle, ORIG: {},{} , RAD: {}, PUL: {},{} , PDR: {},{}",
-                        circ.origin.0, circ.origin.1, circ.radius,
-                        rect3.ul.0, rect3.ul.1, rect3.dr.0, rect3.dr.1);
-                    }*/
                     self.speed = temp_speed;
                     self.hurtbox = temp_hurtbox;
                     self.hitbox = temp_hitbox;
+                    return 9999999.;
+                }
+            }
+        }
+        let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
+        let left: i32 = (hurtbox_rect.ul.0 - bounds.ul.0).round() as i32;
+        let right: i32 = (hurtbox_rect.dr.0 - bounds.dr.0).round() as i32;
+        let up: i32 = (hurtbox_rect.ul.1 - bounds.ul.1).round() as i32;
+        let down: i32 = (hurtbox_rect.dr.1 - bounds.dr.1).round() as i32;
+        for x in left..right {
+            for y in up..down {
+                if static_death[y as usize][x as usize] {
                     return 9999999.;
                 }
             }
