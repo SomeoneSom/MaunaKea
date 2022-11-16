@@ -3,7 +3,8 @@
 use std::io::stdout;
 use std::io::Write;
 
-use crate::colliders::{Player, Rect};
+use crate::colliders::Rect;
+use crate::player::Player;
 
 use bitvec::prelude as bv;
 use colored::Colorize;

@@ -3,6 +3,7 @@ mod colliders;
 mod globals;
 mod gui;
 mod level;
+mod player;
 
 use colored::Colorize;
 

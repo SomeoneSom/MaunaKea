@@ -6,7 +6,8 @@ use colored::Colorize;
 use regex::Regex;
 
 use crate::algorithm::Algorithm;
-use crate::colliders::{Circle, Collider, Player, Rect};
+use crate::colliders::{Circle, Collider, Rect};
+use crate::player::Player;
 use image::{ImageBuffer, Rgb, RgbImage};
 
 #[derive(Default)]
