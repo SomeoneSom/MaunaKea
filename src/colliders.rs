@@ -321,7 +321,7 @@ impl Player {
             hitbox: Collider::Rectangular(Rect::new(
                 (position.0 - 4., position.1 - 12.),
                 (position.0 + 3., position.1 - 1.),
-            ))
+            )),
         }
     }
 

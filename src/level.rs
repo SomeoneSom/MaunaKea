@@ -7,6 +7,7 @@ use regex::Regex;
 
 use crate::algorithm::Algorithm;
 use crate::colliders::{Circle, Collider, Death, Player, Rect};
+use image::{ImageBuffer, Rgb, RgbImage};
 
 #[derive(Default)]
 pub struct Level {
@@ -40,14 +41,32 @@ impl Level {
         let data = &std::fs::read_to_string(info_path)
             .expect("Failed to read infodump file! Somehow uncaught");
         let caps = re.captures(data).unwrap();
-        Self::grift_circle((0., 0.), 6.);
         self.load_bounds(caps.get(6).unwrap().as_str().to_owned());
         self.death2 = vec![
             bv::bitvec![0; (self.bounds.dr.0 - self.bounds.ul.0) as usize];
             (self.bounds.dr.1 - self.bounds.ul.1) as usize
         ];
         self.solids = self.death2.clone();
+        /*let mut test:Vec<bv::BitVec> = vec![bv::bitvec![0; 17]; 17];
+        Self::grift_circle(&mut test, (12. , 12.), 6.);
+        Self::grift_circle(&mut test, (2. , 2.), 6.);
+        for i in 0..15 {
+            println!("{:?}", test[i]);
+        }*/
         self.load_spinners(caps.get(4).unwrap().as_str().to_owned());
+        let mut img: RgbImage =
+            ImageBuffer::new(self.death2[0].len() as u32, self.death2.len() as u32);
+        let (width, height) = img.dimensions();
+        for y in 0..height {
+            for x in 0..width {
+                if self.death2[y as usize][x as usize] {
+                    img.put_pixel(x, y, Rgb([255, 0, 0]));
+                } else {
+                    img.put_pixel(x, y, Rgb([0, 0, 0]));
+                }
+            }
+        }
+        img.save("death2.png").unwrap();
         self.load_player(
             caps.get(2).unwrap().as_str().to_owned(),
             caps.get(3).unwrap().as_str().to_owned(),
@@ -67,22 +86,115 @@ impl Level {
     }
 
     #[inline]
-    fn grift_bv(dest: &mut Vec<bv::BitVec>, src: &Vec<bv::BitVec>, x: usize, y: usize) -> () {
-        for h in y..src.len() {
-            dest[h][x..src[0].len()].clone_from_bitslice(&src[h - y][..]);
+    fn grift_bv(dest: &mut Vec<bv::BitVec>, src: &Vec<bv::BitVec>, x: i32, y: i32) -> () {
+        if dest.len() == 0 || src.len() == 0 {
+            return ();
+        }
+        if y > dest.len() as i32 || x >= dest[0].len() as i32 || x + (src[0].len() as i32) < 0 {
+            return ();
+        }
+        for h in 0..src.len() as i32 {
+            if h + y < dest.len() as i32 && h + y >= 0 {
+                if src[0].len() as i32 + x < dest[0].len() as i32 && x >= 0 {
+                    dest[(h + y) as usize][x as usize..(src[0].len() as i32 + x) as usize]
+                        .clone_from_bitslice(&src[h as usize][..]);
+                } else {
+                    let start: usize = f32::clamp(x as f32, 0., dest.len() as f32 - 1.) as usize;
+                    let end: usize =
+                        f32::clamp((x + src[0].len() as i32) as f32, 0., dest.len() as f32)
+                            as usize;
+                    if start != end {
+                        dest[(h + y) as usize][start..end].clone_from_bitslice(
+                            &src[h as usize]
+                                [(start as i32 - x) as usize..(end as i32 - x) as usize],
+                        );
+                    }
+                }
+            }
         }
     }
 
-    fn grift_circle(/*dest: &mut Vec<bv::BitVec>, */origin: (f32, f32), radius: f32) -> () {
-        let mut src:Vec<bv::BitVec> = vec![bv::bitvec![0; (radius * 2.) as usize]; (radius * 2.) as usize];
-        for y in 0..src.len() {
-            for x in 0..src[0].len() {
-                let dist_x:f32 = radius - x as f32 - 0.5;
-                let dist_y:f32 = radius - y as f32 - 0.5;
-                src[y].set(x, (dist_x.powi(2) + dist_y.powi(2)) > (radius - 0.1).powi(2));
+    #[inline]
+    fn grift_line(dest: &mut Vec<bv::BitVec>, x: i32, y0: i32, y1: i32, switch: bool) -> () {
+        if switch {
+            let temp: Vec<bv::BitVec> = vec![bv::bitvec![1; ((y1 - y0).abs()) as usize]];
+            Self::grift_bv(dest, &temp, if y0 < y1 { y0 } else { y1 }, x);
+        } else {
+            let temp: Vec<bv::BitVec> = vec![bv::bitvec![1; 1]; ((y1 - y0).abs()) as usize];
+            Self::grift_bv(dest, &temp, x, if y0 < y1 { y0 } else { y1 });
+        }
+    }
+
+    fn circle_octant(
+        dest: &mut Vec<bv::BitVec>, origin: (f32, f32), radius: f32, flip_x: i32, flip_y: i32,
+        switch: bool,
+    ) -> () {
+        let cx: f32;
+        let cy: f32;
+
+        if switch {
+            cx = origin.1;
+            cy = origin.0;
+        } else {
+            cx = origin.0;
+            cy = origin.1;
+        }
+
+        let mut x: f32;
+        if flip_x > 0 {
+            x = f32::ceil(cx + radius - 1.);
+        } else {
+            x = f32::floor(cx - radius + 1.);
+        }
+
+        let mut y: f32;
+        if flip_y > 0 {
+            y = cy.floor();
+        } else {
+            y = cy.ceil();
+        }
+
+        let mut start_y: f32 = y.clone();
+        let mut e: f32 = (x - cx) * (x - cx) + (y - cy) * (y - cy) - radius * radius;
+        let mut yc: f32 = flip_y as f32 * 2. * (y - cy) + 1.;
+        let mut xc: f32 = flip_x as f32 * -2. * (x - cx) + 1.;
+
+        while flip_y as f32 * (y - cy) <= flip_x as f32 * (x - cx) {
+            e += yc;
+            y += flip_y as f32;
+            yc += 2.;
+            if e >= 0. {
+                Self::grift_line(
+                    dest,
+                    x as i32 + (if flip_x < 0 { -1 } else { 0 }),
+                    start_y as i32,
+                    y as i32,
+                    switch,
+                );
+                start_y = y.clone();
+                e += xc;
+                x -= flip_x as f32;
+                xc += 2.;
             }
         }
-        println!("{:?}", src);
+        Self::grift_line(
+            dest,
+            x as i32 + (if flip_x < 0 { -1 } else { 0 }),
+            start_y as i32,
+            y as i32,
+            switch,
+        );
+    }
+
+    fn grift_circle(dest: &mut Vec<bv::BitVec>, origin: (f32, f32), radius: f32) -> () {
+        Self::circle_octant(dest, origin, radius, 1, 1, false);
+        Self::circle_octant(dest, origin, radius, 1, -1, false);
+        Self::circle_octant(dest, origin, radius, -1, 1, false);
+        Self::circle_octant(dest, origin, radius, -1, -1, false);
+        Self::circle_octant(dest, origin, radius, 1, 1, true);
+        Self::circle_octant(dest, origin, radius, 1, -1, true);
+        Self::circle_octant(dest, origin, radius, -1, 1, true);
+        Self::circle_octant(dest, origin, radius, -1, -1, true);
     }
 
     fn load_bounds(&mut self, bounds: String) -> () {
@@ -117,11 +229,15 @@ impl Level {
             let pair: (f32, f32) = Self::get_pair(p);
             ret.push(Death::new(vec![
                 Collider::Circular(Circle::new(6., pair)),
-                Collider::Rectangular(Rect::new(
-                    (pair.0 - 9., pair.1 - 3.),
-                    (pair.0 + 7., pair.1),
-                )),
+                Collider::Rectangular(Rect::new((pair.0 - 9., pair.1 - 3.), (pair.0 + 7., pair.1))),
             ]));
+            Self::grift_circle(&mut self.death2, pair, 6.);
+            Self::grift_bv(
+                &mut self.death2,
+                &vec![bv::bitvec![1; 16]; 4],
+                pair.0 as i32 - 8 + self.bounds.ul.0 as i32,
+                pair.1 as i32 + 5 + self.bounds.ul.1 as i32,
+            );
             print!("{}/{}", i + 1, to);
             stdout().flush();
             i += 1;
