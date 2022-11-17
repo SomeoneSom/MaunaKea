@@ -248,26 +248,6 @@ impl Level {
         println!("");
     }
 
-    fn load_barriers(&mut self, data_ul: String, data_dr: String) -> () {
-        let mut ul: Vec<&str> = data_ul.split("[").collect();
-        let mut dr: Vec<&str> = data_dr.split("[").collect();
-        ul.remove(0);
-        dr.remove(0);
-        for i in 0..ul.len() {
-            let ul_pair: (f32, f32) = Self::get_pair(ul[i]);
-            let dr_pair: (f32, f32) = Self::get_pair(dr[i]);
-            let width: usize = (dr_pair.0 - ul_pair.0) as usize;
-            let height: usize = (dr_pair.1 - ul_pair.1) as usize;
-            println!("{} {} {} {}", width, height, (ul_pair.0 - self.bounds.ul.0) as i32, (ul_pair.1 - self.bounds.ul.1) as i32);
-            Self::grift_bv(
-                &mut self.static_solids,
-                &vec![bv::bitvec![1; width]; height],
-                (ul_pair.0 - self.bounds.ul.0) as i32,
-                (ul_pair.1 - self.bounds.ul.1) as i32,
-            );
-        }
-    }
-
     fn load_solids(&mut self, data: String) -> () {
         let rows: Vec<&str> = data.split(" ").collect();
         let tile: Vec<bv::BitVec> = vec![bv::bitvec![1; 8]; 8];
