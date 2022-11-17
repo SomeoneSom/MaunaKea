@@ -31,7 +31,8 @@ impl Level {
     pub fn load(&mut self, info_path: String) -> () {
         let re = Regex::new(
             &(r"(.*)(Pos:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*) (Speed:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*)(.*)"
-                .to_owned() + r"LightningUL:(.*)Bounds: \{(.*)\} Solids: (.*)"/* + r" LightningDR:(.*)" +
+                .to_owned()
+                + r"LightningUL:(.*)Bounds: \{(.*)\} Solids: (.*)"/* + r" LightningDR:(.*)" +
             r" SpikeUL:(.*) SpikeDR:(.*) SpikeDir:(.*)" +
             r" Wind:(.*) WTPos:(.*) WTPattern:(.*) WTWidth:(.*) WTHeight(.*)" +
             r" StarJumpUL:(.*) JThruUL:(.*?)"*/),
@@ -46,20 +47,25 @@ impl Level {
             (self.bounds.dr.1 - self.bounds.ul.1) as usize
         ];
         self.static_solids = self.static_death.clone();
+        self.load_solids(caps.get(7).unwrap().as_str().to_owned());
         self.load_spinners(caps.get(4).unwrap().as_str().to_owned());
-        /*let mut img: RgbImage =
-            ImageBuffer::new(self.death2[0].len() as u32, self.death2.len() as u32);
+        /*let mut img: RgbImage = ImageBuffer::new(
+            self.static_death[0].len() as u32,
+            self.static_death.len() as u32,
+        );
         let (width, height) = img.dimensions();
         for y in 0..height {
             for x in 0..width {
-                if self.death2[y as usize][x as usize] {
+                if self.static_solids[y as usize][x as usize] {
+                    img.put_pixel(x, y, Rgb([255, 194, 11]));
+                } else if self.static_death[y as usize][x as usize] {
                     img.put_pixel(x, y, Rgb([255, 0, 0]));
                 } else {
                     img.put_pixel(x, y, Rgb([0, 0, 0]));
                 }
             }
         }
-        img.save("death2.png").unwrap();*/
+        img.save("testimg.png").unwrap();*/
         self.load_player(
             caps.get(2).unwrap().as_str().to_owned(),
             caps.get(3).unwrap().as_str().to_owned(),
@@ -88,7 +94,7 @@ impl Level {
         }
         for h in 0..src.len() as i32 {
             if h + y < dest.len() as i32 && h + y >= 0 {
-                if src[0].len() as i32 + x < dest[0].len() as i32 && x >= 0 {
+                if src[0].len() as i32 + x <= dest[0].len() as i32 && x >= 0 {
                     dest[(h + y) as usize][x as usize..(src[0].len() as i32 + x) as usize]
                         .clone_from_bitslice(&src[h as usize][..]);
                 } else {
@@ -240,6 +246,38 @@ impl Level {
             i += 1;
         }
         println!("");
+    }
+
+    fn load_barriers(&mut self, data_ul: String, data_dr: String) -> () {
+        let mut ul: Vec<&str> = data_ul.split("[").collect();
+        let mut dr: Vec<&str> = data_dr.split("[").collect();
+        ul.remove(0);
+        dr.remove(0);
+        for i in 0..ul.len() {
+            let ul_pair: (f32, f32) = Self::get_pair(ul[i]);
+            let dr_pair: (f32, f32) = Self::get_pair(dr[i]);
+            let width: usize = (dr_pair.0 - ul_pair.0) as usize;
+            let height: usize = (dr_pair.1 - ul_pair.1) as usize;
+            println!("{} {} {} {}", width, height, (ul_pair.0 - self.bounds.ul.0) as i32, (ul_pair.1 - self.bounds.ul.1) as i32);
+            Self::grift_bv(
+                &mut self.static_solids,
+                &vec![bv::bitvec![1; width]; height],
+                (ul_pair.0 - self.bounds.ul.0) as i32,
+                (ul_pair.1 - self.bounds.ul.1) as i32,
+            );
+        }
+    }
+
+    fn load_solids(&mut self, data: String) -> () {
+        let rows: Vec<&str> = data.split(" ").collect();
+        let tile: Vec<bv::BitVec> = vec![bv::bitvec![1; 8]; 8];
+        for y in 0..rows.len() {
+            for x in 0..rows[0].len() {
+                if rows[y].chars().nth(x).unwrap() != '0' {
+                    Self::grift_bv(&mut self.static_solids, &tile, x as i32 * 8, y as i32 * 8);
+                }
+            }
+        }
     }
 
     fn load_player(&mut self, position: String, speed: String) -> () {
