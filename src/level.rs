@@ -3,12 +3,12 @@ use std::io::Write;
 
 use bitvec::prelude as bv;
 use colored::Colorize;
+use image::{ImageBuffer, Rgb, RgbImage};
 use regex::Regex;
 
 use crate::algorithm::Algorithm;
-use crate::colliders::{Circle, Collider, Rect};
+use crate::colliders::{Collider, Rect};
 use crate::player::Player;
-use image::{ImageBuffer, Rgb, RgbImage};
 
 #[derive(Default)]
 pub struct Level {
@@ -84,7 +84,6 @@ impl Level {
         return (Self::parse_f32(&caps, 1), Self::parse_f32(&caps, 2));
     }
 
-    #[inline]
     fn grift_bv(dest: &mut Vec<bv::BitVec>, src: &Vec<bv::BitVec>, x: i32, y: i32) -> () {
         if dest.len() == 0 || src.len() == 0 {
             return ();

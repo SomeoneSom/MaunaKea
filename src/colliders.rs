@@ -28,21 +28,12 @@ impl Default for Collider {
 }
 
 impl Collider {
+    #[inline]
     pub fn collide_check(&self, other: &Collider) -> bool {
         if matches!(other, Collider::Rectangular(_)) {
-            let rect = if let Collider::Rectangular(r) = other {
-                r
-            } else {
-                unreachable!()
-            };
-            return rect.collide_check(self);
+            return other.rect().unwrap().collide_check(self);
         } else {
-            let circ = if let Collider::Circular(c) = other {
-                c
-            } else {
-                unreachable!()
-            };
-            return circ.collide_check(self);
+            return other.circle().unwrap().collide_check(self);
         }
     }
 

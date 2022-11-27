@@ -49,11 +49,7 @@ impl Player {
             }
         }
         //TODO: make it so this actually calcs distance properly and not just center of player to center of checkpoint
-        let rect = if let Collider::Rectangular(r) = self.hurtbox {
-            r
-        } else {
-            unreachable!()
-        };
+        let rect = self.hurtbox.rect().unwrap();
         let player_cent: (f32, f32) = ((rect.ul.0 + rect.dr.0) / 2., (rect.ul.1 + rect.dr.1) / 2.);
         let check_cent: (f32, f32) = (
             (checkpoint.ul.0 + checkpoint.dr.0) / 2.,
