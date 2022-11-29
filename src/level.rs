@@ -31,8 +31,7 @@ impl Level {
     pub fn load(&mut self, info_path: String) -> () {
         let re = Regex::new(
             &(r"(.*)(Pos:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*) (Speed:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*)(.*)"
-                .to_owned()
-                + r"LightningUL:(.*)Bounds: \{(.*)\} Solids: (.*)"/* + r" LightningDR:(.*)" +
+                .to_owned() + r"LightningUL:(.*)Bounds: \{(.*)\} Solids: (.*)"/* + r" LightningDR:(.*)" +
             r" SpikeUL:(.*) SpikeDR:(.*) SpikeDir:(.*)" +
             r" Wind:(.*) WTPos:(.*) WTPattern:(.*) WTWidth:(.*) WTHeight(.*)" +
             r" StarJumpUL:(.*) JThruUL:(.*?)"*/),
@@ -49,7 +48,7 @@ impl Level {
         self.static_solids = self.static_death.clone();
         self.load_solids(caps.get(7).unwrap().as_str().to_owned());
         self.load_spinners(caps.get(4).unwrap().as_str().to_owned());
-        /*let mut img: RgbImage = ImageBuffer::new(
+        let mut img: RgbImage = ImageBuffer::new(
             self.static_death[0].len() as u32,
             self.static_death.len() as u32,
         );
@@ -65,7 +64,7 @@ impl Level {
                 }
             }
         }
-        img.save("testimg.png").unwrap();*/
+        img.save("testimg.png").unwrap();
         self.load_player(
             caps.get(2).unwrap().as_str().to_owned(),
             caps.get(3).unwrap().as_str().to_owned(),
@@ -251,9 +250,19 @@ impl Level {
         let rows: Vec<&str> = data.split(" ").collect();
         let tile: Vec<bv::BitVec> = vec![bv::bitvec![1; 8]; 8];
         for y in 0..rows.len() {
-            for x in 0..rows[0].len() {
-                if rows[y].chars().nth(x).unwrap() != '0' {
-                    Self::grift_bv(&mut self.static_solids, &tile, x as i32 * 8, y as i32 * 8);
+            for x in 0..rows[y].len() {
+                match rows[y].chars().nth(x) {
+                    Some(c) => {
+                        if c != '0' && c != '\r' {
+                            Self::grift_bv(
+                                &mut self.static_solids,
+                                &tile,
+                                x as i32 * 8,
+                                y as i32 * 8,
+                            )
+                        }
+                    }
+                    None => (),
                 }
             }
         }
@@ -284,8 +293,14 @@ impl Level {
                 &mut self.player,
                 &self.bounds,
                 &self.static_death,
+                &self.static_solids,
                 &checks[i as usize],
             );
+            /*if frame > 100 {
+                println!("{}", "Aborting due to absurd frame count. Temporary.".red());
+                flag = true;
+                break;
+            }*/
             if inp == -1 {
                 flag = true;
                 break;
@@ -304,9 +319,19 @@ impl Level {
         }
         let mut last_input: i32 = -1;
         let mut count: i32 = 0;
+        let mut file = std::fs::File::create("pain.txt").unwrap();
         for inp in inputs {
             if inp != last_input {
                 if last_input != -1 {
+                    file.write_all(
+                        format!(
+                            "{},F,{}.{:0>3}\n",
+                            count,
+                            (last_input as f32 / 1000.) as i32,
+                            last_input % 1000
+                        )
+                        .as_bytes(),
+                    );
                     println!(
                         "{},F,{}.{:0>3}",
                         count,
@@ -320,6 +345,15 @@ impl Level {
                 count += 1;
             }
         }
+        file.write_all(
+            format!(
+                "{},F,{}.{:0>3}\n",
+                count,
+                (last_input as f32 / 1000.) as i32,
+                last_input % 1000
+            )
+            .as_bytes(),
+        );
         println!(
             "{},F,{}.{:0>3}",
             count,

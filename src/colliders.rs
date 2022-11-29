@@ -30,10 +30,9 @@ impl Default for Collider {
 impl Collider {
     #[inline]
     pub fn collide_check(&self, other: &Collider) -> bool {
-        if matches!(other, Collider::Rectangular(_)) {
-            return other.rect().unwrap().collide_check(self);
-        } else {
-            return other.circle().unwrap().collide_check(self);
+        match other {
+            Collider::Rectangular(rect) => rect.collide_check(self),
+            Collider::Circular(circ) => circ.collide_check(self)
         }
     }
 
@@ -50,6 +49,21 @@ impl Collider {
             circ.origin.0 += x / 60.;
             circ.origin.1 += y / 60.;
             return Collider::Circular(circ);
+        }
+    }
+
+    pub fn reset_subpixels(&mut self, switch_xy: bool) -> () {
+        match self {
+            Collider::Rectangular(rect) => {
+                if switch_xy {
+                    rect.ul.1 = rect.ul.1.round();
+                    rect.dr.1 = rect.dr.1.round();
+                } else {
+                    rect.ul.0 = rect.ul.0.round();
+                    rect.dr.0 = rect.dr.0.round();
+                }
+            },
+            _ => panic!("Tried to call reset_subpixels on a Circle. Should be unreachable.")
         }
     }
 
@@ -134,14 +148,13 @@ impl Circle {
     }
 
     fn collide_check(self, other: &Collider) -> bool {
-        if matches!(other, Collider::Rectangular(_)) {
-            let rect = other.rect().unwrap();
-            return rect.collide_check(&Collider::Circular(self));
-        } else {
-            let circ = other.circle().unwrap();
-            let distance: f32 =
-                (self.origin.0 - circ.origin.0).powi(2) + (self.origin.1 - circ.origin.1).powi(2);
-            return distance < (self.radius + circ.radius).powi(2);
+        match other {
+            Collider::Rectangular(rect) => rect.collide_check(&Collider::Circular(self)),
+            Collider::Circular(circ) => {
+                let distance: f32 = (self.origin.0 - circ.origin.0).powi(2)
+                    + (self.origin.1 - circ.origin.1).powi(2);
+                distance < (self.radius + circ.radius).powi(2)
+            }
         }
     }
 }
