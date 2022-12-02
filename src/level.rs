@@ -19,15 +19,6 @@ pub struct Level {
 }
 
 impl Level {
-    pub fn new() -> Self {
-        Self {
-            bounds: Rect::default(),
-            static_death: Vec::new(),
-            static_solids: Vec::new(),
-            player: Player::new((0., 0.), (0., 0.)),
-        }
-    }
-
     pub fn load(&mut self, info_path: String) -> () {
         let re = Regex::new(
             &(r"(.*)(Pos:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*) (Speed:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*)(.*)"
