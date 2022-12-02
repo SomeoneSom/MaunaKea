@@ -106,8 +106,8 @@ impl Player {
                 } else {
                     speed_x.max(-480.)
                 };
-                self.hurtbox = self.hurtbox.move_collider(speed, 0.);
-                self.hitbox = self.hitbox.move_collider(speed, 0.);
+                self.hurtbox.move_collider(speed, 0.);
+                self.hitbox.move_collider(speed, 0.);
                 if self.solids_collision(bounds, static_solids, false, sign_x < 0.) {
                     speed_x = 0.;
                 }
@@ -118,8 +118,8 @@ impl Player {
                 } else {
                     speed_y.max(-480.)
                 };
-                self.hurtbox = self.hurtbox.move_collider(0., speed);
-                self.hitbox = self.hitbox.move_collider(0., speed);
+                self.hurtbox.move_collider(0., speed);
+                self.hitbox.move_collider(0., speed);
                 if self.solids_collision(bounds, static_solids, true, sign_y < 0.) {
                     break;
                 }
@@ -184,15 +184,13 @@ impl Player {
         let mut multiplier: f32 = if switch_lr { 60. } else { -60. };
         multiplier *= if switch_xy { -1. } else { 1. };
         if switch_xy {
-            self.hitbox = self.hitbox.move_collider(0., last_seen as f32 * multiplier);
-            self.hurtbox = self
-                .hurtbox
+            self.hitbox.move_collider(0., last_seen as f32 * multiplier);
+            self.hurtbox
                 .move_collider(0., last_seen as f32 * multiplier);
             self.speed.1 = 0.;
         } else {
-            self.hitbox = self.hitbox.move_collider(last_seen as f32 * multiplier, 0.);
-            self.hurtbox = self
-                .hurtbox
+            self.hitbox.move_collider(last_seen as f32 * multiplier, 0.);
+            self.hurtbox
                 .move_collider(last_seen as f32 * multiplier, 0.);
             self.speed.0 = 0.;
         }
