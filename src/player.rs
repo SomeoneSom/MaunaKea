@@ -76,6 +76,7 @@ impl Player {
         //TODO: make speed capping actually work how its meant to
         //TODO: water surface bs
         //TODO: precompute angles
+        self.retained_timer -= 1;
         let mut ang: i32 = angle - 90000;
         if ang < 0 {
             ang += 360000;
@@ -87,6 +88,14 @@ impl Player {
             self.speed.0 = target.0;
         } else {
             self.speed.0 += f32::clamp(target.0 - self.speed.0, -10., 10.);
+        }
+        if self.speed.0.signum() == self.retained.signum() && self.retained_timer > 0 {
+            let temp_hitbox:Collider = self.hitbox;
+            self.hitbox.move_collider(self.speed.0.signum(), 0.);
+            if self.solids_collision(bounds, static_solids, false, self.speed.0.signum() < 0.) {
+                self.speed.0 = self.retained;
+            }
+            self.hitbox = temp_hitbox;
         }
         self.speed.0 = self.speed.0.clamp(-60., 60.);
         if f32::abs(target.1 - self.speed.1) < 10. {
