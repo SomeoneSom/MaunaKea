@@ -198,9 +198,4 @@ impl Player {
         self.hurtbox.reset_subpixels(switch_xy);
         true
     }
-
-    //TODO: maybe get rid of this, it might not be useful
-    fn die(&mut self) -> () {
-        self.alive = false;
-    }
 }
