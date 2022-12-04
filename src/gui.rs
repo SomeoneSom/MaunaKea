@@ -122,7 +122,6 @@ impl eframe::App for MaunaKea {
                 self.level.load(self.options.info_path.clone());
                 self.level.run_alg(self.options.checkpoints.clone());
             }
-            ui.label("add more shit here later!");
         });
     }
 }
