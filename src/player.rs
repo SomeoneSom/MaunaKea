@@ -47,7 +47,7 @@ impl Player {
         let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
         let left: i32 = (hurtbox_rect.ul.0 - bounds.ul.0).round() as i32;
         let right: i32 = (hurtbox_rect.dr.0 - bounds.ul.0).round() as i32 + 1;
-        let up: i32 = (hurtbox_rect.ul.1 - bounds.ul.1).round() as i32;
+        let up: i32 = (hurtbox_rect.ul.1 - bounds.ul.1 - 0.000001).round() as i32;
         let down: i32 = (hurtbox_rect.dr.1 - bounds.ul.1).round() as i32 + 1;
         //println!("{} {} {} {}", left, right, up, down);
         for x in left..right {
@@ -151,7 +151,7 @@ impl Player {
         let hitbox_rect: &Rect = self.hitbox.rect().unwrap();
         let left: usize = (hitbox_rect.ul.0 - bounds.ul.0).round() as usize;
         let right: usize = (hitbox_rect.dr.0 - bounds.ul.0).round() as usize + 1;
-        let up: usize = (hitbox_rect.ul.1 - bounds.ul.1).round() as usize;
+        let up: usize = (hitbox_rect.ul.1 - bounds.ul.1 - 0.0001).round() as usize;
         let down: usize = (hitbox_rect.dr.1 - bounds.ul.1).round() as usize + 1;
         let first: Range<usize>;
         let second: Range<usize>;
@@ -173,15 +173,15 @@ impl Player {
             second.collect::<Vec<_>>()
         };
         let mut last_seen: i32 = -1;
-        for f in first_v {
+        for f in &first_v {
             for s in &second_v {
                 let b: bool = if switch_xy {
-                    static_solids[f][*s]
+                    static_solids[*f][*s]
                 } else {
-                    static_solids[*s][f]
+                    static_solids[*s][*f]
                 };
                 if b {
-                    last_seen = f as i32 - if switch_xy { up as i32 } else { left as i32 };
+                    last_seen = *f as i32 - if switch_xy { up as i32 } else { left as i32 };
                 }
             }
         }
@@ -189,7 +189,7 @@ impl Player {
             return false;
         }
         if !switch_lr {
-            last_seen = if switch_xy { 11 } else { 8 } - last_seen;
+            last_seen = first_v.len() as i32 - last_seen;
         } else {
             last_seen += 1;
         }
