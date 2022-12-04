@@ -88,7 +88,8 @@ impl Algorithm {
         println!("Winner: {} -> {}", best.0, best.1);
         player.move_self(best.0, bounds, static_solids);
         let rect: &Rect = player.hurtbox.rect().unwrap();
-        println!("Position: ({}, {})", rect.ul.0 + 4., rect.ul.1 + 12.);
+        println!("Position: ({}, {})", rect.ul.0 + 4., rect.ul.1 + 11.);
+        println!("Speed: ({}, {})", player.speed.0, player.speed.1);
         return best.0;
     }
 }

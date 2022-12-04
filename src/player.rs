@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use bitvec::prelude as bv;
 
-use crate::colliders::{Collider, Rect};
+use crate::colliders::{Axes, Collider, Rect};
 
 #[derive(Default)]
 pub struct Player {
@@ -22,11 +22,11 @@ impl Player {
             retained_timer: 0,
             alive: true,
             hurtbox: Collider::Rectangular(Rect::new(
-                (position.0 - 4., position.1 - 12.),
+                (position.0 - 4., position.1 - 11.),
                 (position.0 + 3., position.1 - 3.),
             )),
             hitbox: Collider::Rectangular(Rect::new(
-                (position.0 - 4., position.1 - 12.),
+                (position.0 - 4., position.1 - 11.),
                 (position.0 + 3., position.1 - 1.),
             )),
         }
@@ -39,7 +39,11 @@ impl Player {
         let temp_speed: (f32, f32) = self.speed.clone();
         let temp_hurtbox = self.hurtbox.clone();
         let temp_hitbox = self.hitbox.clone();
+        let temp_retained = self.retained.clone();
+        let temp_retained_timer = self.retained_timer.clone();
         self.move_self(angle, bounds, static_solids);
+        self.retained = temp_retained;
+        self.retained_timer = temp_retained_timer;
         let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
         let left: i32 = (hurtbox_rect.ul.0 - bounds.ul.0).round() as i32;
         let right: i32 = (hurtbox_rect.dr.0 - bounds.ul.0).round() as i32 + 1;
@@ -140,6 +144,7 @@ impl Player {
         }
     }
 
+    //TODO: fix weird float rounding issue
     pub fn solids_collision(
         &mut self, bounds: &Rect, static_solids: &Vec<bv::BitVec>, switch_xy: bool, switch_lr: bool,
     ) -> bool {
@@ -184,14 +189,15 @@ impl Player {
             return false;
         }
         if !switch_lr {
-            last_seen = if switch_xy { 10 } else { 8 } - last_seen;
+            last_seen = if switch_xy { 11 } else { 8 } - last_seen;
+        } else {
+            last_seen += 1;
         }
         if self.retained_timer == 0 && !switch_xy {
             self.retained = self.speed.0;
             self.retained_timer = 4;
         }
-        let mut multiplier: f32 = if switch_lr { 60. } else { -60. };
-        multiplier *= if switch_xy { -1. } else { 1. };
+        let multiplier: f32 = if switch_lr { 60. } else { -60. };
         if switch_xy {
             self.hitbox.move_collider(0., last_seen as f32 * multiplier);
             self.hurtbox
@@ -203,8 +209,13 @@ impl Player {
                 .move_collider(last_seen as f32 * multiplier, 0.);
             self.speed.0 = 0.;
         }
-        self.hitbox.reset_subpixels(switch_xy);
-        self.hurtbox.reset_subpixels(switch_xy);
+        if !switch_xy {
+            self.hitbox.reset_subpixels(Axes::Horizontal);
+            self.hurtbox.reset_subpixels(Axes::Horizontal);
+        } else {
+            self.hitbox.reset_subpixels(Axes::Vertical);
+            self.hurtbox.reset_subpixels(Axes::Vertical);
+        }
         true
     }
 }

@@ -1,7 +1,3 @@
-use crate::level::Level;
-
-use bitvec::prelude as bv;
-
 #[derive(PartialEq)]
 pub enum Direction {
     Left,
@@ -51,15 +47,18 @@ impl Collider {
         }
     }
 
-    pub fn reset_subpixels(&mut self, switch_xy: bool) -> () {
+    pub fn reset_subpixels(&mut self, axis: Axes) -> () {
         match self {
             Collider::Rectangular(rect) => {
-                if switch_xy {
-                    rect.ul.1 = rect.ul.1.round();
-                    rect.dr.1 = rect.dr.1.round();
-                } else {
-                    rect.ul.0 = rect.ul.0.round();
-                    rect.dr.0 = rect.dr.0.round();
+                match axis {
+                    Axes::Horizontal => {
+                        rect.ul.0 = rect.ul.0.round();
+                        rect.dr.0 = rect.dr.0.round();
+                    },
+                    Axes::Vertical => {
+                        rect.ul.1 = rect.ul.1.round();
+                        rect.dr.1 = rect.dr.1.round();
+                    }
                 }
             }
             _ => panic!("Tried to call reset_subpixels on a Circle. Should be unreachable."),
