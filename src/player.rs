@@ -45,9 +45,9 @@ impl Player {
         self.retained = temp_retained;
         self.retained_timer = temp_retained_timer;
         let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
-        let left: i32 = (hurtbox_rect.ul.0 - bounds.ul.0).round() as i32;
+        let left: i32 = (hurtbox_rect.ul.0 - bounds.ul.0 - 0.0001).round() as i32;
         let right: i32 = (hurtbox_rect.dr.0 - bounds.ul.0).round() as i32 + 1;
-        let up: i32 = (hurtbox_rect.ul.1 - bounds.ul.1 - 0.000001).round() as i32;
+        let up: i32 = (hurtbox_rect.ul.1 - bounds.ul.1 - 0.0001).round() as i32;
         let down: i32 = (hurtbox_rect.dr.1 - bounds.ul.1).round() as i32 + 1;
         //println!("{} {} {} {}", left, right, up, down);
         for x in left..right {
@@ -149,7 +149,7 @@ impl Player {
         &mut self, bounds: &Rect, static_solids: &Vec<bv::BitVec>, switch_xy: bool, switch_lr: bool,
     ) -> bool {
         let hitbox_rect: &Rect = self.hitbox.rect().unwrap();
-        let left: usize = (hitbox_rect.ul.0 - bounds.ul.0).round() as usize;
+        let left: usize = (hitbox_rect.ul.0 - bounds.ul.0 - 0.0001).round() as usize;
         let right: usize = (hitbox_rect.dr.0 - bounds.ul.0).round() as usize + 1;
         let up: usize = (hitbox_rect.ul.1 - bounds.ul.1 - 0.0001).round() as usize;
         let down: usize = (hitbox_rect.dr.1 - bounds.ul.1).round() as usize + 1;
