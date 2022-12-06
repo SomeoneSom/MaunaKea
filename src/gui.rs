@@ -122,6 +122,9 @@ impl eframe::App for MaunaKea {
                 self.level.load(self.options.info_path.clone());
                 self.level.run_alg(self.options.checkpoints.clone());
             }
+            if ui.button("Run 2 (TESTING)").clicked() {
+                println!("Running alg test.");
+            }
         });
     }
 }
