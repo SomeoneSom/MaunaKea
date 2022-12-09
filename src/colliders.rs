@@ -1,3 +1,5 @@
+pub type Point = (f32, f32);
+
 #[derive(PartialEq)]
 pub enum Direction {
     Left,
@@ -83,12 +85,12 @@ impl Collider {
 
 #[derive(Clone, Copy, Default)]
 pub struct Rect {
-    pub ul: (f32, f32),
-    pub dr: (f32, f32),
+    pub ul: Point,
+    pub dr: Point,
 }
 
 impl Rect {
-    pub fn new(up_left: (f32, f32), down_right: (f32, f32)) -> Self {
+    pub fn new(up_left: Point, down_right: Point) -> Self {
         Self {
             ul: up_left,
             dr: down_right,
@@ -119,12 +121,12 @@ impl Rect {
         }
     }
 
-    fn line_to_circ(circ: &Circle, from: (f32, f32), to: (f32, f32)) -> bool {
-        let sub: (f32, f32) = (from.0 - to.0, from.1 - to.1);
-        let sub2: (f32, f32) = (from.0 - circ.origin.0, from.1 - circ.origin.1);
+    fn line_to_circ(circ: &Circle, from: Point, to: Point) -> bool {
+        let sub: Point = (from.0 - to.0, from.1 - to.1);
+        let sub2: Point = (from.0 - circ.origin.0, from.1 - circ.origin.1);
         let mut val: f32 = (sub.0 * sub2.0 + sub.1 * sub2.1) / (sub2.0.powi(2) + sub2.1.powi(2));
         val = val.clamp(0., 1.);
-        let closest: (f32, f32) = (from.0 + sub2.0 * val, from.1 + sub2.1 * val);
+        let closest: Point = (from.0 + sub2.0 * val, from.1 + sub2.1 * val);
         let distance: f32 =
             (circ.origin.0 - closest.0).powi(2) + (circ.origin.1 - closest.1).powi(2);
         return distance < circ.radius.powi(2);
@@ -134,11 +136,11 @@ impl Rect {
 #[derive(Clone, Copy, Default)]
 pub struct Circle {
     pub radius: f32,
-    pub origin: (f32, f32),
+    pub origin: Point,
 }
 
 impl Circle {
-    pub fn new(rad: f32, orig: (f32, f32)) -> Self {
+    pub fn new(rad: f32, orig: Point) -> Self {
         Self {
             radius: rad,
             origin: orig,

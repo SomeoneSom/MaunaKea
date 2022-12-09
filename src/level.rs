@@ -7,7 +7,7 @@ use image::{ImageBuffer, Rgb, RgbImage};
 use regex::Regex;
 
 use crate::algorithm::Algorithm;
-use crate::colliders::{Collider, Rect};
+use crate::colliders::{Collider, Point, Rect};
 use crate::player::Player;
 
 #[derive(Default)]
@@ -68,7 +68,7 @@ impl Level {
         return caps.get(num).unwrap().as_str().parse::<f32>().unwrap();
     }
 
-    fn get_pair(string: &str) -> (f32, f32) {
+    fn get_pair(string: &str) -> Point {
         let re = Regex::new(r"(-?\d+\.?\d*), (-?\d+\.?\d*)").unwrap();
         let caps = re.captures(string).unwrap();
         return (Self::parse_f32(&caps, 1), Self::parse_f32(&caps, 2));
@@ -114,7 +114,7 @@ impl Level {
     }
 
     fn circle_octant(
-        dest: &mut Vec<bv::BitVec>, origin: (f32, f32), radius: f32, flip_x: i32, flip_y: i32,
+        dest: &mut Vec<bv::BitVec>, origin: Point, radius: f32, flip_x: i32, flip_y: i32,
         switch: bool,
     ) -> () {
         let cx: f32;
@@ -174,7 +174,7 @@ impl Level {
         );
     }
 
-    fn grift_circle(dest: &mut Vec<bv::BitVec>, origin: (f32, f32), radius: f32) -> () {
+    fn grift_circle(dest: &mut Vec<bv::BitVec>, origin: Point, radius: f32) -> () {
         Self::circle_octant(dest, origin, radius, 1, 1, false);
         Self::circle_octant(dest, origin, radius, 1, -1, false);
         Self::circle_octant(dest, origin, radius, -1, 1, false);
@@ -217,7 +217,7 @@ impl Level {
                 "{}",
                 "\u{8}".repeat((i).to_string().len() + to.to_string().len() + 1)
             );
-            let pair: (f32, f32) = Self::get_pair(p);
+            let pair: Point = Self::get_pair(p);
             Self::grift_bv(
                 &mut self.static_death,
                 &circle,
@@ -260,8 +260,8 @@ impl Level {
     }
 
     fn load_player(&mut self, position: String, speed: String) -> () {
-        let pair1: (f32, f32) = Self::get_pair(position.as_str());
-        let pair2: (f32, f32) = Self::get_pair(speed.as_str());
+        let pair1: Point = Self::get_pair(position.as_str());
+        let pair2: Point = Self::get_pair(speed.as_str());
         self.player = Player::new(pair2, pair1);
     }
 

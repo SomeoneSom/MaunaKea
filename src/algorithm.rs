@@ -3,25 +3,24 @@
 use std::io::stdout;
 use std::io::Write;
 
-use crate::colliders::Rect;
+use crate::colliders::{Point, Rect};
 use crate::player::Player;
 use crate::level::Level;
 
 use bitvec::prelude as bv;
 use colored::Colorize;
 
-//this will be a genetic alg, similar to what featherline uses. this will be used if it outperforms
-//the deterministic alg.
-pub struct AlgGenetic {}
+pub struct Pathfinder {}
 
-impl AlgGenetic {
-}
+impl Pathfinder {
+    pub fn point_line_distance(line: (Point, Point), point: Point) -> f32 {
+        0.
+    }
 
-//this will be a deterministic alg that i will make myself. this will be used if it outperforms the
-//genetic alg.
-pub struct AlgDeterministic {}
-
-impl AlgDeterministic {
+    pub fn optimal_path(checkpoints: &Vec<Rect>, starting: Point) -> Vec<Point> {
+        let mut path:Vec<Point> = vec![];
+        path
+    }
 }
 
 pub struct Algorithm {}

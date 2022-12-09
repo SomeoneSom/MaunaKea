@@ -2,11 +2,11 @@ use std::ops::Range;
 
 use bitvec::prelude as bv;
 
-use crate::colliders::{Axes, Collider, Rect};
+use crate::colliders::{Axes, Collider, Point, Rect};
 
 #[derive(Default)]
 pub struct Player {
-    pub speed: (f32, f32),
+    pub speed: Point,
     pub retained: f32,
     pub retained_timer: i32,
     pub alive: bool,
@@ -15,7 +15,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(speed: (f32, f32), position: (f32, f32)) -> Self {
+    pub fn new(speed: Point, position: Point) -> Self {
         Self {
             speed: speed,
             retained: 0.,
@@ -36,7 +36,7 @@ impl Player {
         &mut self, angle: i32, bounds: &Rect, static_death: &Vec<bv::BitVec>,
         static_solids: &Vec<bv::BitVec>, checkpoint: &Rect,
     ) -> f32 {
-        let temp_speed: (f32, f32) = self.speed.clone();
+        let temp_speed: Point = self.speed.clone();
         let temp_hurtbox = self.hurtbox.clone();
         let temp_hitbox = self.hitbox.clone();
         let temp_retained = self.retained.clone();
@@ -62,8 +62,8 @@ impl Player {
         }
         //TODO: make it so this actually calcs distance properly
         let rect = self.hurtbox.rect().unwrap();
-        let player_cent: (f32, f32) = ((rect.ul.0 + rect.dr.0) / 2., (rect.ul.1 + rect.dr.1) / 2.);
-        let check_cent: (f32, f32) = (
+        let player_cent: Point = ((rect.ul.0 + rect.dr.0) / 2., (rect.ul.1 + rect.dr.1) / 2.);
+        let check_cent: Point = (
             (checkpoint.ul.0 + checkpoint.dr.0) / 2.,
             (checkpoint.ul.1 + checkpoint.dr.1) / 2.,
         );
@@ -87,7 +87,7 @@ impl Player {
         }
         ang = 360000 - ang;
         let rang: f32 = (ang as f32 / 1000.).to_radians();
-        let target: (f32, f32) = (60. * rang.cos(), 80. * rang.sin() * -1.);
+        let target: Point = (60. * rang.cos(), 80. * rang.sin() * -1.);
         if f32::abs(target.0 - self.speed.0) < 10. {
             self.speed.0 = target.0;
         } else {
