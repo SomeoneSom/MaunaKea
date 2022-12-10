@@ -22,12 +22,12 @@ impl Player {
             retained_timer: 0,
             alive: true,
             hurtbox: Collider::Rectangular(Rect::new(
-                (position.0 - 4., position.1 - 11.),
-                (position.0 + 3., position.1 - 3.),
+                Point::new(position.x - 4., position.y - 11.),
+                Point::new(position.x + 3., position.y - 3.),
             )),
             hitbox: Collider::Rectangular(Rect::new(
-                (position.0 - 4., position.1 - 11.),
-                (position.0 + 3., position.1 - 1.),
+                Point::new(position.x - 4., position.y - 11.),
+                Point::new(position.x + 3., position.y - 1.),
             )),
         }
     }
@@ -45,10 +45,10 @@ impl Player {
         self.retained = temp_retained;
         self.retained_timer = temp_retained_timer;
         let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
-        let left: i32 = (hurtbox_rect.ul.0 - bounds.ul.0 - 0.0001).round() as i32;
-        let right: i32 = (hurtbox_rect.dr.0 - bounds.ul.0).round() as i32 + 1;
-        let up: i32 = (hurtbox_rect.ul.1 - bounds.ul.1 - 0.0001).round() as i32;
-        let down: i32 = (hurtbox_rect.dr.1 - bounds.ul.1).round() as i32 + 1;
+        let left: i32 = (hurtbox_rect.ul.x - bounds.ul.x - 0.0001).round() as i32;
+        let right: i32 = (hurtbox_rect.dr.x - bounds.ul.x).round() as i32 + 1;
+        let up: i32 = (hurtbox_rect.ul.y - bounds.ul.y - 0.0001).round() as i32;
+        let down: i32 = (hurtbox_rect.dr.y - bounds.ul.y).round() as i32 + 1;
         //println!("{} {} {} {}", left, right, up, down);
         for x in left..right {
             for y in up..down {
@@ -62,16 +62,16 @@ impl Player {
         }
         //TODO: make it so this actually calcs distance properly
         let rect = self.hurtbox.rect().unwrap();
-        let player_cent: Point = ((rect.ul.0 + rect.dr.0) / 2., (rect.ul.1 + rect.dr.1) / 2.);
-        let check_cent: Point = (
-            (checkpoint.ul.0 + checkpoint.dr.0) / 2.,
-            (checkpoint.ul.1 + checkpoint.dr.1) / 2.,
+        let player_cent: Point = Point::new((rect.ul.x + rect.dr.x) / 2., (rect.ul.y + rect.dr.y) / 2.);
+        let check_cent: Point = Point::new(
+            (checkpoint.ul.x + checkpoint.dr.x) / 2.,
+            (checkpoint.ul.y + checkpoint.dr.y) / 2.,
         );
         self.speed = temp_speed;
         self.hurtbox = temp_hurtbox;
         self.hitbox = temp_hitbox;
         return f32::sqrt(
-            (player_cent.0 - check_cent.0).powi(2) + (player_cent.1 - check_cent.1).powi(2),
+            (player_cent.x - check_cent.x).powi(2) + (player_cent.y - check_cent.y).powi(2),
         );
     }
 
@@ -87,29 +87,29 @@ impl Player {
         }
         ang = 360000 - ang;
         let rang: f32 = (ang as f32 / 1000.).to_radians();
-        let target: Point = (60. * rang.cos(), 80. * rang.sin() * -1.);
-        if f32::abs(target.0 - self.speed.0) < 10. {
-            self.speed.0 = target.0;
+        let target: Point = Point::new(60. * rang.cos(), 80. * rang.sin() * -1.);
+        if f32::abs(target.x - self.speed.x) < 10. {
+            self.speed.x = target.x;
         } else {
-            self.speed.0 += f32::clamp(target.0 - self.speed.0, -10., 10.);
+            self.speed.x += f32::clamp(target.x - self.speed.x, -10., 10.);
         }
-        if self.speed.0.signum() == self.retained.signum() && self.retained_timer > 0 {
+        if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
             let temp_hitbox:Collider = self.hitbox;
-            self.hitbox.move_collider(self.speed.0.signum(), 0.);
-            if self.solids_collision(bounds, static_solids, false, self.speed.0.signum() < 0.) {
-                self.speed.0 = self.retained;
+            self.hitbox.move_collider(self.speed.x.signum(), 0.);
+            if self.solids_collision(bounds, static_solids, false, self.speed.x.signum() < 0.) {
+                self.speed.x = self.retained;
             }
             self.hitbox = temp_hitbox;
         }
-        self.speed.0 = self.speed.0.clamp(-60., 60.);
-        if f32::abs(target.1 - self.speed.1) < 10. {
-            self.speed.1 = target.1;
+        self.speed.x = self.speed.x.clamp(-60., 60.);
+        if f32::abs(target.y - self.speed.y) < 10. {
+            self.speed.y = target.y;
         } else {
-            self.speed.1 += f32::clamp(target.1 - self.speed.1, -10., 10.);
+            self.speed.y += f32::clamp(target.y - self.speed.y, -10., 10.);
         }
-        self.speed.1 = self.speed.1.clamp(-80., 80.);
-        let mut speed_x: f32 = self.speed.0;
-        let mut speed_y: f32 = self.speed.1;
+        self.speed.y = self.speed.y.clamp(-80., 80.);
+        let mut speed_x: f32 = self.speed.x;
+        let mut speed_y: f32 = self.speed.y;
         let sign_x: f32 = speed_x.signum();
         let sign_y: f32 = speed_y.signum();
         loop {
@@ -149,10 +149,10 @@ impl Player {
         &mut self, bounds: &Rect, static_solids: &Vec<bv::BitVec>, switch_xy: bool, switch_lr: bool,
     ) -> bool {
         let hitbox_rect: &Rect = self.hitbox.rect().unwrap();
-        let left: usize = (hitbox_rect.ul.0 - bounds.ul.0 - 0.0001).round() as usize;
-        let right: usize = (hitbox_rect.dr.0 - bounds.ul.0).round() as usize + 1;
-        let up: usize = (hitbox_rect.ul.1 - bounds.ul.1 - 0.0001).round() as usize;
-        let down: usize = (hitbox_rect.dr.1 - bounds.ul.1).round() as usize + 1;
+        let left: usize = (hitbox_rect.ul.x - bounds.ul.x - 0.0001).round() as usize;
+        let right: usize = (hitbox_rect.dr.x - bounds.ul.x).round() as usize + 1;
+        let up: usize = (hitbox_rect.ul.y - bounds.ul.y - 0.0001).round() as usize;
+        let down: usize = (hitbox_rect.dr.y - bounds.ul.y).round() as usize + 1;
         let first: Range<usize>;
         let second: Range<usize>;
         if switch_xy {
@@ -194,7 +194,7 @@ impl Player {
             last_seen += 1;
         }
         if self.retained_timer == 0 && !switch_xy {
-            self.retained = self.speed.0;
+            self.retained = self.speed.x;
             self.retained_timer = 4;
         }
         let multiplier: f32 = if switch_lr { 60. } else { -60. };
@@ -202,12 +202,12 @@ impl Player {
             self.hitbox.move_collider(0., last_seen as f32 * multiplier);
             self.hurtbox
                 .move_collider(0., last_seen as f32 * multiplier);
-            self.speed.1 = 0.;
+            self.speed.y = 0.;
         } else {
             self.hitbox.move_collider(last_seen as f32 * multiplier, 0.);
             self.hurtbox
                 .move_collider(last_seen as f32 * multiplier, 0.);
-            self.speed.0 = 0.;
+            self.speed.x = 0.;
         }
         if !switch_xy {
             self.hitbox.reset_subpixels(Axes::Horizontal);

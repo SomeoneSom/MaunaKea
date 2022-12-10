@@ -33,8 +33,8 @@ impl Level {
         let caps = re.captures(data).unwrap();
         self.load_bounds(caps.get(6).unwrap().as_str().to_owned());
         self.static_death = vec![
-            bv::bitvec![0; (self.bounds.dr.0 - self.bounds.ul.0) as usize];
-            (self.bounds.dr.1 - self.bounds.ul.1) as usize
+            bv::bitvec![0; (self.bounds.dr.x - self.bounds.ul.x) as usize];
+            (self.bounds.dr.y - self.bounds.ul.y) as usize
         ];
         self.static_solids = self.static_death.clone();
         self.load_solids(caps.get(7).unwrap().as_str().to_owned());
@@ -60,7 +60,7 @@ impl Level {
             caps.get(2).unwrap().as_str().to_owned(),
             caps.get(3).unwrap().as_str().to_owned(),
         );
-        //println!("X:{} Y:{} Width:{} Height:{}", self.bounds.ul.0, self.bounds.ul.1, self.bounds.dr.0, self.bounds.dr.1);
+        //println!("X:{} Y:{} Width:{} Height:{}", self.bounds.ul.x, self.bounds.ul.y, self.bounds.dr.x, self.bounds.dr.y);
     }
 
     #[inline(always)]
@@ -71,7 +71,7 @@ impl Level {
     fn get_pair(string: &str) -> Point {
         let re = Regex::new(r"(-?\d+\.?\d*), (-?\d+\.?\d*)").unwrap();
         let caps = re.captures(string).unwrap();
-        return (Self::parse_f32(&caps, 1), Self::parse_f32(&caps, 2));
+        return Point::new(Self::parse_f32(&caps, 1), Self::parse_f32(&caps, 2));
     }
 
     fn grift_bv(dest: &mut Vec<bv::BitVec>, src: &Vec<bv::BitVec>, x: i32, y: i32) -> () {
@@ -121,11 +121,11 @@ impl Level {
         let cy: f32;
 
         if switch {
-            cx = origin.1;
-            cy = origin.0;
+            cx = origin.y;
+            cy = origin.x;
         } else {
-            cx = origin.0;
-            cy = origin.1;
+            cx = origin.x;
+            cy = origin.y;
         }
 
         let mut x: f32;
@@ -211,7 +211,7 @@ impl Level {
         //this lets us just reuse the same circle bitvec over and over and over
         //instead of generating new ones each time
         let mut circle: Vec<bv::BitVec> = vec![bv::bitvec![0; 12]; 12];
-        Self::grift_circle(&mut circle, (6., 6.), 6.);
+        Self::grift_circle(&mut circle, Point::new(6., 6.), 6.);
         for p in split {
             print!(
                 "{}",
@@ -221,14 +221,14 @@ impl Level {
             Self::grift_bv(
                 &mut self.static_death,
                 &circle,
-                (pair.0 - 6.) as i32,
-                (pair.1 - 6.) as i32,
+                (pair.x - 6.) as i32,
+                (pair.y - 6.) as i32,
             );
             Self::grift_bv(
                 &mut self.static_death,
                 &vec![bv::bitvec![1; 16]; 4],
-                pair.0 as i32 - 8 + self.bounds.ul.0 as i32,
-                pair.1 as i32 + 5 + self.bounds.ul.1 as i32,
+                pair.x as i32 - 8 + self.bounds.ul.x as i32,
+                pair.y as i32 + 5 + self.bounds.ul.y as i32,
             );
             print!("{}/{}", i + 1, to);
             stdout().flush();
@@ -273,7 +273,7 @@ impl Level {
             for c in check.split(", ") {
                 temp.push(c.parse::<f32>().unwrap());
             }
-            checks.push(Rect::new((temp[0], temp[1]), (temp[2], temp[3])));
+            checks.push(Rect::new(Point::new(temp[0], temp[1]), Point::new(temp[2], temp[3])));
         }
         let mut i: i32 = 0;
         let mut flag: bool = false;

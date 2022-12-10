@@ -14,7 +14,10 @@ pub struct Pathfinder {}
 
 impl Pathfinder {
     pub fn point_line_distance(line: (Point, Point), point: Point) -> f32 {
-        0.
+        let length:f32 = line.0.distance_squared(line.1);
+        let t:f32 = f32::max(0., f32::min(1., 0.) / length);
+        let distance:f32 = 0.;
+        distance
     }
 
     pub fn optimal_path(checkpoints: &Vec<Rect>, starting: Point) -> Vec<Point> {
@@ -76,8 +79,8 @@ impl Algorithm {
         println!("Winner: {} -> {}", best.0, best.1);
         player.move_self(best.0, bounds, static_solids);
         let rect: &Rect = player.hurtbox.rect().unwrap();
-        println!("Position: ({}, {})", rect.ul.0 + 4., rect.ul.1 + 11.);
-        println!("Speed: ({}, {})", player.speed.0, player.speed.1);
+        println!("Position: ({}, {})", rect.ul.x + 4., rect.ul.y + 11.);
+        println!("Speed: ({}, {})", player.speed.x, player.speed.y);
         return best.0;
     }
 }
