@@ -22,7 +22,7 @@ fn main() {
     );
     let options = eframe::NativeOptions::default();
     eframe::run_native(
-        "MaunaKea ALPHA",
+        "MaunaKea ALPHA v0.0.3",
         options,
         Box::new(|_cc| Box::new(gui::MaunaKea::default())),
     );
