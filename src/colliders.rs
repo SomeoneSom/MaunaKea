@@ -39,6 +39,17 @@ impl ops::Mul<f32> for Point {
     }
 }
 
+impl ops::Mul<Point> for Point {
+    type Output = Point;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y
+        }
+    }
+}
+
 impl ops::Div<f32> for Point {
     type Output = Point;
 

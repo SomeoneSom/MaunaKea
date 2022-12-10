@@ -15,9 +15,9 @@ pub struct Pathfinder {}
 impl Pathfinder {
     pub fn point_line_distance(line: (Point, Point), point: Point) -> f32 {
         let length:f32 = line.0.distance_squared(line.1);
-        let t:f32 = f32::max(0., f32::min(1., 0.) / length);
-        let distance:f32 = 0.;
-        distance
+        let t:f32 = f32::max(0., f32::min(1., Point::dot(point - line.0, line.1 - line.0)) / length);
+        let projection = point + Point::new(t, t) * (line.1 - line.0);
+        f32::sqrt(point.distance_squared(projection))
     }
 
     pub fn optimal_path(checkpoints: &Vec<Rect>, starting: Point) -> Vec<Point> {
