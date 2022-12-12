@@ -4,8 +4,8 @@ use std::io::stdout;
 use std::io::Write;
 
 use crate::colliders::{Point, Rect};
-use crate::player::Player;
 use crate::level::Level;
+use crate::player::Player;
 
 use bitvec::prelude as bv;
 use colored::Colorize;
@@ -13,15 +13,12 @@ use colored::Colorize;
 pub struct Pathfinder {}
 
 impl Pathfinder {
-    pub fn point_line_distance(line: (Point, Point), point: Point) -> f32 {
-        let length:f32 = line.0.distance_squared(line.1);
-        let t:f32 = f32::max(0., f32::min(1., Point::dot(point - line.0, line.1 - line.0)) / length);
-        let projection = point + Point::new(t, t) * (line.1 - line.0);
-        f32::sqrt(point.distance_squared(projection))
+    pub fn intersection_point(line1: (Point, Point), line2: (Point, Point)) -> (bool, Point) {
+        (false, Point::new(0., 0.))
     }
 
-    pub fn optimal_path(checkpoints: &Vec<Rect>, starting: Point) -> Vec<Point> {
-        let mut path:Vec<Point> = vec![];
+    pub fn initial_path(checkpoints: &Vec<Rect>, starting: Point) -> Vec<Point> {
+        let mut path: Vec<Point> = vec![];
         path
     }
 }

@@ -3,16 +3,16 @@ use std::ops;
 #[derive(Copy, Clone, Default)]
 pub struct Point {
     pub x: f32,
-    pub y: f32
+    pub y: f32,
 }
 
 impl ops::Add<Point> for Point {
     type Output = Point;
-    
+
     fn add(self, rhs: Self) -> Self::Output {
         Self {
             x: self.x + rhs.x,
-            y: self.y + rhs.y
+            y: self.y + rhs.y,
         }
     }
 }
@@ -23,7 +23,7 @@ impl ops::Sub<Point> for Point {
     fn sub(self, rhs: Self) -> Self::Output {
         Self {
             x: self.x - rhs.x,
-            y: self.y - rhs.y
+            y: self.y - rhs.y,
         }
     }
 }
@@ -34,7 +34,7 @@ impl ops::Mul<f32> for Point {
     fn mul(self, rhs: f32) -> Self::Output {
         Self {
             x: self.x * rhs,
-            y: self.y * rhs
+            y: self.y * rhs,
         }
     }
 }
@@ -45,7 +45,7 @@ impl ops::Mul<Point> for Point {
     fn mul(self, rhs: Self) -> Self::Output {
         Self {
             x: self.x * rhs.x,
-            y: self.y * rhs.y
+            y: self.y * rhs.y,
         }
     }
 }
@@ -56,17 +56,14 @@ impl ops::Div<f32> for Point {
     fn div(self, rhs: f32) -> Self::Output {
         Self {
             x: self.x * rhs,
-            y: self.y * rhs
+            y: self.y * rhs,
         }
     }
 }
 
 impl Point {
     pub fn new(x: f32, y: f32) -> Self {
-        Self {
-            x,
-            y
-        }
+        Self { x, y }
     }
 
     #[inline]
@@ -131,18 +128,16 @@ impl Collider {
 
     pub fn reset_subpixels(&mut self, axis: Axes) -> () {
         match self {
-            Collider::Rectangular(rect) => {
-                match axis {
-                    Axes::Horizontal => {
-                        rect.ul.x = rect.ul.x.round();
-                        rect.dr.x = rect.dr.x.round();
-                    },
-                    Axes::Vertical => {
-                        rect.ul.y = rect.ul.y.round();
-                        rect.dr.y = rect.dr.y.round();
-                    }
+            Collider::Rectangular(rect) => match axis {
+                Axes::Horizontal => {
+                    rect.ul.x = rect.ul.x.round();
+                    rect.dr.x = rect.dr.x.round();
                 }
-            }
+                Axes::Vertical => {
+                    rect.ul.y = rect.ul.y.round();
+                    rect.dr.y = rect.dr.y.round();
+                }
+            },
             _ => panic!("Tried to call reset_subpixels on a Circle. Should be unreachable."),
         }
     }

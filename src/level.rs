@@ -273,7 +273,10 @@ impl Level {
             for c in check.split(", ") {
                 temp.push(c.parse::<f32>().unwrap());
             }
-            checks.push(Rect::new(Point::new(temp[0], temp[1]), Point::new(temp[2], temp[3])));
+            checks.push(Rect::new(
+                Point::new(temp[0], temp[1]),
+                Point::new(temp[2], temp[3]),
+            ));
         }
         let mut i: i32 = 0;
         let mut flag: bool = false;

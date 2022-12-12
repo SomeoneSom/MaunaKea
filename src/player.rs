@@ -62,7 +62,7 @@ impl Player {
         }
         //TODO: make it so this actually calcs distance properly
         let rect = self.hurtbox.rect().unwrap();
-        let player_cent: Point = Point::new((rect.ul.x + rect.dr.x) / 2., (rect.ul.y + rect.dr.y) / 2.);
+        let player_cent: Point = (rect.ul + rect.dr) / 2.;
         let check_cent: Point = Point::new(
             (checkpoint.ul.x + checkpoint.dr.x) / 2.,
             (checkpoint.ul.y + checkpoint.dr.y) / 2.,
@@ -94,7 +94,7 @@ impl Player {
             self.speed.x += f32::clamp(target.x - self.speed.x, -10., 10.);
         }
         if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
-            let temp_hitbox:Collider = self.hitbox;
+            let temp_hitbox: Collider = self.hitbox;
             self.hitbox.move_collider(self.speed.x.signum(), 0.);
             if self.solids_collision(bounds, static_solids, false, self.speed.x.signum() < 0.) {
                 self.speed.x = self.retained;
