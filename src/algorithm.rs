@@ -78,6 +78,6 @@ impl Algorithm {
         let rect: &Rect = player.hurtbox.rect().unwrap();
         println!("Position: ({}, {})", rect.ul.x + 4., rect.ul.y + 11.);
         println!("Speed: ({}, {})", player.speed.x, player.speed.y);
-        return best.0;
+        best.0
     }
 }
