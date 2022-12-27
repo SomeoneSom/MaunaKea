@@ -23,8 +23,8 @@ pub struct Algorithm {}
 //current approach will be brute force just to test the simulation. this is horrible but it will be improved later
 impl Algorithm {
     pub fn sim_frame(
-        player: &mut Player, bounds: &Rect, static_death: &Vec<bv::BitVec>,
-        static_solids: &Vec<bv::BitVec>, checkpoint: &Rect,
+        player: &mut Player, bounds: &Rect, static_death: &[bv::BitVec],
+        static_solids: &[bv::BitVec], checkpoint: &Rect,
     ) -> i32 {
         let mut best: (i32, f32) = (360000, 9999999.);
         //print!("Round 1/4");

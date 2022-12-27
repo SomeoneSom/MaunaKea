@@ -17,7 +17,7 @@ pub struct Player {
 impl Player {
     pub fn new(speed: Point, position: Point) -> Self {
         Self {
-            speed: speed,
+            speed,
             retained: 0.,
             retained_timer: 0,
             alive: true,
@@ -33,8 +33,8 @@ impl Player {
     }
 
     pub fn sim_frame(
-        &mut self, angle: i32, bounds: &Rect, static_death: &Vec<bv::BitVec>,
-        static_solids: &Vec<bv::BitVec>, checkpoint: &Rect,
+        &mut self, angle: i32, bounds: &Rect, static_death: &[bv::BitVec],
+        static_solids: &[bv::BitVec], checkpoint: &Rect,
     ) -> f32 {
         let temp_speed: Point = self.speed.clone();
         let temp_hurtbox = self.hurtbox.clone();
@@ -45,9 +45,9 @@ impl Player {
         self.retained = temp_retained;
         self.retained_timer = temp_retained_timer;
         let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
-        let left: i32 = (hurtbox_rect.ul.x - bounds.ul.x - 0.0001).round() as i32;
+        let left: i32 = (hurtbox_rect.ul.x - bounds.ul.x).round() as i32;
         let right: i32 = (hurtbox_rect.dr.x - bounds.ul.x).round() as i32 + 1;
-        let up: i32 = (hurtbox_rect.ul.y - bounds.ul.y - 0.0001).round() as i32;
+        let up: i32 = (hurtbox_rect.ul.y - bounds.ul.y).round() as i32;
         let down: i32 = (hurtbox_rect.dr.y - bounds.ul.y).round() as i32 + 1;
         //println!("{} {} {} {}", left, right, up, down);
         for x in left..right {
@@ -70,12 +70,12 @@ impl Player {
         self.speed = temp_speed;
         self.hurtbox = temp_hurtbox;
         self.hitbox = temp_hitbox;
-        return f32::sqrt(
+        f32::sqrt(
             (player_cent.x - check_cent.x).powi(2) + (player_cent.y - check_cent.y).powi(2),
-        );
+        )
     }
 
-    pub fn move_self(&mut self, angle: i32, bounds: &Rect, static_solids: &Vec<bv::BitVec>) -> () {
+    pub fn move_self(&mut self, angle: i32, bounds: &Rect, static_solids: &[bv::BitVec]) {
         //TODO: add in stuff for when speed is outside octagon and should be pulled back to it
         //TODO: make speed capping actually work how its meant to
         //TODO: water surface bs
@@ -144,14 +144,13 @@ impl Player {
         }
     }
 
-    //TODO: fix weird float rounding issue
     pub fn solids_collision(
-        &mut self, bounds: &Rect, static_solids: &Vec<bv::BitVec>, switch_xy: bool, switch_lr: bool,
+        &mut self, bounds: &Rect, static_solids: &[bv::BitVec], switch_xy: bool, switch_lr: bool,
     ) -> bool {
         let hitbox_rect: &Rect = self.hitbox.rect().unwrap();
-        let left: usize = (hitbox_rect.ul.x - bounds.ul.x - 0.0001).round() as usize;
+        let left: usize = (hitbox_rect.ul.x - bounds.ul.x).round() as usize;
         let right: usize = (hitbox_rect.dr.x - bounds.ul.x).round() as usize + 1;
-        let up: usize = (hitbox_rect.ul.y - bounds.ul.y - 0.0001).round() as usize;
+        let up: usize = (hitbox_rect.ul.y - bounds.ul.y).round() as usize;
         let down: usize = (hitbox_rect.dr.y - bounds.ul.y).round() as usize + 1;
         let first: Range<usize>;
         let second: Range<usize>;
