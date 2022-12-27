@@ -1,5 +1,4 @@
 use colored::Colorize;
-use egui;
 
 use crate::level::Level;
 use regex::Regex;
@@ -72,7 +71,7 @@ impl eframe::App for MaunaKea {
         egui::SidePanel::right("options")
             .resizable(false)
             .default_width(0.3)
-            .show(&ctx, |ui| {
+            .show(ctx, |ui| {
                 ui.add(
                     egui::DragValue::new(&mut self.options.decimals)
                         .clamp_range(0..=3)
@@ -81,7 +80,7 @@ impl eframe::App for MaunaKea {
                 );
                 ui.label("test!");
             });
-        egui::CentralPanel::default().show(&ctx, |ui| {
+        egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label("infodump.txt path: ");
                 ui.text_edit_singleline(&mut self.options.info_path);
