@@ -49,7 +49,6 @@ impl ops::Mul<Point> for Point {
         }
     }
 }
-
 impl ops::Div<f32> for Point {
     type Output = Point;
 
@@ -76,6 +75,8 @@ impl Point {
         (rhs.x - self.x).powi(2) + (rhs.y - self.y).powi(2)
     }
 }
+
+const DELTATIME: f32 = 0.0166667;
 
 #[derive(PartialEq)]
 pub enum Direction {
@@ -111,22 +112,22 @@ impl Collider {
         }
     }
 
-    pub fn move_collider(&mut self, x: f32, y: f32) -> () {
+    pub fn move_collider(&mut self, x: f32, y: f32) {
         match self {
             Collider::Rectangular(rect) => {
-                rect.ul.x += x / 60.0;
-                rect.ul.y += y / 60.0;
-                rect.dr.x += x / 60.0;
-                rect.dr.y += y / 60.0;
+                rect.ul.x += x * DELTATIME;
+                rect.ul.y += y * DELTATIME;
+                rect.dr.x += x * DELTATIME;
+                rect.dr.y += y * DELTATIME;
             }
             Collider::Circular(circ) => {
-                circ.origin.x += x / 60.;
-                circ.origin.y += y / 60.;
+                circ.origin.x += x * DELTATIME;
+                circ.origin.y += y * DELTATIME;
             }
-        }
+        };
     }
 
-    pub fn reset_subpixels(&mut self, axis: Axes) -> () {
+    pub fn reset_subpixels(&mut self, axis: Axes) {
         match self {
             Collider::Rectangular(rect) => match axis {
                 Axes::Horizontal => {
@@ -139,7 +140,7 @@ impl Collider {
                 }
             },
             _ => panic!("Tried to call reset_subpixels on a Circle. Should be unreachable."),
-        }
+        };
     }
 
     //TODO: change these to let-else once it becomes stable
@@ -161,6 +162,8 @@ impl Collider {
 #[derive(Clone, Copy, Default)]
 pub struct Rect {
     pub ul: Point,
+    pub ur: Point,
+    pub dl: Point,
     pub dr: Point,
 }
 
@@ -168,6 +171,8 @@ impl Rect {
     pub fn new(up_left: Point, down_right: Point) -> Self {
         Self {
             ul: up_left,
+            ur: Point::new(down_right.x, up_left.y),
+            dl: Point::new(up_left.x, down_right.y),
             dr: down_right,
         }
     }
@@ -175,6 +180,8 @@ impl Rect {
     pub fn new_xywh(x: f32, y: f32, w: f32, h: f32) -> Self {
         Self {
             ul: Point::new(x, y),
+            ur: Point::new(x + w, y),
+            dl: Point::new(x, y + h),
             dr: Point::new(x + w, y + h),
         }
     }
