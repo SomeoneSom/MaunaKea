@@ -211,7 +211,7 @@ impl Rect {
         let closest: Point = Point::new(from.x + sub2.x * val, from.y + sub2.y * val);
         let distance: f32 =
             (circ.origin.x - closest.x).powi(2) + (circ.origin.y - closest.y).powi(2);
-        return distance < circ.radius.powi(2);
+        distance < circ.radius.powi(2)
     }
 }
 

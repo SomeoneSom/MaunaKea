@@ -4,7 +4,6 @@ use std::io::stdout;
 use std::io::Write;
 
 use crate::colliders::{Point, Rect};
-use crate::level::Level;
 use crate::player::Player;
 
 use bitvec::prelude as bv;
@@ -13,40 +12,8 @@ use colored::Colorize;
 pub struct Pathfinder {}
 
 impl Pathfinder {
-    pub fn intersection_point(
-        line1: (Point, Point), line2: (Point, Point),
-    ) -> Option<(bool, Point)> {
-        let c1s = line1.1 - line1.0;
-        let c1m = c1s * line1.0;
-        let c1 = c1m.x - c1m.y;
-
-        let c2s = line2.1 - line2.0;
-        let c2m = c2s * line2.0;
-        let c2 = c2m.x - c2m.y;
-
-        let determinant = c1s.x * -c2s.y - c2s.x * -c1s.y;
-
-        if determinant == 0.0 {
-            None
-        } else {
-            let x = (c1s.y * c2 - c2s.y * c1) / determinant;
-            let y = (c1s.x * c2 - c2s.x * c1) / determinant;
-            Some((
-                (f32::min(line1.0.x, line1.1.x) <= x
-                    && x <= f32::max(line1.0.x, line1.1.x)
-                    && f32::min(line1.0.y, line1.1.y) <= y
-                    && y <= f32::max(line1.0.y, line1.1.y))
-                    && (f32::min(line2.0.x, line2.1.x) <= x
-                        && x <= f32::max(line2.0.x, line2.1.x)
-                        && f32::min(line2.0.y, line2.1.y) <= y
-                        && y <= f32::max(line2.0.y, line2.1.y)),
-                Point::new(x, y),
-            ))
-        }
-    }
-
-    pub fn initial_path(checkpoints: &Vec<Rect>, starting: Point) -> Vec<Point> {
-        let mut path: Vec<Point> = vec![];
+    pub fn initial_path(checkpoints: &[Rect], starting: Point) -> Vec<Point> {
+        let mut path = vec![];
         path
     }
 }

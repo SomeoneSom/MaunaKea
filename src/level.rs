@@ -19,7 +19,7 @@ pub struct Level {
 }
 
 impl Level {
-    pub fn load(&mut self, info_path: String) -> () {
+    pub fn load(&mut self, info_path: String) {
         let re = Regex::new(
             &(r"(.*)(Pos:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*) (Speed:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*)(.*)"
                 .to_owned() + r"LightningUL:(.*)Bounds: \{(.*)\} Solids: (.*)"/* + r" LightningDR:(.*)" +
@@ -71,15 +71,15 @@ impl Level {
     fn get_pair(string: &str) -> Point {
         let re = Regex::new(r"(-?\d+\.?\d*), (-?\d+\.?\d*)").unwrap();
         let caps = re.captures(string).unwrap();
-        return Point::new(Self::parse_f32(&caps, 1), Self::parse_f32(&caps, 2));
+        Point::new(Self::parse_f32(&caps, 1), Self::parse_f32(&caps, 2))
     }
 
-    fn grift_bv(dest: &mut Vec<bv::BitVec>, src: &Vec<bv::BitVec>, x: i32, y: i32) -> () {
-        if dest.len() == 0 || src.len() == 0 {
-            return ();
+    fn grift_bv(dest: &mut Vec<bv::BitVec>, src: &Vec<bv::BitVec>, x: i32, y: i32) {
+        if dest.is_empty() || src.is_empty() {
+            return;
         }
         if y > dest.len() as i32 || x >= dest[0].len() as i32 || x + (src[0].len() as i32) < 0 {
-            return ();
+            return;
         }
         for h in 0..src.len() as i32 {
             if h + y < dest.len() as i32 && h + y >= 0 {
@@ -103,12 +103,14 @@ impl Level {
     }
 
     #[inline]
-    fn grift_line(dest: &mut Vec<bv::BitVec>, x: i32, y0: i32, y1: i32, switch: bool) -> () {
+    fn grift_line(dest: &mut Vec<bv::BitVec>, x: i32, y0: i32, y1: i32, switch: bool) {
         if switch {
-            let temp: Vec<bv::BitVec> = vec![bv::bitvec![1; ((y1 - y0).abs()) as usize]];
-            Self::grift_bv(dest, &temp, if y0 < y1 { y0 } else { y1 }, x);
+            let temp: Vec<bv::BitVec> =
+                vec![bv::bitvec![1; (y1 - y0).unsigned_abs().try_into().unwrap()]];
+            Self::grift_bv(dest, &temp, if y0 < y1 { y0 } else { y1 }, x)
         } else {
-            let temp: Vec<bv::BitVec> = vec![bv::bitvec![1; 1]; ((y1 - y0).abs()) as usize];
+            let temp: Vec<bv::BitVec> =
+                vec![bv::bitvec![1; 1]; (y1 - y0).unsigned_abs().try_into().unwrap()];
             Self::grift_bv(dest, &temp, x, if y0 < y1 { y0 } else { y1 });
         }
     }
@@ -116,7 +118,7 @@ impl Level {
     fn circle_octant(
         dest: &mut Vec<bv::BitVec>, origin: Point, radius: f32, flip_x: i32, flip_y: i32,
         switch: bool,
-    ) -> () {
+    ) {
         let cx: f32;
         let cy: f32;
 
@@ -142,7 +144,7 @@ impl Level {
             y = cy.ceil();
         }
 
-        let mut start_y: f32 = y.clone();
+        let mut start_y: f32 = y;
         let mut e: f32 = (x - cx) * (x - cx) + (y - cy) * (y - cy) - radius * radius;
         let mut yc: f32 = flip_y as f32 * 2. * (y - cy) + 1.;
         let mut xc: f32 = flip_x as f32 * -2. * (x - cx) + 1.;
@@ -159,7 +161,7 @@ impl Level {
                     y as i32,
                     switch,
                 );
-                start_y = y.clone();
+                start_y = y;
                 e += xc;
                 x -= flip_x as f32;
                 xc += 2.;
@@ -174,7 +176,7 @@ impl Level {
         );
     }
 
-    fn grift_circle(dest: &mut Vec<bv::BitVec>, origin: Point, radius: f32) -> () {
+    fn grift_circle(dest: &mut Vec<bv::BitVec>, origin: Point, radius: f32) {
         Self::circle_octant(dest, origin, radius, 1, 1, false);
         Self::circle_octant(dest, origin, radius, 1, -1, false);
         Self::circle_octant(dest, origin, radius, -1, 1, false);
@@ -185,7 +187,7 @@ impl Level {
         Self::circle_octant(dest, origin, radius, -1, -1, true);
     }
 
-    fn load_bounds(&mut self, bounds: String) -> () {
+    fn load_bounds(&mut self, bounds: String) {
         let re = Regex::new(r"X:(-*\d*) Y:(-*\d*) Width:(-*\d*) Height:(-*\d*)").unwrap();
         let caps = re.captures(&bounds).unwrap();
         self.bounds = Rect::new_xywh(
@@ -196,23 +198,21 @@ impl Level {
         );
     }
 
-    fn load_spinners(&mut self, data: String) -> () {
-        let mut split: Vec<&str> = data.split("[").collect();
+    fn load_spinners(&mut self, data: String) {
+        let mut split: Vec<&str> = data.split('[').collect();
         split.remove(0);
         let to: i32 = split.len() as i32;
-        let mut i = 0;
         print!(
-            "{}{}{}",
+            "{}0/{}",
             "Loading spinners... ".bright_green().bold().italic(),
-            "0/",
             to
         );
-        stdout().flush();
+        stdout().flush().unwrap();
         //this lets us just reuse the same circle bitvec over and over and over
         //instead of generating new ones each time
         let mut circle: Vec<bv::BitVec> = vec![bv::bitvec![0; 12]; 12];
         Self::grift_circle(&mut circle, Point::new(6., 6.), 6.);
-        for p in split {
+        for (i, p) in split.into_iter().enumerate() {
             print!(
                 "{}",
                 "\u{8}".repeat((i).to_string().len() + to.to_string().len() + 1)
@@ -231,44 +231,35 @@ impl Level {
                 pair.y as i32 + 5 + self.bounds.ul.y as i32,
             );
             print!("{}/{}", i + 1, to);
-            stdout().flush();
-            i += 1;
+            stdout().flush().unwrap();
         }
-        println!("");
+        println!();
     }
 
-    fn load_solids(&mut self, data: String) -> () {
-        let rows: Vec<&str> = data.split(" ").collect();
+    fn load_solids(&mut self, data: String) {
+        let rows: Vec<&str> = data.split(' ').collect();
         let tile: Vec<bv::BitVec> = vec![bv::bitvec![1; 8]; 8];
-        for y in 0..rows.len() {
-            for x in 0..rows[y].len() {
-                match rows[y].chars().nth(x) {
-                    Some(c) => {
-                        if c != '0' && c != '\r' {
-                            Self::grift_bv(
-                                &mut self.static_solids,
-                                &tile,
-                                x as i32 * 8,
-                                y as i32 * 8,
-                            )
-                        }
+        for (y, row) in rows.iter().enumerate() {
+            for x in 0..row.len() {
+                if let Some(c) = row.chars().nth(x) {
+                    if c != '0' && c != '\r' {
+                        Self::grift_bv(&mut self.static_solids, &tile, x as i32 * 8, y as i32 * 8)
                     }
-                    None => (),
                 }
             }
         }
     }
 
-    fn load_player(&mut self, position: String, speed: String) -> () {
+    fn load_player(&mut self, position: String, speed: String) {
         let pair1: Point = Self::get_pair(position.as_str());
         let pair2: Point = Self::get_pair(speed.as_str());
         self.player = Player::new(pair2, pair1);
     }
 
-    pub fn run_alg(&mut self, checkpoints: String) -> () {
+    pub fn run_alg(&mut self, checkpoints: String) {
         let mut inputs: Vec<i32> = Vec::new();
         let mut checks: Vec<Rect> = Vec::new();
-        for check in checkpoints.split("\n") {
+        for check in checkpoints.split('\n') {
             let mut temp: Vec<f32> = Vec::new();
             for c in check.split(", ") {
                 temp.push(c.parse::<f32>().unwrap());
@@ -325,7 +316,8 @@ impl Level {
                             last_input % 1000
                         )
                         .as_bytes(),
-                    );
+                    )
+                    .unwrap();
                     println!(
                         "{},F,{}.{:0>3}",
                         count,
@@ -347,14 +339,14 @@ impl Level {
                 last_input % 1000
             )
             .as_bytes(),
-        );
+        )
+        .unwrap();
         println!(
             "{},F,{}.{:0>3}",
             count,
             (last_input as f32 / 1000.) as i32,
             last_input % 1000
         );
-        return;
     }
 
     /*pub fn test_count(to:i32, interval:f32) {
