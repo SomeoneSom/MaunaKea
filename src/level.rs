@@ -10,7 +10,6 @@ use crate::algorithm::Algorithm;
 use crate::colliders::{Collider, Rect};
 use crate::player::Player;
 use crate::point::Point;
-a
 
 #[derive(Default)]
 pub struct Level {
