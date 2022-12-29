@@ -49,6 +49,7 @@ impl ops::Mul<Point> for Point {
         }
     }
 }
+
 impl ops::Div<f32> for Point {
     type Output = Point;
 
