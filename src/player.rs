@@ -2,7 +2,8 @@ use std::ops::Range;
 
 use bitvec::prelude as bv;
 
-use crate::colliders::{Axes, Collider, Point, Rect};
+use crate::colliders::{Axes, Collider, Rect};
+use crate::point::Point;
 
 #[derive(Default)]
 pub struct Player {
@@ -79,7 +80,6 @@ impl Player {
         //TODO: add in stuff for when speed is outside octagon and should be pulled back to it
         //TODO: make speed capping actually work how its meant to
         //TODO: water surface bs
-        //TODO: precompute angles
         self.retained_timer -= 1;
         let mut ang: i32 = angle - 90000;
         if ang < 0 {

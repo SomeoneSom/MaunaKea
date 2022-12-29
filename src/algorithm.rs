@@ -3,8 +3,9 @@
 use std::io::stdout;
 use std::io::Write;
 
-use crate::colliders::{Point, Rect};
+use crate::colliders::Rect;
 use crate::player::Player;
+use crate::point::Point;
 
 use bitvec::prelude as bv;
 use colored::Colorize;

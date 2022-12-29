@@ -3,6 +3,7 @@ mod colliders;
 mod gui;
 mod level;
 mod player;
+mod point;
 
 use colored::Colorize;
 

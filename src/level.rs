@@ -7,8 +7,10 @@ use image::{ImageBuffer, Rgb, RgbImage};
 use regex::Regex;
 
 use crate::algorithm::Algorithm;
-use crate::colliders::{Collider, Point, Rect};
+use crate::colliders::{Collider, Rect};
 use crate::player::Player;
+use crate::point::Point;
+a
 
 #[derive(Default)]
 pub struct Level {
@@ -208,8 +210,6 @@ impl Level {
             to
         );
         stdout().flush().unwrap();
-        //this lets us just reuse the same circle bitvec over and over and over
-        //instead of generating new ones each time
         let mut circle: Vec<bv::BitVec> = vec![bv::bitvec![0; 12]; 12];
         Self::grift_circle(&mut circle, Point::new(6., 6.), 6.);
         for (i, p) in split.into_iter().enumerate() {
