@@ -6,7 +6,7 @@ use colored::Colorize;
 use image::{ImageBuffer, Rgb, RgbImage};
 use regex::Regex;
 
-use crate::algorithm::Algorithm;
+use crate::algorithm;
 use crate::colliders::{Collider, Rect};
 use crate::player::Player;
 use crate::point::Point;
@@ -273,7 +273,7 @@ impl Level {
         let mut frame: i32 = 1;
         while i < checks.len() as i32 {
             println!("Frame: {}, Checkpoint: {}", frame, i);
-            let inp: i32 = Algorithm::sim_frame(
+            let inp: i32 = algorithm::sim_frame(
                 &mut self.player,
                 &self.bounds,
                 &self.static_death,
