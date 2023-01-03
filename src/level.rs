@@ -106,12 +106,10 @@ impl Level {
     #[inline]
     fn grift_line(dest: &mut Vec<bv::BitVec>, x: i32, y0: i32, y1: i32, switch: bool) {
         if switch {
-            let temp: Vec<bv::BitVec> =
-                vec![bv::bitvec![1; (y1 - y0).unsigned_abs() as usize]];
+            let temp: Vec<bv::BitVec> = vec![bv::bitvec![1; (y1 - y0).unsigned_abs() as usize]];
             Self::grift_bv(dest, &temp, if y0 < y1 { y0 } else { y1 }, x)
         } else {
-            let temp: Vec<bv::BitVec> =
-                vec![bv::bitvec![1; 1]; (y1 - y0).unsigned_abs() as usize];
+            let temp: Vec<bv::BitVec> = vec![bv::bitvec![1; 1]; (y1 - y0).unsigned_abs() as usize];
             Self::grift_bv(dest, &temp, x, if y0 < y1 { y0 } else { y1 });
         }
     }

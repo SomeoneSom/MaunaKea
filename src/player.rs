@@ -71,9 +71,7 @@ impl Player {
         self.speed = temp_speed;
         self.hurtbox = temp_hurtbox;
         self.hitbox = temp_hitbox;
-        f32::sqrt(
-            (player_cent.x - check_cent.x).powi(2) + (player_cent.y - check_cent.y).powi(2),
-        )
+        f32::sqrt((player_cent.x - check_cent.x).powi(2) + (player_cent.y - check_cent.y).powi(2))
     }
 
     pub fn move_self(&mut self, angle: i32, bounds: &Rect, static_solids: &[bv::BitVec]) {
