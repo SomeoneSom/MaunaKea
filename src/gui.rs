@@ -26,7 +26,7 @@ impl Default for MaunaKea {
             },
             //TODO: deal with bubble columns and wind later
             //TODO: add custom water shit later, cant be bothered to rn
-            template: "Pos: {Player.Position} Speed: {Player.Speed} \
+            template: "Pos: {Player.Position} PosRemainder: {Player.Position} Speed: {Player.Speed} \
             {CrystalStaticSpinner.Position}{DustStaticSpinner.Position}{FrostHelper.CustomSpinner@FrostTempleHelper.Position}\
             {VivHelper.Entities.CustomSpinner@VivHelper.Position}{Celeste.Mod.XaphanHelper.Entities.CustomSpinner@XaphanHelper.Position} ".to_owned() +
             
