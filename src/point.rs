@@ -1,6 +1,6 @@
 use std::ops;
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct Point {
     pub x: f32,
     pub y: f32,
@@ -72,7 +72,7 @@ impl Point {
     }
 
     #[inline]
-    pub fn distance_squared(self, rhs: Point) -> f32 {
-        (rhs.x - self.x).powi(2) + (rhs.y - self.y).powi(2)
+    pub fn distance(self, rhs: Point) -> f32 {
+        f32::sqrt((rhs.x - self.x).powi(2) + (rhs.y - self.y).powi(2))
     }
 }

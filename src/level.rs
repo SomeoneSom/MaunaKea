@@ -1,22 +1,20 @@
-use std::io::stdout;
-use std::io::Write;
-
 use bitvec::prelude as bv;
 use colored::Colorize;
 use image::{ImageBuffer, Rgb, RgbImage};
 use regex::Regex;
+use std::io::stdout;
+use std::io::Write;
 
-use crate::algorithm;
 use crate::colliders::{Collider, Rect};
 use crate::player::Player;
 use crate::point::Point;
 
 #[derive(Default)]
 pub struct Level {
-    bounds: Rect,
-    static_death: Vec<bv::BitVec>,
-    static_solids: Vec<bv::BitVec>,
-    player: Player,
+    pub bounds: Rect,
+    pub static_death: Vec<bv::BitVec>,
+    pub static_solids: Vec<bv::BitVec>,
+    pub player: Player,
 }
 
 impl Level {
@@ -249,121 +247,9 @@ impl Level {
     }
 
     fn load_player(&mut self, position: String, position_remainder: String, speed: String) {
-        let pair1: Point = Self::get_pair(position.as_str());
-        let pair2: Point = Self::get_pair(position_remainder.as_str());
-        let pair3: Point = Self::get_pair(speed.as_str());
+        let pair1: Point = Self::get_pair(&position);
+        let pair2: Point = Self::get_pair(&position_remainder);
+        let pair3: Point = Self::get_pair(&speed);
         self.player = Player::new(pair3, pair1 + pair2);
     }
-
-    pub fn run_alg(&mut self, checkpoints: String) {
-        let mut inputs: Vec<i32> = Vec::new();
-        let mut checks: Vec<Rect> = Vec::new();
-        for check in checkpoints.split('\n') {
-            let mut temp: Vec<f32> = Vec::new();
-            for c in check.split(", ") {
-                temp.push(c.parse::<f32>().unwrap());
-            }
-            checks.push(Rect::new(
-                Point::new(temp[0], temp[1]),
-                Point::new(temp[2], temp[3]),
-            ));
-        }
-        let mut i: i32 = 0;
-        let mut flag: bool = false;
-        let mut frame: i32 = 1;
-        while i < checks.len() as i32 {
-            println!("Frame: {}, Checkpoint: {}", frame, i);
-            let inp: i32 = algorithm::sim_frame(
-                &mut self.player,
-                &self.bounds,
-                &self.static_death,
-                &self.static_solids,
-                &checks[i as usize],
-            );
-            /*if frame > 100 {
-                println!("{}", "Aborting due to absurd frame count. Temporary.".red());
-                flag = true;
-                break;
-            }*/
-            if inp == -1 {
-                flag = true;
-                break;
-            } else {
-                inputs.push(inp);
-            }
-            if Collider::Rectangular(checks[i as usize]).collide_check(&self.player.hurtbox) {
-                i += 1;
-            }
-            frame += 1;
-        }
-        if !flag {
-            println!("{}", "Done! Inputs:".bright_green());
-        } else {
-            println!("{}", "Inputs before aborting:".red());
-        }
-        let mut last_input: i32 = -1;
-        let mut count: i32 = 0;
-        let mut file = std::fs::File::create("pain.txt").unwrap();
-        for inp in inputs {
-            if inp != last_input {
-                if last_input != -1 {
-                    file.write_all(
-                        format!(
-                            "{},F,{}.{:0>3}\n",
-                            count,
-                            (last_input as f32 / 1000.) as i32,
-                            last_input % 1000
-                        )
-                        .as_bytes(),
-                    )
-                    .unwrap();
-                    println!(
-                        "{},F,{}.{:0>3}",
-                        count,
-                        (last_input as f32 / 1000.) as i32,
-                        last_input % 1000
-                    );
-                }
-                last_input = inp;
-                count = 1;
-            } else {
-                count += 1;
-            }
-        }
-        file.write_all(
-            format!(
-                "{},F,{}.{:0>3}\n",
-                count,
-                (last_input as f32 / 1000.) as i32,
-                last_input % 1000
-            )
-            .as_bytes(),
-        )
-        .unwrap();
-        println!(
-            "{},F,{}.{:0>3}",
-            count,
-            (last_input as f32 / 1000.) as i32,
-            last_input % 1000
-        );
-    }
-
-    /*pub fn test_count(to:i32, interval:f32) {
-        let start = Instant::now();
-        let mut next:f32 = interval;
-        print!("loading    0/{}", to);
-        stdout().flush();
-        for i in 1..=to {
-            print!("{}", "\u{8}".repeat((i - 1).to_string().len() + to.to_string().len() + 1));
-            let dur:f32 = start.elapsed().as_secs_f32();
-            if dur >= next {
-                next += interval;
-                print!("{}", "\u{8}".repeat(4));
-                let dots:i32  = ((dur / interval) % 4.) as i32;
-                print!("{}{}", ".".repeat(dots as usize), " ".repeat(4 - dots as usize));
-            }
-            print!("{}/{}", i, to);
-            stdout().flush();
-        }
-    }*/
 }

@@ -83,7 +83,7 @@ impl Collider {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Rect {
     pub ul: Point,
     pub ur: Point,
@@ -108,6 +108,11 @@ impl Rect {
             dl: Point::new(x, y + h),
             dr: Point::new(x + w, y + h),
         }
+    }
+
+    #[inline]
+    pub fn center(&self) -> Point {
+        Point::new((self.ul.x + self.dr.x) / 2.0, (self.ul.y + self.dr.y) / 2.0)
     }
 
     fn collide_check(&self, other: &Collider) -> bool {

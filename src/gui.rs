@@ -1,5 +1,6 @@
 use colored::Colorize;
 
+use crate::algorithm;
 use crate::level::Level;
 use regex::Regex;
 
@@ -119,10 +120,15 @@ impl eframe::App for MaunaKea {
             if ui.button("Run (INCOMPLETE)").clicked() {
                 println!("{}", "Running!".bright_green());
                 self.level.load(self.options.info_path.clone());
-                self.level.run_alg(self.options.checkpoints.clone());
+                algorithm::run_alg(&mut self.level, self.options.checkpoints.clone());
             }
             if ui.button("Run 2 (TESTING)").clicked() {
                 println!("Running alg test.");
+                let res = algorithm::test_alg(&self.options.checkpoints);
+                match res {
+                    Ok(_v) => println!("Success!"),
+                    Err(e) => println!("{e}"),
+                }
             }
         });
     }
