@@ -196,6 +196,7 @@ impl Level {
         );
     }
 
+    //TODO: just use indicatif
     fn load_spinners(&mut self, data: String) {
         let mut split: Vec<&str> = data.split('[').collect();
         split.remove(0);

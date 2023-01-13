@@ -11,7 +11,7 @@ fn main() {
     if cfg!(windows) {
         unsafe {
             winapi::um::consoleapi::SetConsoleMode(
-                kernel32::GetStdHandle(winapi::um::winbase::STD_OUTPUT_HANDLE),
+                winapi::um::processenv::GetStdHandle(winapi::um::winbase::STD_OUTPUT_HANDLE),
                 0x4 | 0x1,
             );
         }
