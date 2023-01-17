@@ -73,12 +73,12 @@ impl Gradient for DistanceFn {
 impl DistanceFn {
     fn from_str(data: &str) -> Result<Self, ParseFloatError> {
         let data_split = data.split('\n').collect::<Vec<_>>();
-        let mut rects: Vec<Rect> = Vec::new();
         let nums = data_split[0]
             .split(", ")
             .map(|s| s.trim().parse::<f32>())
             .collect::<Result<Vec<_>, _>>()?;
         let start = Point::new(nums[0], nums[1]);
+        let mut rects: Vec<Rect> = Vec::new();
         for rect in data_split[1..].iter() {
             let mut temp: Vec<f32> = Vec::new();
             for r in rect.split(", ") {
