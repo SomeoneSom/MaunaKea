@@ -109,6 +109,38 @@ fn test_descent(distance_fn: &DistanceFn, param: &mut Vec<f32>, change: f32) {
     }
 }
 
+fn parse_data() {
+
+}
+
+fn num_derivative() {
+
+}
+
+fn initial_path() {
+
+}
+
+fn frameize_path() {
+
+}
+
+fn dodge_hazards() {
+
+}
+
+fn add_turns() {
+
+}
+
+fn adjust() {
+
+}
+
+pub fn run() {
+
+}
+
 pub fn test_alg(data: &str) -> Result<Vec<f32>, ParseFloatError> {
     let distance_fn = DistanceFn::from_str(data)?;
     let mut init_param = vec![0f32; distance_fn.rects.len() * 2];
