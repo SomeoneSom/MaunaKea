@@ -111,36 +111,28 @@ fn test_descent(distance_fn: &DistanceFn, param: &mut Vec<f32>, change: f32) {
 
 type Input = (f32, i32);
 
-fn parse_data() {
-
+fn parse_data() -> (Point, Vec<Rect>) {
+    (Point::new(0.0, 0.0), vec![])
 }
 
-fn num_derivative() {
-
+fn weight_angle(angle: f32) -> f32 {
+    unimplemented!();
 }
 
 fn initial_path() {
-
-}
-
-fn dodge_hazards() {
-
-}
-
-fn frameize_path() {
-
+    unimplemented!();
 }
 
 fn add_turns() {
-
+    unimplemented!();
 }
 
 fn adjust() {
-
+    unimplemented!();
 }
 
 pub fn run() {
-
+    unimplemented!();
 }
 
 pub fn test_alg(data: &str) -> Result<Vec<f32>, ParseFloatError> {
