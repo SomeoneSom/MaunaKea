@@ -15,6 +15,7 @@ image = "0.24.5"
 argmin = {version = "0.7.0", features = ["rayon"]}
 thiserror = "1.0.38"
 argmin-math = "0.2.1"
+genovo = "0.3.2"
 
 [target.'cfg(windows)'.dependencies]
 winapi = "0.3.9"

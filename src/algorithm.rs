@@ -109,6 +109,8 @@ fn test_descent(distance_fn: &DistanceFn, param: &mut Vec<f32>, change: f32) {
     }
 }
 
+type Input = (f32, i32);
+
 fn parse_data() {
 
 }
@@ -121,11 +123,11 @@ fn initial_path() {
 
 }
 
-fn frameize_path() {
+fn dodge_hazards() {
 
 }
 
-fn dodge_hazards() {
+fn frameize_path() {
 
 }
 
