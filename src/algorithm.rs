@@ -12,6 +12,7 @@ use crate::point::Point;
 use argmin::core::{CostFunction, Error, Executor, Gradient, State};
 use bitvec::prelude as bv;
 use colored::Colorize;
+use thiserror::Error;
 
 //TODO: finish implementing these traits
 //TODO: add useless input removal
@@ -111,8 +112,29 @@ fn test_descent(distance_fn: &DistanceFn, param: &mut Vec<f32>, change: f32) {
 
 type Input = (f32, i32);
 
-fn parse_data() -> (Point, Vec<Rect>) {
-    (Point::new(0.0, 0.0), vec![])
+#[derive(Error, Debug)]
+pub enum DataParseError {
+    //#[error("Malformed checkpoint on line {line}: {reason}")]
+    //MalformedCheckpoint { line: i32, reason: String },
+
+    #[error("Invalid float literal")]
+    InvalidFloat(#[from] ParseFloatError),
+}
+
+fn parse_data(data: &str) -> Result<Vec<Rect>, DataParseError> {
+    let data_split = data.split('\n').collect::<Vec<_>>();
+    let mut rects = Vec::new();
+    for rect in data_split {
+        let mut temp = Vec::new();
+        for r in rect.split(", ") {
+            temp.push(r.trim().parse::<f32>()?);
+        }
+        rects.push(Rect::new(
+            Point::new(temp[0], temp[1]),
+            Point::new(temp[2], temp[3]),
+        ));
+    }
+    Ok(rects)
 }
 
 fn weight_angle(angle: f32) -> f32 {
@@ -131,7 +153,7 @@ fn adjust() {
     unimplemented!();
 }
 
-pub fn run() {
+pub fn run() -> Vec<Input> {
     unimplemented!();
 }
 
