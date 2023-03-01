@@ -114,8 +114,8 @@ type Input = (f32, i32);
 
 #[derive(Error, Debug)]
 pub enum DataParseError {
-    //#[error("Malformed checkpoint on line {line}: {reason}")]
-    //MalformedCheckpoint { line: i32, reason: String },
+    #[error("Invalid number of rectangle corners on line {0}: expected 4, got {1}")]
+    InvalidNumRectCorners(usize, usize),
 
     #[error("Invalid float literal")]
     InvalidFloat(#[from] ParseFloatError),
@@ -124,14 +124,21 @@ pub enum DataParseError {
 fn parse_data(data: &str) -> Result<Vec<Rect>, DataParseError> {
     let data_split = data.split('\n').collect::<Vec<_>>();
     let mut rects = Vec::new();
-    for rect in data_split {
-        let mut temp = Vec::new();
-        for r in rect.split(", ") {
-            temp.push(r.trim().parse::<f32>()?);
+    for (line, rect) in data_split.iter().enumerate() {
+        let temp_split = rect.split(", ").collect::<Vec<_>>();
+        if temp_split.len() != 4 {
+            return Err(DataParseError::InvalidNumRectCorners(
+                line,
+                temp_split.len(),
+            ));
         }
+        let temp_nums = temp_split
+            .iter()
+            .map(|x| x.parse::<f32>())
+            .collect::<Result<Vec<_>, _>>()?;
         rects.push(Rect::new(
-            Point::new(temp[0], temp[1]),
-            Point::new(temp[2], temp[3]),
+            Point::new(temp_nums[0], temp_nums[1]),
+            Point::new(temp_nums[2], temp_nums[3]),
         ));
     }
     Ok(rects)

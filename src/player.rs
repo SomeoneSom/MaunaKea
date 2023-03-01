@@ -37,11 +37,11 @@ impl Player {
         &mut self, angle: i32, bounds: &Rect, static_death: &[bv::BitVec],
         static_solids: &[bv::BitVec], checkpoint: &Rect,
     ) -> f32 {
-        let temp_speed: Point = self.speed.clone();
-        let temp_hurtbox = self.hurtbox.clone();
-        let temp_hitbox = self.hitbox.clone();
-        let temp_retained = self.retained.clone();
-        let temp_retained_timer = self.retained_timer.clone();
+        let temp_speed = self.speed;
+        let temp_hurtbox = self.hurtbox;
+        let temp_hitbox = self.hitbox;
+        let temp_retained = self.retained;
+        let temp_retained_timer = self.retained_timer;
         self.move_self(angle, bounds, static_solids);
         self.retained = temp_retained;
         self.retained_timer = temp_retained_timer;
