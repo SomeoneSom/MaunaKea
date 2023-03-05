@@ -121,7 +121,7 @@ pub enum DataParseError {
     InvalidFloat(#[from] ParseFloatError),
 }
 
-fn parse_data(data: &str) -> Result<Vec<Rect>, DataParseError> {
+fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
     let data_split = data.split('\n').collect::<Vec<_>>();
     let mut rects = Vec::new();
     for (line, rect) in data_split.iter().enumerate() {
@@ -162,26 +162,6 @@ fn adjust() {
 
 pub fn run() -> Vec<Input> {
     unimplemented!();
-}
-
-pub fn test_alg(data: &str) -> Result<Vec<f32>, ParseFloatError> {
-    let distance_fn = DistanceFn::from_str(data)?;
-    let mut init_param = vec![0f32; distance_fn.rects.len() * 2];
-    println!("{distance_fn:?}");
-    println!("{init_param:?}");
-    println!("{:?}", distance_fn.gradient(&init_param));
-    test_descent(&distance_fn, &mut init_param, 0.9999);
-    println!("{init_param:?}");
-    let points = init_param
-        .iter()
-        .step_by(2)
-        .zip(init_param.iter().skip(1).step_by(2))
-        .zip(distance_fn.rects.iter())
-        .map(|((x, y), r)| Point::new(*x, *y) * (r.dr - r.center()) + r.center())
-        .collect::<Vec<_>>();
-    println!("{points:#?}");
-    println!("{:?}", distance_fn.gradient(&init_param));
-    Ok(vec![])
 }
 
 pub fn run_alg(level: &mut Level, checkpoints: String) {

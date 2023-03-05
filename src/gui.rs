@@ -124,11 +124,6 @@ impl eframe::App for MaunaKea {
             }
             if ui.button("Run 2 (TESTING)").clicked() {
                 println!("Running alg test.");
-                let res = algorithm::test_alg(&self.options.checkpoints);
-                match res {
-                    Ok(_v) => println!("Success!"),
-                    Err(e) => println!("{e}"),
-                }
             }
         });
     }
