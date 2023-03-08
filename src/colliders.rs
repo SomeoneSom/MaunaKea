@@ -92,6 +92,7 @@ pub struct Rect {
 }
 
 impl Rect {
+    //TODO: check if up_left and down_right are actually up_left and down_right
     pub fn new(up_left: Point, down_right: Point) -> Self {
         Self {
             ul: up_left,
