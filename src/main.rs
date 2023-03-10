@@ -1,6 +1,6 @@
 mod algorithm;
 mod colliders;
-mod ga;
+mod geneticalg;
 mod gui;
 mod level;
 mod player;
