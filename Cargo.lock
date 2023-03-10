@@ -1440,6 +1440,7 @@ dependencies = [
  "egui",
  "genevo",
  "image",
+ "ordered-float",
  "regex",
  "reqwest",
  "thiserror",
@@ -1845,6 +1846,15 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "ordered-float"
+version = "3.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d84eb1409416d254e4a9c8fa56cc24701755025b458f0fcd8e59e1f5f40c23bf"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]
