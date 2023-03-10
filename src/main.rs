@@ -1,9 +1,11 @@
 mod algorithm;
 mod colliders;
+mod ga;
 mod gui;
 mod level;
 mod player;
 mod point;
+mod waterspeed;
 
 use colored::Colorize;
 
@@ -33,6 +35,6 @@ fn main() {
     eframe::run_native(
         "MaunaKea ALPHA v0.0.3",
         options,
-        Box::new(|_cc| Box::new(gui::MaunaKea::default())),
+        Box::new(|_cc| Box::<gui::MaunaKea>::default()),
     );
 }

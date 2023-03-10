@@ -1,3 +1,4 @@
+//! This file should get phased out soon in favor of ga.rs and waterspeed.rs
 //use std::time::{Duration, Instant};
 use std::io::stdout;
 use std::io::Write;
