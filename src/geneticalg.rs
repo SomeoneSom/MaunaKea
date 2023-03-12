@@ -46,7 +46,7 @@ impl FitnessFunction<Inputs, OrdFloat64> for FitnessCalc {
     }
 
     fn highest_possible_fitness(&self) -> OrdFloat64 {
-        OrdFloat64(OrderedFloat((self.checkpoint_count * 1000) as f64))
+        OrdFloat64(OrderedFloat((self.checkpoint_count * 10000 + 10000) as f64))
     }
 
     fn lowest_possible_fitness(&self) -> OrdFloat64 {
