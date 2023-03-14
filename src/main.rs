@@ -1,11 +1,9 @@
 mod algorithm;
 mod colliders;
-mod geneticalg;
 mod gui;
 mod level;
 mod player;
 mod point;
-mod waterspeed;
 
 use colored::Colorize;
 

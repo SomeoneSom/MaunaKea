@@ -1,4 +1,5 @@
-//! This file should get phased out soon in favor of geneticalg.rs and waterspeed.rs
+mod geneticalg;
+mod waterspeed;
 //use std::time::{Duration, Instant};
 use std::io::stdout;
 use std::io::Write;
