@@ -5,7 +5,7 @@ use bitvec::prelude as bv;
 use crate::colliders::{Axes, Collider, Rect};
 use crate::point::Point;
 
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Player {
     pub speed: Point,
     pub retained: f32,

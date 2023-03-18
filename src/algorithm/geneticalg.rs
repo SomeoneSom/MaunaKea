@@ -1,5 +1,6 @@
 use genevo::{operator::prelude::*, prelude::*};
 use ordered_float::OrderedFloat;
+use crate::player::Player;
 
 #[derive(PartialEq, PartialOrd, Eq, Ord, Clone, Copy, Debug)]
 struct OrdFloat64(OrderedFloat<f64>);
@@ -17,27 +18,41 @@ impl Fitness for OrdFloat64 {
 type Inputs = Vec<f32>;
 
 #[derive(Clone, Debug)]
-struct InputsPheno {
+struct PlayerSim {
     inputs: Inputs,
+    player: Player,
 }
 
-impl Phenotype<Inputs> for InputsPheno {
+impl PlayerSim {
+    fn simulate(&self) {
+        todo!()
+    }
+
+    fn from_inputs(inp: &Inputs) -> Self {
+        todo!()
+    }
+}
+
+impl Phenotype<Inputs> for PlayerSim {
     fn genes(&self) -> Inputs {
         self.inputs.clone()
     }
 
+    //maybe this function is meant to not reset stuff? idk, remove this comment when this has been cleared up
     fn derive(&self, genes: Inputs) -> Self {
-        Self { inputs: genes }
+        Self::from_inputs(&genes)
     }
 }
 
 #[derive(Clone, Debug)]
-struct FitnessCalc {
+struct Simulator {
     checkpoint_count: usize,
 }
 
-impl FitnessFunction<Inputs, OrdFloat64> for FitnessCalc {
-    fn fitness_of(&self, phenotype: &Inputs) -> OrdFloat64 {
+impl FitnessFunction<Inputs, OrdFloat64> for Simulator {
+    fn fitness_of(&self, inp: &Inputs) -> OrdFloat64 {
+        let player = PlayerSim::from_inputs(inp);
+        player.simulate();
         todo!()
     }
 

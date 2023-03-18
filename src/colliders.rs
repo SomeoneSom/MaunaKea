@@ -15,7 +15,7 @@ pub enum Axes {
     Vertical,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Collider {
     Rectangular(Rect),
     Circular(Circle),
@@ -145,7 +145,7 @@ impl Rect {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Circle {
     pub radius: f32,
     pub origin: Point,
