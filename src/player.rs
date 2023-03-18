@@ -33,6 +33,19 @@ impl Player {
         }
     }
 
+    pub fn move_self() {
+        todo!()
+    }
+
+    pub fn move_self_restricted() {
+        todo!()
+    }
+
+    pub fn collision_check() -> bool {
+        todo!()
+    }
+
+    //this function is getting removed soon im pretty sure
     pub fn sim_frame(
         &mut self, angle: i32, bounds: &Rect, static_death: &[bv::BitVec],
         static_solids: &[bv::BitVec], checkpoint: &Rect,
