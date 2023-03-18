@@ -33,60 +33,6 @@ impl Player {
         }
     }
 
-    pub fn move_self() {
-        todo!()
-    }
-
-    pub fn move_self_restricted() {
-        todo!()
-    }
-
-    pub fn collision_check() -> bool {
-        todo!()
-    }
-
-    //this function is getting removed soon im pretty sure
-    pub fn sim_frame(
-        &mut self, angle: i32, bounds: &Rect, static_death: &[bv::BitVec],
-        static_solids: &[bv::BitVec], checkpoint: &Rect,
-    ) -> f32 {
-        let temp_speed = self.speed;
-        let temp_hurtbox = self.hurtbox;
-        let temp_hitbox = self.hitbox;
-        let temp_retained = self.retained;
-        let temp_retained_timer = self.retained_timer;
-        self.move_self(angle, bounds, static_solids);
-        self.retained = temp_retained;
-        self.retained_timer = temp_retained_timer;
-        let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
-        let left: i32 = (hurtbox_rect.ul.x - bounds.ul.x).round() as i32;
-        let right: i32 = (hurtbox_rect.dr.x - bounds.ul.x).round() as i32 + 1;
-        let up: i32 = (hurtbox_rect.ul.y - bounds.ul.y).round() as i32;
-        let down: i32 = (hurtbox_rect.dr.y - bounds.ul.y).round() as i32 + 1;
-        //println!("{} {} {} {}", left, right, up, down);
-        for x in left..right {
-            for y in up..down {
-                if static_death[y as usize][x as usize] {
-                    self.speed = temp_speed;
-                    self.hurtbox = temp_hurtbox;
-                    self.hitbox = temp_hitbox;
-                    return 9999999.;
-                }
-            }
-        }
-        //TODO: make it so this actually calcs distance properly
-        let rect = self.hurtbox.rect().unwrap();
-        let player_cent: Point = (rect.ul + rect.dr) / 2.;
-        let check_cent: Point = Point::new(
-            (checkpoint.ul.x + checkpoint.dr.x) / 2.,
-            (checkpoint.ul.y + checkpoint.dr.y) / 2.,
-        );
-        self.speed = temp_speed;
-        self.hurtbox = temp_hurtbox;
-        self.hitbox = temp_hitbox;
-        f32::sqrt((player_cent.x - check_cent.x).powi(2) + (player_cent.y - check_cent.y).powi(2))
-    }
-
     pub fn move_self(&mut self, angle: i32, bounds: &Rect, static_solids: &[bv::BitVec]) {
         //TODO: add in stuff for when speed is outside octagon and should be pulled back to it
         //TODO: make speed capping actually work how its meant to
@@ -153,6 +99,56 @@ impl Player {
                 break;
             }
         }
+    }
+
+    pub fn move_self_restricted() {
+        todo!()
+    }
+
+    pub fn collision_check() -> bool {
+        todo!()
+    }
+
+    //this function is getting removed soon im pretty sure
+    pub fn sim_frame(
+        &mut self, angle: i32, bounds: &Rect, static_death: &[bv::BitVec],
+        static_solids: &[bv::BitVec], checkpoint: &Rect,
+    ) -> f32 {
+        let temp_speed = self.speed;
+        let temp_hurtbox = self.hurtbox;
+        let temp_hitbox = self.hitbox;
+        let temp_retained = self.retained;
+        let temp_retained_timer = self.retained_timer;
+        self.move_self(angle, bounds, static_solids);
+        self.retained = temp_retained;
+        self.retained_timer = temp_retained_timer;
+        let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
+        let left: i32 = (hurtbox_rect.ul.x - bounds.ul.x).round() as i32;
+        let right: i32 = (hurtbox_rect.dr.x - bounds.ul.x).round() as i32 + 1;
+        let up: i32 = (hurtbox_rect.ul.y - bounds.ul.y).round() as i32;
+        let down: i32 = (hurtbox_rect.dr.y - bounds.ul.y).round() as i32 + 1;
+        //println!("{} {} {} {}", left, right, up, down);
+        for x in left..right {
+            for y in up..down {
+                if static_death[y as usize][x as usize] {
+                    self.speed = temp_speed;
+                    self.hurtbox = temp_hurtbox;
+                    self.hitbox = temp_hitbox;
+                    return 9999999.;
+                }
+            }
+        }
+        //TODO: make it so this actually calcs distance properly
+        let rect = self.hurtbox.rect().unwrap();
+        let player_cent: Point = (rect.ul + rect.dr) / 2.;
+        let check_cent: Point = Point::new(
+            (checkpoint.ul.x + checkpoint.dr.x) / 2.,
+            (checkpoint.ul.y + checkpoint.dr.y) / 2.,
+        );
+        self.speed = temp_speed;
+        self.hurtbox = temp_hurtbox;
+        self.hitbox = temp_hitbox;
+        f32::sqrt((player_cent.x - check_cent.x).powi(2) + (player_cent.y - check_cent.y).powi(2))
     }
 
     pub fn solids_collision(
