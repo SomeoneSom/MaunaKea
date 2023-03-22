@@ -1,6 +1,6 @@
+use crate::player::Player;
 use genevo::{operator::prelude::*, prelude::*};
 use ordered_float::OrderedFloat;
-use crate::player::Player;
 
 #[derive(PartialEq, PartialOrd, Eq, Ord, Clone, Copy, Debug)]
 struct OrdFloat64(OrderedFloat<f64>);
@@ -11,7 +11,7 @@ impl Fitness for OrdFloat64 {
     }
 
     fn abs_diff(&self, other: &Self) -> Self {
-        Self(OrderedFloat((self.0  - other.0).abs()))
+        Self(OrderedFloat((self.0 - other.0).abs()))
     }
 }
 
@@ -57,7 +57,9 @@ impl FitnessFunction<Inputs, OrdFloat64> for Simulator {
     }
 
     fn average(&self, a: &[OrdFloat64]) -> OrdFloat64 {
-        OrdFloat64(OrderedFloat(a.iter().map(|f| f.0.into_inner()).sum::<f64>() / (a.len() as f64)))
+        OrdFloat64(OrderedFloat(
+            a.iter().map(|f| f.0.into_inner()).sum::<f64>() / (a.len() as f64),
+        ))
     }
 
     fn highest_possible_fitness(&self) -> OrdFloat64 {
