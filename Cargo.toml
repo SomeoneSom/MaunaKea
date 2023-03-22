@@ -25,5 +25,5 @@ criterion = {version = "0.4", features = ["html_reports"]}
 winapi = "0.3.9"
 
 [[bench]]
-name = "bv_vs_kdt"
+name = "mk_benches"
 harness = false
