@@ -182,8 +182,8 @@ impl KdPoint for Rect {
     type Dim = typenum::U2;
     fn at(&self, k: usize) -> Self::Scalar {
         match k {
-            0 => self.ul.x,
-            1 => self.ul.y,
+            0 => self.center().x,
+            1 => self.center().y,
             _ => panic!("Rect accessed out of bounds in KdTree! k = {k}"),
         }
     }
