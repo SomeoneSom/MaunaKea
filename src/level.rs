@@ -200,20 +200,10 @@ impl Level {
     fn load_spinners(&mut self, data: String) {
         let mut split: Vec<&str> = data.split('[').collect();
         split.remove(0);
-        let to: i32 = split.len() as i32;
-        print!(
-            "{}0/{}",
-            "Loading spinners... ".bright_green().bold().italic(),
-            to
-        );
         stdout().flush().unwrap();
         let mut circle: Vec<bv::BitVec> = vec![bv::bitvec![0; 12]; 12];
         Self::grift_circle(&mut circle, Point::new(6., 6.), 6.);
         for (i, p) in split.into_iter().enumerate() {
-            print!(
-                "{}",
-                "\u{8}".repeat((i).to_string().len() + to.to_string().len() + 1)
-            );
             let pair: Point = Self::get_pair(p);
             Self::grift_bv(
                 &mut self.static_death,
@@ -227,10 +217,8 @@ impl Level {
                 pair.x as i32 - 8 + self.bounds.ul.x as i32,
                 pair.y as i32 + 5 + self.bounds.ul.y as i32,
             );
-            print!("{}/{}", i + 1, to);
             stdout().flush().unwrap();
         }
-        println!();
     }
 
     fn load_solids(&mut self, data: String) {
