@@ -17,6 +17,8 @@ thiserror = "1.0.38"
 argmin-math = "0.2.1"
 genevo = "0.7.1"
 ordered-float = "3.4.0"
+typenum = "1.16.0"
+kd-tree = "0.5.1"
 
 [target.'cfg(windows)'.dependencies]
 winapi = "0.3.9"
