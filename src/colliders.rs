@@ -146,6 +146,19 @@ impl Rect {
     }
 }
 
+impl KdPoint for Rect {
+    type Scalar = f32;
+    type Dim = typenum::U2;
+    fn at(&self, k: usize) -> Self::Scalar {
+        match k {
+            0 => self.center().x,
+            1 => self.center().y,
+            _ => panic!("Rect accessed out of bounds in KdTree! k = {k}"),
+        }
+    }
+}
+
+
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Circle {
     pub radius: f32,
@@ -172,19 +185,14 @@ impl Circle {
     }
 }
 
-//These are test trait implementations for kd-tree testing, which is why they are seperate
-//They will be moved if kdtree turns out to be better
-//Or if I decide to implement moving stuff
-//Which i kind of have to
-//Thanks Nyan
-impl KdPoint for Rect {
+impl KdPoint for Circle {
     type Scalar = f32;
     type Dim = typenum::U2;
     fn at(&self, k: usize) -> Self::Scalar {
         match k {
-            0 => self.center().x,
-            1 => self.center().y,
-            _ => panic!("Rect accessed out of bounds in KdTree! k = {k}"),
+            0 => self.origin.x,
+            1 => self.origin.y,
+            _ => panic!("Circle accessed out of bounds in KdTree! k = {k}"),
         }
     }
 }
