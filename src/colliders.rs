@@ -1,5 +1,4 @@
 use crate::point::Point;
-use kd_tree::KdPoint;
 
 const DELTATIME: f32 = 0.0166667;
 
@@ -146,19 +145,6 @@ impl Rect {
     }
 }
 
-impl KdPoint for Rect {
-    type Scalar = f32;
-    type Dim = typenum::U2;
-    fn at(&self, k: usize) -> Self::Scalar {
-        match k {
-            0 => self.center().x,
-            1 => self.center().y,
-            _ => panic!("Rect accessed out of bounds in KdTree! k = {k}"),
-        }
-    }
-}
-
-
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Circle {
     pub radius: f32,
@@ -181,18 +167,6 @@ impl Circle {
                     + (self.origin.y - circ.origin.y).powi(2);
                 distance < (self.radius + circ.radius).powi(2)
             }
-        }
-    }
-}
-
-impl KdPoint for Circle {
-    type Scalar = f32;
-    type Dim = typenum::U2;
-    fn at(&self, k: usize) -> Self::Scalar {
-        match k {
-            0 => self.origin.x,
-            1 => self.origin.y,
-            _ => panic!("Circle accessed out of bounds in KdTree! k = {k}"),
         }
     }
 }
