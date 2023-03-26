@@ -1,4 +1,5 @@
 use crate::player::Player;
+use crate::level::Level;
 use genevo::{operator::prelude::*, prelude::*};
 use ordered_float::OrderedFloat;
 
@@ -18,12 +19,13 @@ impl Fitness for OrdFloat64 {
 type Inputs = Vec<f32>;
 
 #[derive(Clone, Debug)]
-struct PlayerSim {
+struct PlayerSim<'a> {
     inputs: Inputs,
     player: Player,
+    level: &'a Level,
 }
 
-impl PlayerSim {
+impl<'a> PlayerSim<'a> {
     fn simulate(&self) {
         todo!()
     }
@@ -33,7 +35,7 @@ impl PlayerSim {
     }
 }
 
-impl Phenotype<Inputs> for PlayerSim {
+impl<'a> Phenotype<Inputs> for PlayerSim<'a> {
     fn genes(&self) -> Inputs {
         self.inputs.clone()
     }

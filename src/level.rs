@@ -9,7 +9,7 @@ use crate::colliders::{Collider, Rect};
 use crate::player::Player;
 use crate::point::Point;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Level {
     pub bounds: Rect,
     pub static_death: Vec<bv::BitVec>,
