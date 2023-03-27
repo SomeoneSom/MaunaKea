@@ -18,7 +18,7 @@ impl Fitness for OrdFloat64 {
 
 type Inputs = Vec<f32>;
 
-/*#[derive(Clone, Debug)]
+#[derive(Clone, Debug)]
 struct PlayerSim<'a> {
     inputs: Inputs,
     player: Player,
@@ -40,30 +40,21 @@ impl<'a> Phenotype<Inputs> for PlayerSim<'a> {
     fn derive(&self, genes: Inputs) -> Self {
         Self {
             inputs: genes,
-            player: self.player.clone(),
-            level: self.level,
+            player: self.player,
+            level: self.level
         }
     }
-}*/
+}
 
 #[derive(Clone, Debug)]
 struct Simulator {
-    player: Player,
-    level: Level, //lets just say this owns the level for now
     checkpoint_count: usize,
-}
-
-impl Simulator {
-    fn sim_player(&self, inp: &Inputs) -> Player {
-        let player = self.player.clone();
-        todo!();
-        player
-    }
 }
 
 impl FitnessFunction<Inputs, OrdFloat64> for Simulator {
     fn fitness_of(&self, inp: &Inputs) -> OrdFloat64 {
-        let player = self.sim_player(inp);
+        let player = PlayerSim::from_inputs(inp);
+        player.simulate();
         todo!()
     }
 
