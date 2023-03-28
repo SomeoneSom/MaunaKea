@@ -14,7 +14,6 @@ pub struct MaunaKea {
     options: Options,
     template: String,
     old_template: String,
-    level: Level,
 }
 
 impl Default for MaunaKea {
@@ -62,7 +61,6 @@ impl Default for MaunaKea {
             "Bounds: {Level.Bounds} " +
             "Solids: {Level.Session.LevelData.Solids}",
             old_template: String::from(""),
-            level: Level::default()
         }
     }
 }
@@ -119,11 +117,8 @@ impl eframe::App for MaunaKea {
             }
             if ui.button("Run (INCOMPLETE)").clicked() {
                 println!("{}", "Running!".bright_green());
-                self.level.load(self.options.info_path.clone());
-                algorithm::run_alg(&mut self.level, self.options.checkpoints.clone());
-            }
-            if ui.button("Run 2 (TESTING)").clicked() {
-                println!("Running alg test.");
+                let (level, mut player) = Level::load(&self.options.info_path);
+                algorithm::run_alg(level, self.options.checkpoints.clone());
             }
         });
     }

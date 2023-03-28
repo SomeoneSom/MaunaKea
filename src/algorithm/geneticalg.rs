@@ -1,6 +1,6 @@
-use crate::player::Player;
-use crate::level::Level;
 use crate::colliders::Rect;
+use crate::level::Level;
+use crate::player::Player;
 use genevo::{operator::prelude::*, prelude::*};
 use ordered_float::OrderedFloat;
 
@@ -75,7 +75,9 @@ impl FitnessFunction<Inputs, OrdFloat64> for Simulator {
     }
 
     fn highest_possible_fitness(&self) -> OrdFloat64 {
-        OrdFloat64(OrderedFloat((self.checkpoints.len() * 10000 + 10000) as f64))
+        OrdFloat64(OrderedFloat(
+            (self.checkpoints.len() * 10000 + 10000) as f64,
+        ))
     }
 
     fn lowest_possible_fitness(&self) -> OrdFloat64 {

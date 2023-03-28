@@ -14,11 +14,10 @@ pub struct Level {
     pub bounds: Rect,
     pub static_death: Vec<bv::BitVec>,
     pub static_solids: Vec<bv::BitVec>,
-    pub player: Player,
 }
 
 impl Level {
-    pub fn load(&mut self, info_path: String) {
+    pub fn load(info_path: &str) -> (Level, Player) {
         let re = Regex::new(
             &(r"(.*)(Pos:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*) (PosRemainder:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*) (Speed:\s*-?\d+\.?\d*, \s*-?\d+\.?\d*)(.*)"
                 .to_owned() + r"LightningUL:(.*)Bounds: \{(.*)\} Solids: (.*)"/* + r" LightningDR:(.*)" +
@@ -30,15 +29,17 @@ impl Level {
         let data = &std::fs::read_to_string(info_path)
             .expect("Failed to read infodump file! Somehow uncaught");
         let caps = re.captures(data).unwrap();
-        self.load_bounds(caps.get(7).unwrap().as_str().to_owned());
-        self.static_death = vec![
-            bv::bitvec![0; (self.bounds.dr.x - self.bounds.ul.x) as usize];
-            (self.bounds.dr.y - self.bounds.ul.y) as usize
+        //TODO: make this not have to be mutable
+        let mut level = Self::default();
+        level.load_bounds(caps.get(7).unwrap().as_str().to_owned());
+        level.static_death = vec![
+            bv::bitvec![0; (level.bounds.dr.x - level.bounds.ul.x) as usize];
+            (level.bounds.dr.y - level.bounds.ul.y) as usize
         ];
-        self.static_solids = self.static_death.clone();
-        self.load_solids(caps.get(8).unwrap().as_str().to_owned());
-        self.load_spinners(caps.get(5).unwrap().as_str().to_owned());
-        let mut img: RgbImage = ImageBuffer::new(
+        level.static_solids = level.static_death.clone();
+        level.load_solids(caps.get(8).unwrap().as_str().to_owned());
+        level.load_spinners(caps.get(5).unwrap().as_str().to_owned());
+        /*let mut img: RgbImage = ImageBuffer::new(
             self.static_death[0].len() as u32,
             self.static_death.len() as u32,
         );
@@ -54,13 +55,15 @@ impl Level {
                 }
             }
         }
-        img.save("testimg.png").unwrap();
-        self.load_player(
-            caps.get(2).unwrap().as_str().to_owned(),
-            caps.get(3).unwrap().as_str().to_owned(),
-            caps.get(4).unwrap().as_str().to_owned(),
-        );
-        //println!("X:{} Y:{} Width:{} Height:{}", self.bounds.ul.x, self.bounds.ul.y, self.bounds.dr.x, self.bounds.dr.y);
+        img.save("testimg.png").unwrap();*/
+        (
+            level,
+            Self::load_player(
+                caps.get(2).unwrap().as_str().to_owned(),
+                caps.get(3).unwrap().as_str().to_owned(),
+                caps.get(4).unwrap().as_str().to_owned(),
+            ),
+        )
     }
 
     #[inline(always)]
@@ -235,10 +238,10 @@ impl Level {
         }
     }
 
-    fn load_player(&mut self, position: String, position_remainder: String, speed: String) {
+    fn load_player(position: String, position_remainder: String, speed: String) -> Player {
         let pair1: Point = Self::get_pair(&position);
         let pair2: Point = Self::get_pair(&position_remainder);
         let pair3: Point = Self::get_pair(&speed);
-        self.player = Player::new(pair3, pair1 + pair2);
+        Player::new(pair3, pair1 + pair2)
     }
 }
