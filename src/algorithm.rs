@@ -5,6 +5,9 @@ use std::io::stdout;
 use std::io::Write;
 use std::num::ParseFloatError;
 
+use geneticalg::{Inputs, Simulator};
+use genevo::population::ValueEncodedGenomeBuilder;
+
 use crate::colliders::Collider;
 use crate::colliders::Rect;
 use crate::level::Level;
@@ -13,6 +16,7 @@ use crate::point::Point;
 
 use bitvec::prelude as bv;
 use colored::Colorize;
+use genevo::{operator::prelude::*, prelude::*};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -47,6 +51,10 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
     Ok(rects)
 }
 
-pub fn run_alg(level: Level, checkpoints: String) {
+pub fn run_alg(level: Level, player: Player, checkpoints: &str) {
+    let initial_population: Population<Inputs> = build_population()
+        .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f32, 359.99996f32))
+        .of_size(500) //TODO: allow for an option to change this please
+        .uniform_at_random();
     todo!();
 }

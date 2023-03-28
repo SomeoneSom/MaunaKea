@@ -1,7 +1,8 @@
 use crate::colliders::Rect;
 use crate::level::Level;
 use crate::player::Player;
-use genevo::{operator::prelude::*, prelude::*};
+
+use genevo::prelude::*;
 use ordered_float::OrderedFloat;
 
 #[derive(PartialEq, PartialOrd, Eq, Ord, Clone, Copy, Debug)]
@@ -17,7 +18,7 @@ impl Fitness for OrdFloat64 {
     }
 }
 
-type Inputs = Vec<f32>;
+pub type Inputs = Vec<f32>;
 
 /*#[derive(Clone, Debug)]
 struct PlayerSim<'a> {
@@ -48,7 +49,7 @@ impl<'a> Phenotype<Inputs> for PlayerSim<'a> {
 }*/
 
 #[derive(Clone, Debug)]
-struct Simulator {
+pub(super) struct Simulator {
     player: Player,
     level: Level, //lets just say this owns the level for now
     checkpoints: Vec<Rect>,

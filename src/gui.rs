@@ -117,8 +117,8 @@ impl eframe::App for MaunaKea {
             }
             if ui.button("Run (INCOMPLETE)").clicked() {
                 println!("{}", "Running!".bright_green());
-                let (level, mut player) = Level::load(&self.options.info_path);
-                algorithm::run_alg(level, self.options.checkpoints.clone());
+                let (level, player) = Level::load(&self.options.info_path);
+                algorithm::run_alg(level, player, &self.options.checkpoints);
             }
         });
     }
