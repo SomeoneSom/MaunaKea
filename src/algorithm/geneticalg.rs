@@ -1,5 +1,6 @@
 use crate::player::Player;
 use crate::level::Level;
+use crate::colliders::Rect;
 use genevo::{operator::prelude::*, prelude::*};
 use ordered_float::OrderedFloat;
 
@@ -50,7 +51,7 @@ impl<'a> Phenotype<Inputs> for PlayerSim<'a> {
 struct Simulator {
     player: Player,
     level: Level, //lets just say this owns the level for now
-    checkpoint_count: usize,
+    checkpoints: Vec<Rect>,
 }
 
 impl Simulator {
@@ -74,7 +75,7 @@ impl FitnessFunction<Inputs, OrdFloat64> for Simulator {
     }
 
     fn highest_possible_fitness(&self) -> OrdFloat64 {
-        OrdFloat64(OrderedFloat((self.checkpoint_count * 10000 + 10000) as f64))
+        OrdFloat64(OrderedFloat((self.checkpoints.len() * 10000 + 10000) as f64))
     }
 
     fn lowest_possible_fitness(&self) -> OrdFloat64 {

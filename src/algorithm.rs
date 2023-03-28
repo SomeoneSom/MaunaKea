@@ -11,108 +11,9 @@ use crate::level::Level;
 use crate::player::Player;
 use crate::point::Point;
 
-use argmin::core::{CostFunction, Error, Executor, Gradient, State};
 use bitvec::prelude as bv;
 use colored::Colorize;
 use thiserror::Error;
-
-//TODO: finish implementing these traits
-//TODO: add useless input removal
-//TODO: add hazard avoidance
-#[derive(Debug)]
-struct DistanceFn {
-    start: Point,
-    rects: Vec<Rect>,
-}
-
-impl CostFunction for DistanceFn {
-    type Param = Vec<f32>;
-    type Output = f32;
-
-    fn cost(&self, param: &Self::Param) -> Result<Self::Output, Error> {
-        let mut points = param
-            .iter()
-            .step_by(2)
-            .zip(param.iter().skip(1).step_by(2))
-            .zip(self.rects.iter())
-            .map(|((x, y), r)| Point::new(*x, *y) * (r.dr - r.center()) + r.center())
-            .collect::<Vec<_>>();
-        points.insert(0, self.start);
-        Ok(points
-            .windows(2)
-            .fold(0., |acc, p| acc + p[0].distance(p[1])))
-    }
-}
-
-impl Gradient for DistanceFn {
-    type Param = Vec<f32>;
-    type Gradient = Vec<f32>;
-
-    fn gradient(&self, param: &Self::Param) -> Result<Self::Gradient, Error> {
-        let mut points = param
-            .iter()
-            .step_by(2)
-            .zip(param.iter().skip(1).step_by(2))
-            .zip(self.rects.iter())
-            .map(|((x, y), r)| Point::new(*x, *y) * (r.dr - r.center()) + r.center())
-            .collect::<Vec<_>>();
-        points.insert(0, self.start);
-        //println!("{points:#?}");
-        let mut output = vec![0f32; 2];
-        for p in points.windows(2) {
-            let d = p[0].distance(p[1]);
-            let dx = (p[0].x - p[1].x) / d;
-            let dy = (p[0].y - p[1].y) / d;
-            let len = output.len();
-            output[len - 2] += dx;
-            output[len - 1] += dy;
-            output.push(-dx);
-            output.push(-dy);
-        }
-        Ok(output[2..].to_vec())
-    }
-}
-
-impl DistanceFn {
-    fn from_str(data: &str) -> Result<Self, ParseFloatError> {
-        let data_split = data.split('\n').collect::<Vec<_>>();
-        let nums = data_split[0]
-            .split(", ")
-            .map(|s| s.trim().parse::<f32>())
-            .collect::<Result<Vec<_>, _>>()?;
-        let start = Point::new(nums[0], nums[1]);
-        let mut rects: Vec<Rect> = Vec::new();
-        for rect in data_split[1..].iter() {
-            let mut temp: Vec<f32> = Vec::new();
-            for r in rect.split(", ") {
-                temp.push(r.trim().parse::<f32>()?);
-            }
-            rects.push(Rect::new(
-                Point::new(temp[0], temp[1]),
-                Point::new(temp[2], temp[3]),
-            ));
-        }
-        Ok(Self { start, rects })
-    }
-}
-
-fn test_descent(distance_fn: &DistanceFn, param: &mut Vec<f32>, change: f32) {
-    let mut multiplier = 1.0;
-    while multiplier > 0.000001 {
-        let grad = distance_fn.gradient(param).unwrap();
-        if grad.iter().any(|&x| x.is_nan()) {
-            println!("NaN gradient due to overlapping points. Breaking.");
-            return;
-        }
-        for j in 0..param.len() {
-            param[j] -= grad[j] * multiplier;
-            param[j] = param[j].clamp(-1., 1.);
-        }
-        multiplier *= change;
-    }
-}
-
-type Input = (f32, i32);
 
 #[derive(Error, Debug)]
 pub enum DataParseError {
@@ -144,26 +45,6 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
         ));
     }
     Ok(rects)
-}
-
-fn weight_angle(angle: f32) -> f32 {
-    unimplemented!();
-}
-
-fn initial_path() {
-    unimplemented!();
-}
-
-fn add_turns() {
-    unimplemented!();
-}
-
-fn adjust() {
-    unimplemented!();
-}
-
-pub fn run() -> Vec<Input> {
-    unimplemented!();
 }
 
 pub fn run_alg(level: &mut Level, checkpoints: String) {
