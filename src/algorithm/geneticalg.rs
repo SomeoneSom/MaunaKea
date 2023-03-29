@@ -6,7 +6,7 @@ use genevo::prelude::*;
 use ordered_float::OrderedFloat;
 
 #[derive(PartialEq, PartialOrd, Eq, Ord, Clone, Copy, Debug)]
-struct OrdFloat64(OrderedFloat<f64>);
+pub struct OrdFloat64(OrderedFloat<f64>);
 
 impl Fitness for OrdFloat64 {
     fn zero() -> Self {
@@ -56,6 +56,14 @@ pub(super) struct Simulator {
 }
 
 impl Simulator {
+    pub fn new(player:Player, level:Level, checkpoints:Vec<Rect>) -> Self {
+        Self {
+            player,
+            level,
+            checkpoints,
+        }
+    }
+
     fn sim_player(&self, inp: &Inputs) -> Player {
         let player = self.player.clone();
         todo!();
@@ -63,7 +71,7 @@ impl Simulator {
     }
 }
 
-impl FitnessFunction<Inputs, OrdFloat64> for Simulator {
+impl<'a> FitnessFunction<Inputs, OrdFloat64> for &'a Simulator {
     fn fitness_of(&self, inp: &Inputs) -> OrdFloat64 {
         let player = self.sim_player(inp);
         todo!()

@@ -51,10 +51,25 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
     Ok(rects)
 }
 
-pub fn run_alg(level: Level, player: Player, checkpoints: &str) {
+pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), DataParseError> {
     let initial_population: Population<Inputs> = build_population()
         .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f32, 359.99996f32))
         .of_size(500) //TODO: allow for an option to change this please
         .uniform_at_random();
+    let simulator = Simulator::new(player, level, parse_checkpoint(checkpoints)?);
+    //TODO: put this in a loop
+    let mut ga_sim = simulate(
+        genetic_algorithm()
+            .with_evaluation(&simulator)
+            .with_selection(MaximizeSelector::new(0.85, 12)) // TODO: add options for this too
+            .with_crossover(SinglePointCrossBreeder::new())
+            .with_mutation(RandomValueMutator::new(0.2, 0f32, 359.99996f32)) //TODO: ditto
+            .with_reinsertion(ElitistReinserter::new(&simulator, true, 0.85)) //TODO: again
+            .with_initial_population(initial_population)
+            .build(),
+    )
+    .until(GenerationLimit::new(200)) //TODO: yet again
+    .build();
     todo!();
+    Ok(())
 }
