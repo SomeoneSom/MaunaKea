@@ -62,7 +62,7 @@ pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), Da
         genetic_algorithm()
             .with_evaluation(&simulator)
             .with_selection(MaximizeSelector::new(0.85, 12)) // TODO: add options for this too
-            .with_crossover(SinglePointCrossBreeder::new())
+            .with_crossover(MultiPointCrossBreeder::new())
             .with_mutation(RandomValueMutator::new(0.2, 0f32, 359.99996f32)) //TODO: ditto
             .with_reinsertion(ElitistReinserter::new(&simulator, true, 0.85)) //TODO: again
             .with_initial_population(initial_population)
