@@ -1,8 +1,7 @@
 mod geneticalg;
 mod waterspeed;
+
 //use std::time::{Duration, Instant};
-use std::io::stdout;
-use std::io::Write;
 use std::num::ParseFloatError;
 
 use geneticalg::{Inputs, Simulator};
@@ -51,7 +50,22 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
     Ok(rects)
 }
 
-pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), DataParseError> {
+#[derive(Error, Debug)]
+pub enum GeneticAlgError {}
+
+fn initial_path() {}
+
+#[derive(Error, Debug)]
+pub enum AlgorithmError {
+    #[error(transparent)]
+    DataParseError(#[from] DataParseError),
+
+    #[error(transparent)]
+    GeneticAlgError(#[from] GeneticAlgError),
+}
+
+//TODO: make an ultra error type for this
+pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), AlgorithmError> {
     let initial_population: Population<Inputs> = build_population()
         .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f32, 359.99996f32))
         .of_size(500) //TODO: allow for an option to change this please
@@ -62,7 +76,7 @@ pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), Da
         genetic_algorithm()
             .with_evaluation(&simulator)
             .with_selection(MaximizeSelector::new(0.85, 12)) // TODO: add options for this too
-            .with_crossover(MultiPointCrossBreeder::new())
+            .with_crossover(SinglePointCrossBreeder::new())
             .with_mutation(RandomValueMutator::new(0.2, 0f32, 359.99996f32)) //TODO: ditto
             .with_reinsertion(ElitistReinserter::new(&simulator, true, 0.85)) //TODO: again
             .with_initial_population(initial_population)
