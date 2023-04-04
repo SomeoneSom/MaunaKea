@@ -1,7 +1,7 @@
 mod geneticalg;
 mod waterspeed;
 
-//use std::time::{Duration, Instant};
+// use std::time::{Duration, Instant};
 use std::num::ParseFloatError;
 
 use geneticalg::{Inputs, Simulator};
@@ -56,21 +56,21 @@ pub enum GeneticAlgError {}
 fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Result<Inputs, GeneticAlgError>{
     let initial_population: Population<Inputs> = build_population()
         .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f32, 359.99996f32))
-        .of_size(500) //TODO: allow for an option to change this please
+        .of_size(500) // TODO: allow for an option to change this please
         .uniform_at_random();
     let simulator = Simulator::new(player, level,checkpoints);
-    //TODO: put this in a loop
+    // TODO: put this in a loop
     let mut ga_sim = simulate(
         genetic_algorithm()
             .with_evaluation(&simulator)
-            .with_selection(MaximizeSelector::new(0.85, 12)) // TODO: add options for this too
+            .with_selection(MaximizeSelector::new(0.85, 12)) //  TODO: add options for this too
             .with_crossover(SinglePointCrossBreeder::new())
-            .with_mutation(RandomValueMutator::new(0.2, 0f32, 359.99996f32)) //TODO: ditto
-            .with_reinsertion(ElitistReinserter::new(&simulator, true, 0.85)) //TODO: again
+            .with_mutation(RandomValueMutator::new(0.2, 0f32, 359.99996f32)) // TODO: ditto
+            .with_reinsertion(ElitistReinserter::new(&simulator, true, 0.85)) // TODO: again
             .with_initial_population(initial_population)
             .build(),
     )
-    .until(GenerationLimit::new(200)) //TODO: yet again
+    .until(GenerationLimit::new(200)) // TODO: yet again
     .build();
     todo!();
     Ok(vec![])
@@ -85,7 +85,7 @@ pub enum AlgorithmError {
     GeneticAlgError(#[from] GeneticAlgError),
 }
 
-//TODO: make an ultra error type for this
+// TODO: make an ultra error type for this
 pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), AlgorithmError> {
     let base_inputs = initial_path(level, player, parse_checkpoint(checkpoints)?)?;
     todo!();

@@ -67,7 +67,7 @@ impl Collider {
         };
     }
 
-    //TODO: change these to let-else once it becomes stable
+    // TODO: change these to let-else once it becomes stable
     pub fn rect(&self) -> Option<&Rect> {
         match self {
             Collider::Rectangular(value) => Some(value),
@@ -92,7 +92,7 @@ pub struct Rect {
 }
 
 impl Rect {
-    //TODO: check if up_left and down_right are actually up_left and down_right
+    // TODO: check if up_left and down_right are actually up_left and down_right
     pub fn new(up_left: Point, down_right: Point) -> Self {
         Self {
             ul: up_left,

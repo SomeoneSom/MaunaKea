@@ -38,7 +38,7 @@ impl<'a> Phenotype<Inputs> for PlayerSim<'a> {
         self.inputs.clone()
     }
 
-    //maybe this function is meant to not reset stuff? idk, remove this comment when this has been cleared up
+    // maybe this function is meant to not reset stuff? idk, remove this comment when this has been cleared up
     fn derive(&self, genes: Inputs) -> Self {
         Self {
             inputs: genes,
@@ -51,7 +51,7 @@ impl<'a> Phenotype<Inputs> for PlayerSim<'a> {
 #[derive(Clone, Debug)]
 pub(super) struct Simulator {
     player: Player,
-    level: Level, //lets just say this owns the level for now
+    level: Level, // lets just say this owns the level for now
     checkpoints: Vec<Rect>,
 }
 

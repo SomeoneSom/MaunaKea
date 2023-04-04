@@ -29,7 +29,7 @@ impl Level {
         let data = &std::fs::read_to_string(info_path)
             .expect("Failed to read infodump file! Somehow uncaught");
         let caps = re.captures(data).unwrap();
-        //TODO: make this not have to be mutable
+        // TODO: make this not have to be mutable
         let mut level = Self::default();
         level.load_bounds(caps.get(7).unwrap().as_str().to_owned());
         level.static_death = vec![
@@ -199,7 +199,7 @@ impl Level {
         );
     }
 
-    //TODO: just use indicatif you fucking idiot
+    // TODO: just use indicatif you fucking idiot
     fn load_spinners(&mut self, data: String) {
         let mut split: Vec<&str> = data.split('[').collect();
         split.remove(0);

@@ -34,9 +34,9 @@ impl Player {
     }
 
     pub fn move_self(&mut self, angle: i32, bounds: &Rect, static_solids: &[bv::BitVec]) {
-        //TODO: add in stuff for when speed is outside octagon and should be pulled back to it
-        //TODO: make speed capping actually work how its meant to
-        //TODO: water surface bs
+        // TODO: add in stuff for when speed is outside octagon and should be pulled back to it
+        // TODO: make speed capping actually work how its meant to
+        // TODO: water surface bs
         self.retained_timer -= 1;
         let mut ang: i32 = angle - 90000;
         if ang < 0 {
@@ -109,7 +109,7 @@ impl Player {
         todo!()
     }
 
-    //this function is getting removed soon im pretty sure
+    // this function is getting removed soon im pretty sure
     pub fn sim_frame(
         &mut self, angle: i32, bounds: &Rect, static_death: &[bv::BitVec],
         static_solids: &[bv::BitVec], checkpoint: &Rect,
@@ -127,7 +127,7 @@ impl Player {
         let right: i32 = (hurtbox_rect.dr.x - bounds.ul.x).round() as i32 + 1;
         let up: i32 = (hurtbox_rect.ul.y - bounds.ul.y).round() as i32;
         let down: i32 = (hurtbox_rect.dr.y - bounds.ul.y).round() as i32 + 1;
-        //println!("{} {} {} {}", left, right, up, down);
+        // println!("{} {} {} {}", left, right, up, down);
         for x in left..right {
             for y in up..down {
                 if static_death[y as usize][x as usize] {
@@ -138,7 +138,7 @@ impl Player {
                 }
             }
         }
-        //TODO: make it so this actually calcs distance properly
+        // TODO: make it so this actually calcs distance properly
         let rect = self.hurtbox.rect().unwrap();
         let player_cent: Point = (rect.ul + rect.dr) / 2.;
         let check_cent: Point = Point::new(
