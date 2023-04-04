@@ -272,3 +272,6 @@ impl Player {
         true
     }
 }
+
+#[cfg(test)]
+mod tests {}

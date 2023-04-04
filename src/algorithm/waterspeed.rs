@@ -2,3 +2,6 @@
 pub fn weight_angle(angle: &f32) -> (f32, f32) {
     (1f32, 1f32)
 }
+
+#[cfg(test)]
+mod tests {}

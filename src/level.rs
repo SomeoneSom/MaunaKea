@@ -245,3 +245,6 @@ impl Level {
         Player::new(pair3, pair1 + pair2)
     }
 }
+
+#[cfg(test)]
+mod tests {}

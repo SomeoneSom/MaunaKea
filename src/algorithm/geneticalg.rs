@@ -93,3 +93,6 @@ impl<'a> FitnessFunction<Inputs, OrdFloat64> for &'a Simulator {
         OrdFloat64(OrderedFloat(f64::MIN))
     }
 }
+
+#[cfg(test)]
+mod tests {}

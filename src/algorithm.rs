@@ -92,3 +92,6 @@ pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), Al
     todo!();
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {}

@@ -170,3 +170,6 @@ impl Circle {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {}
