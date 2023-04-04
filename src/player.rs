@@ -90,7 +90,8 @@ impl Player {
         }
         ang = 360000 - ang;
         let rang: f32 = (ang as f32 / 1000.).to_radians();
-        let target: Point = Point::new(60. * rang.cos(), 80. * rang.sin() * -1.);
+        let adjusted = precise_fix(rang, 1f32);
+        let target: Point = Point::new(60f32 * adjusted.x, 80f32 * adjusted.y);
         if f32::abs(target.x - self.speed.x) < 10. {
             self.speed.x = target.x;
         } else {

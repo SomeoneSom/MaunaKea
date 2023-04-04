@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 mod algorithm;
 mod colliders;
 mod gui;
