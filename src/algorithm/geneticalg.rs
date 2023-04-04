@@ -56,7 +56,7 @@ pub(super) struct Simulator {
 }
 
 impl Simulator {
-    pub fn new(player:Player, level:Level, checkpoints:Vec<Rect>) -> Self {
+    pub fn new(player: Player, level: Level, checkpoints: Vec<Rect>) -> Self {
         Self {
             player,
             level,

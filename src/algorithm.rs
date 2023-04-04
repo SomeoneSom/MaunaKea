@@ -53,12 +53,14 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
 #[derive(Error, Debug)]
 pub enum GeneticAlgError {}
 
-fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Result<Inputs, GeneticAlgError>{
+fn initial_path(
+    level: Level, player: Player, checkpoints: Vec<Rect>,
+) -> Result<Inputs, GeneticAlgError> {
     let initial_population: Population<Inputs> = build_population()
         .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f32, 359.99996f32))
         .of_size(500) // TODO: allow for an option to change this please
         .uniform_at_random();
-    let simulator = Simulator::new(player, level,checkpoints);
+    let simulator = Simulator::new(player, level, checkpoints);
     // TODO: put this in a loop
     let mut ga_sim = simulate(
         genetic_algorithm()

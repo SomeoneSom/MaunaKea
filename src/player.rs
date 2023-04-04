@@ -5,6 +5,10 @@ use bitvec::prelude as bv;
 use crate::colliders::{Axes, Collider, Rect};
 use crate::point::Point;
 
+fn precise_fix(angle: f32) -> f32 {
+    todo!()
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct Player {
     pub speed: Point,
