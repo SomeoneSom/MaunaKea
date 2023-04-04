@@ -87,7 +87,6 @@ pub enum AlgorithmError {
     GeneticAlgError(#[from] GeneticAlgError),
 }
 
-// TODO: make an ultra error type for this
 pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), AlgorithmError> {
     let base_inputs = initial_path(level, player, parse_checkpoint(checkpoints)?)?;
     todo!();

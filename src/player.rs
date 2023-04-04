@@ -5,8 +5,50 @@ use bitvec::prelude as bv;
 use crate::colliders::{Axes, Collider, Rect};
 use crate::point::Point;
 
-fn precise_fix(angle: f32) -> f32 {
-    todo!()
+fn precise_fix(angle: f32, magnitude: f32) -> Point {
+    const DEADZONE: f64 = 0.239532471;
+    const AMPLOWERBOUND: f32 = (0.25 * (1f64 - DEADZONE) * (1f64 - DEADZONE)) as f32;
+    const LOWERBOUND: i16 = 7849;
+    let raw_angle = Point::new(angle.cos(), angle.sin());
+    let upper_bound = i16::max((magnitude * 32767f32) as i16, LOWERBOUND);
+    let approx = (raw_angle.x as f64) / (raw_angle.y as f64);
+    let multip = (raw_angle.y as f64) / (raw_angle.x as f64);
+    let upperl = (upper_bound / 32767) as f64;
+    let mut least_error = approx;
+    let mut short_x = 32767i16;
+    let mut short_y = 0i16;
+    let mut y = LOWERBOUND;
+    loop {
+        let ys = y as f64 / 32767f64 - DEADZONE;
+        let xx = f64::min(DEADZONE + multip * ys, upperl);
+        let mut x = f64::floor(xx * 32767f64) as i16;
+        let mut xs = x as f64 / 32767f64 - DEADZONE;
+        let mut error = f64::abs(ys / xs - approx);
+        if xs * xs + ys * ys >= AMPLOWERBOUND as f64 && (error < least_error || error <= 0.5e-10) {
+            least_error = error;
+            short_x = x;
+            short_y = y;
+        }
+        if x < upper_bound {
+            x += 1;
+            xs = x as f64 / 32767f64 - DEADZONE;
+            error = f64::abs(ys / xs - approx);
+            if xs * xs + ys * ys >= AMPLOWERBOUND as f64
+                && (error < least_error || error <= 0.5e-10)
+            {
+                least_error = error;
+                short_x = x;
+                short_y = y;
+            }
+        }
+        if xx >= upperl {
+            break;
+        }
+        y += 1;
+    }
+    let final_x = (f64::max(short_x as f64 / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
+    let final_y = (f64::max(short_y as f64 / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
+    Point::new(final_x, final_y)
 }
 
 #[derive(Clone, Debug, Default)]
