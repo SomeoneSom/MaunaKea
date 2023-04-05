@@ -46,8 +46,8 @@ fn precise_fix(angle: f32, magnitude: f32) -> Point {
         }
         y += 1;
     }
-    let final_x = short_x.signum() * (f64::max(f64::abs(short_x as f64) / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
-    let final_y = short_y.signum() * (f64::max(f64::abs(short_y as f64) / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
+    let final_x = short_x.signum() as f32 * (f64::max(f64::abs(short_x as f64) / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
+    let final_y = short_y.signum() as f32 * (f64::max(f64::abs(short_y as f64) / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
     Point::new(final_x, final_y)
 }
 
