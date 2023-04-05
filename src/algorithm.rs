@@ -74,7 +74,7 @@ fn initial_path(
     )
     .until(GenerationLimit::new(200)) // TODO: yet again
     .build();
-    loop {
+    Ok(loop {
         let result = loop {
             let result = ga_sim.step();
             match result {
@@ -89,7 +89,7 @@ fn initial_path(
         let mut population = (*result.evaluated_population.individuals()).clone();
         if population[0].len() >= 6 {
             // TODO: make breaking criteria correct
-            break;
+            break result.best_solution.solution.genome;
         }
         let to_add = build_population()
             .with_genome_builder(ValueEncodedGenomeBuilder::new(1, 0f32, 359.99996f32))
@@ -111,9 +111,7 @@ fn initial_path(
         )
         .until(GenerationLimit::new(200)) // TOO
         .build();
-    }
-    todo!();
-    Ok(vec![])
+    })
 }
 
 #[derive(Error, Debug)]
