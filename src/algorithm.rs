@@ -74,6 +74,44 @@ fn initial_path(
     )
     .until(GenerationLimit::new(200)) // TODO: yet again
     .build();
+    loop {
+        let result = loop {
+            let result = ga_sim.step();
+            match result {
+                // TODO: actually handle this stuff
+                Ok(SimResult::Intermediate(step)) => (),
+                Ok(SimResult::Final(step, processing_time, duration, stop_reason)) => {
+                    break step.result
+                }
+                Err(error) => panic!("{}", error),
+            }
+        };
+        let mut population = (*result.evaluated_population.individuals()).clone();
+        if population[0].len() >= 6 {
+            // TODO: make breaking criteria correct
+            break;
+        }
+        let to_add = build_population()
+            .with_genome_builder(ValueEncodedGenomeBuilder::new(1, 0f32, 359.99996f32))
+            .of_size(population.len())
+            .uniform_at_random();
+        for (p, t) in population.iter_mut().zip(to_add.individuals().iter()) {
+            p.extend(t);
+        }
+        ga_sim = simulate(
+            // TODO: all the options need to be checked here too
+            genetic_algorithm()
+                .with_evaluation(&simulator)
+                .with_selection(MaximizeSelector::new(0.85, 12))
+                .with_crossover(SinglePointCrossBreeder::new())
+                .with_mutation(RandomValueMutator::new(0.2, 0f32, 359.99996f32))
+                .with_reinsertion(ElitistReinserter::new(&simulator, true, 0.85))
+                .with_initial_population(Population::with_individuals(population))
+                .build(),
+        )
+        .until(GenerationLimit::new(200)) // TOO
+        .build();
+    }
     todo!();
     Ok(vec![])
 }

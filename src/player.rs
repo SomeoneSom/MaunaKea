@@ -46,8 +46,12 @@ fn precise_fix(angle: f32, magnitude: f32) -> Point {
         }
         y += 1;
     }
-    let final_x = short_x.signum() as f32 * (f64::max(f64::abs(short_x as f64) / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
-    let final_y = short_y.signum() as f32 * (f64::max(f64::abs(short_y as f64) / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
+    let final_x = short_x.signum() as f32
+        * (f64::max(f64::abs(short_x as f64) / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE))
+            as f32;
+    let final_y = short_y.signum() as f32
+        * (f64::max(f64::abs(short_y as f64) / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE))
+            as f32;
     Point::new(final_x, final_y)
 }
 
@@ -250,7 +254,7 @@ impl Player {
             self.retained = self.speed.x;
             self.retained_timer = 4;
         }
-        let multiplier: f32 = if switch_lr { 60. } else { -60. };
+        let multiplier = if switch_lr { 60f32 } else { -60f32 };
         if switch_xy {
             self.hitbox.move_collider(0., last_seen as f32 * multiplier);
             self.hurtbox
