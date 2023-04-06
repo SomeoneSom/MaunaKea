@@ -5,7 +5,6 @@ mod waterspeed;
 use std::num::ParseFloatError;
 
 use geneticalg::{Inputs, Simulator};
-use genevo::population::ValueEncodedGenomeBuilder;
 
 use crate::colliders::Collider;
 use crate::colliders::Rect;
@@ -15,7 +14,7 @@ use crate::point::Point;
 
 use bitvec::prelude as bv;
 use colored::Colorize;
-use genevo::{operator::prelude::*, prelude::*};
+use genevo::{operator::prelude::*, prelude::*, population::ValueEncodedGenomeBuilder};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -50,12 +49,10 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
     Ok(rects)
 }
 
-#[derive(Error, Debug)]
-pub enum GeneticAlgError {}
-
+// NOTE: not handling the error here because of absurd error type
 fn initial_path(
     level: Level, player: Player, checkpoints: Vec<Rect>,
-) -> Result<Inputs, GeneticAlgError> {
+) -> Inputs {
     let initial_population: Population<Inputs> = build_population()
         .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f32, 359.99996f32))
         .of_size(500) // TODO: allow for an option to change this please
@@ -74,7 +71,7 @@ fn initial_path(
     )
     .until(GenerationLimit::new(200)) // TODO: yet again
     .build();
-    Ok(loop {
+    loop {
         let result = loop {
             let result = ga_sim.step();
             match result {
@@ -84,7 +81,7 @@ fn initial_path(
                     break step.result
                 }
                 Err(error) => panic!("{}", error),
-            }
+           }
         };
         let mut population = (*result.evaluated_population.individuals()).clone();
         if population[0].len() >= 6 {
@@ -111,20 +108,17 @@ fn initial_path(
         )
         .until(GenerationLimit::new(200)) // TOO
         .build();
-    })
+    }
 }
 
 #[derive(Error, Debug)]
 pub enum AlgorithmError {
     #[error(transparent)]
     DataParseError(#[from] DataParseError),
-
-    #[error(transparent)]
-    GeneticAlgError(#[from] GeneticAlgError),
 }
 
 pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), AlgorithmError> {
-    let base_inputs = initial_path(level, player, parse_checkpoint(checkpoints)?)?;
+    let base_inputs = initial_path(level, player, parse_checkpoint(checkpoints)?);
     todo!();
     Ok(())
 }
