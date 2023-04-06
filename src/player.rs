@@ -70,25 +70,21 @@ impl Player {
     pub fn new(speed: Point, position: Point) -> Self {
         Self {
             speed,
-            retained: 0.,
+            retained: 0f32,
             retained_timer: 0,
             alive: true,
             hurtbox: Collider::Rectangular(Rect::new(
-                Point::new(position.x - 4., position.y - 11.),
-                Point::new(position.x + 3., position.y - 3.),
+                Point::new(position.x - 4f32, position.y - 11f32),
+                Point::new(position.x + 3f32, position.y - 3f32),
             )),
             hitbox: Collider::Rectangular(Rect::new(
-                Point::new(position.x - 4., position.y - 11.),
-                Point::new(position.x + 3., position.y - 1.),
+                Point::new(position.x - 4f32, position.y - 11f32),
+                Point::new(position.x + 3f32, position.y - 1f32),
             )),
         }
     }
 
     pub fn move_self(&mut self, angle: f32, level: &Level) {
-        // TODO: add in stuff for when speed is outside octagon and should be pulled back to it
-        // TODO: make speed capping actually work how its meant to
-        // TODO: water surface bs
-        self.retained_timer -= 1;
         let mut ang = angle - 90f32;
         if ang < 0f32 {
             ang += 360f32;
@@ -96,65 +92,69 @@ impl Player {
         ang = 360f32 - ang;
         let rang = ang.to_radians();
         let adjusted = precise_fix(rang, 1f32);
-        let target: Point = Point::new(60f32 * adjusted.x, 80f32 * adjusted.y);
-        if f32::abs(target.x - self.speed.x) < 10. {
-            self.speed.x = target.x;
-        } else {
-            self.speed.x += f32::clamp(target.x - self.speed.x, -10., 10.);
-        }
-        if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
-            let temp_hitbox: Collider = self.hitbox;
-            self.hitbox.move_collider(self.speed.x.signum(), 0.);
-            if self.solids_collision(&level.bounds, &level.static_solids, false, self.speed.x.signum() < 0.) {
-                self.speed.x = self.retained;
-            }
-            self.hitbox = temp_hitbox;
-        }
-        self.speed.x = self.speed.x.clamp(-60., 60.);
-        if f32::abs(target.y - self.speed.y) < 10. {
-            self.speed.y = target.y;
-        } else {
-            self.speed.y += f32::clamp(target.y - self.speed.y, -10., 10.);
-        }
-        self.speed.y = self.speed.y.clamp(-80., 80.);
+        self.speed_calc(adjusted, level);
         let mut speed_x: f32 = self.speed.x;
         let mut speed_y: f32 = self.speed.y;
         let sign_x: f32 = speed_x.signum();
         let sign_y: f32 = speed_y.signum();
         loop {
-            if speed_x * sign_x > 0. {
-                let speed: f32 = if sign_x > 0. {
-                    speed_x.min(480.)
+            if speed_x * sign_x > 0f32 {
+                let speed: f32 = if sign_x > 0f32 {
+                    speed_x.min(480f32)
                 } else {
-                    speed_x.max(-480.)
+                    speed_x.max(-480f32)
                 };
-                self.hurtbox.move_collider(speed, 0.);
-                self.hitbox.move_collider(speed, 0.);
-                if self.solids_collision(&level.bounds, &level.static_solids, false, sign_x < 0.) {
-                    speed_x = 0.;
+                self.hurtbox.move_collider(speed, 0f32);
+                self.hitbox.move_collider(speed, 0f32);
+                if self.solids_collision(&level.bounds, &level.static_solids, false, sign_x < 0f32) {
+                    speed_x = 0f32;
                 }
-                speed_x -= 480. * sign_x;
+                speed_x -= 480f32 * sign_x;
             } else {
-                let speed: f32 = if sign_y > 0. {
-                    speed_y.min(480.)
+                let speed: f32 = if sign_y > 0f32 {
+                    speed_y.min(480f32)
                 } else {
-                    speed_y.max(-480.)
+                    speed_y.max(-480f32)
                 };
-                self.hurtbox.move_collider(0., speed);
-                self.hitbox.move_collider(0., speed);
-                if self.solids_collision(&level.bounds, &level.static_solids, true, sign_y < 0.) {
+                self.hurtbox.move_collider(0f32, speed);
+                self.hitbox.move_collider(0f32, speed);
+                if self.solids_collision(&level.bounds, &level.static_solids, true, sign_y < 0f32) {
                     break;
                 }
-                speed_y -= 480. * sign_y;
+                speed_y -= 480f32 * sign_y;
             }
-            if speed_x * sign_x <= 0. && speed_y * sign_y <= 0. {
+            if speed_x * sign_x <= 0f32 && speed_y * sign_y <= 0f32 {
                 break;
             }
         }
     }
 
-    pub fn speed_calc(&mut self) {
-        todo!()
+    // TODO: add in stuff for when speed is outside octagon and should be pulled back to it
+    // TODO: make speed capping actually work how its meant to
+    // TODO: water surface bs
+    pub fn speed_calc(&mut self, vector: Point, level: &Level) {
+        self.retained_timer -= 1;
+        let target: Point = Point::new(60f32 * vector.x, 80f32 * vector.y);
+        if f32::abs(target.x - self.speed.x) < 10f32 {
+            self.speed.x = target.x;
+        } else {
+            self.speed.x += f32::clamp(target.x - self.speed.x, -10f32, 10f32);
+        }
+        if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
+            let temp_hitbox: Collider = self.hitbox;
+            self.hitbox.move_collider(self.speed.x.signum(), 0f32);
+            if self.solids_collision(&level.bounds, &level.static_solids, false, self.speed.x.signum() < 0f32) {
+                self.speed.x = self.retained;
+            }
+            self.hitbox = temp_hitbox;
+        }
+        self.speed.x = self.speed.x.clamp(-60f32, 60f32);
+        if f32::abs(target.y - self.speed.y) < 10f32 {
+            self.speed.y = target.y;
+        } else {
+            self.speed.y += f32::clamp(target.y - self.speed.y, -10f32, 10f32);
+        }
+        self.speed.y = self.speed.y.clamp(-80f32, 80f32);
     }
 
     pub fn speed_calc_restricted(&mut self) {
@@ -186,10 +186,10 @@ impl Player {
         }
         // TODO: make it so this actually calcs distance properly
         let rect = self.hurtbox.rect().unwrap();
-        let player_cent: Point = (rect.ul + rect.dr) / 2.;
+        let player_cent: Point = (rect.ul + rect.dr) / 2f32;
         let check_cent: Point = Point::new(
-            (checkpoint.ul.x + checkpoint.dr.x) / 2.,
-            (checkpoint.ul.y + checkpoint.dr.y) / 2.,
+            (checkpoint.ul.x + checkpoint.dr.x) / 2f32,
+            (checkpoint.ul.y + checkpoint.dr.y) / 2f32,
         );
         f32::sqrt((player_cent.x - check_cent.x).powi(2) + (player_cent.y - check_cent.y).powi(2))
     }
@@ -197,11 +197,11 @@ impl Player {
     pub fn solids_collision(
         &mut self, bounds: &Rect, static_solids: &[bv::BitVec], switch_xy: bool, switch_lr: bool,
     ) -> bool {
-        let hitbox_rect: &Rect = self.hitbox.rect().unwrap();
-        let left: usize = (hitbox_rect.ul.x - bounds.ul.x).round() as usize;
-        let right: usize = (hitbox_rect.dr.x - bounds.ul.x).round() as usize + 1;
-        let up: usize = (hitbox_rect.ul.y - bounds.ul.y).round() as usize;
-        let down: usize = (hitbox_rect.dr.y - bounds.ul.y).round() as usize + 1;
+        let hitbox_rect = self.hitbox.rect().unwrap();
+        let left = (hitbox_rect.ul.x - bounds.ul.x).round() as usize;
+        let right = (hitbox_rect.dr.x - bounds.ul.x).round() as usize + 1;
+        let up = (hitbox_rect.ul.y - bounds.ul.y).round() as usize;
+        let down = (hitbox_rect.dr.y - bounds.ul.y).round() as usize + 1;
         let first: Range<usize>;
         let second: Range<usize>;
         if switch_xy {
@@ -211,17 +211,17 @@ impl Player {
             first = left..right;
             second = up..down;
         }
-        let first_v: Vec<usize> = if switch_lr {
+        let first_v = if switch_lr {
             first.rev().collect::<Vec<_>>()
         } else {
             first.collect::<Vec<_>>()
         };
-        let second_v: Vec<usize> = if switch_lr {
+        let second_v = if switch_lr {
             second.rev().collect::<Vec<_>>()
         } else {
             second.collect::<Vec<_>>()
         };
-        let mut last_seen: i32 = -1;
+        let mut last_seen = -1;
         for f in &first_v {
             for s in &second_v {
                 let b: bool = if switch_xy {
@@ -248,15 +248,15 @@ impl Player {
         }
         let multiplier = if switch_lr { 60f32 } else { -60f32 };
         if switch_xy {
-            self.hitbox.move_collider(0., last_seen as f32 * multiplier);
+            self.hitbox.move_collider(0f32, last_seen as f32 * multiplier);
             self.hurtbox
-                .move_collider(0., last_seen as f32 * multiplier);
-            self.speed.y = 0.;
+                .move_collider(0f32, last_seen as f32 * multiplier);
+            self.speed.y = 0f32;
         } else {
-            self.hitbox.move_collider(last_seen as f32 * multiplier, 0.);
+            self.hitbox.move_collider(last_seen as f32 * multiplier, 0f32);
             self.hurtbox
-                .move_collider(last_seen as f32 * multiplier, 0.);
-            self.speed.x = 0.;
+                .move_collider(last_seen as f32 * multiplier, 0f32);
+            self.speed.x = 0f32;
         }
         if !switch_xy {
             self.hitbox.reset_subpixels(Axes::Horizontal);
