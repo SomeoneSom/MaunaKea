@@ -90,7 +90,8 @@ impl Level {
                     dest[(h + y) as usize][x as usize..(src[0].len() as i32 + x) as usize]
                         .clone_from_bitslice(&src[h as usize][..]);
                 } else {
-                    let start: usize = f32::clamp(x as f32, 0f32, dest.len() as f32 - 1f32) as usize;
+                    let start: usize =
+                        f32::clamp(x as f32, 0f32, dest.len() as f32 - 1f32) as usize;
                     let end: usize =
                         f32::clamp((x + src[0].len() as i32) as f32, 0f32, dest.len() as f32)
                             as usize;
