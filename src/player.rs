@@ -3,8 +3,8 @@ use std::ops::Range;
 use bitvec::prelude as bv;
 
 use crate::colliders::{Axes, Collider, Rect};
-use crate::point::Point;
 use crate::level::Level;
+use crate::point::Point;
 
 fn precise_fix(angle: f32, magnitude: f32) -> Point {
     const DEADZONE: f64 = 0.239532471;
@@ -106,7 +106,8 @@ impl Player {
                 };
                 self.hurtbox.move_collider(speed, 0f32);
                 self.hitbox.move_collider(speed, 0f32);
-                if self.solids_collision(&level.bounds, &level.static_solids, false, sign_x < 0f32) {
+                if self.solids_collision(&level.bounds, &level.static_solids, false, sign_x < 0f32)
+                {
                     speed_x = 0f32;
                 }
                 speed_x -= 480f32 * sign_x;
@@ -143,7 +144,12 @@ impl Player {
         if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
             let temp_hitbox: Collider = self.hitbox;
             self.hitbox.move_collider(self.speed.x.signum(), 0f32);
-            if self.solids_collision(&level.bounds, &level.static_solids, false, self.speed.x.signum() < 0f32) {
+            if self.solids_collision(
+                &level.bounds,
+                &level.static_solids,
+                false,
+                self.speed.x.signum() < 0f32,
+            ) {
                 self.speed.x = self.retained;
             }
             self.hitbox = temp_hitbox;
@@ -158,7 +164,7 @@ impl Player {
     }
 
     pub fn speed_calc_restricted(&mut self) {
-       todo!()
+        todo!()
     }
 
     pub fn collision_check() -> bool {
@@ -248,12 +254,14 @@ impl Player {
         }
         let multiplier = if switch_lr { 60f32 } else { -60f32 };
         if switch_xy {
-            self.hitbox.move_collider(0f32, last_seen as f32 * multiplier);
+            self.hitbox
+                .move_collider(0f32, last_seen as f32 * multiplier);
             self.hurtbox
                 .move_collider(0f32, last_seen as f32 * multiplier);
             self.speed.y = 0f32;
         } else {
-            self.hitbox.move_collider(last_seen as f32 * multiplier, 0f32);
+            self.hitbox
+                .move_collider(last_seen as f32 * multiplier, 0f32);
             self.hurtbox
                 .move_collider(last_seen as f32 * multiplier, 0f32);
             self.speed.x = 0f32;

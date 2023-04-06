@@ -14,7 +14,7 @@ use crate::point::Point;
 
 use bitvec::prelude as bv;
 use colored::Colorize;
-use genevo::{operator::prelude::*, prelude::*, population::ValueEncodedGenomeBuilder};
+use genevo::{operator::prelude::*, population::ValueEncodedGenomeBuilder, prelude::*};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -50,9 +50,7 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
 }
 
 // NOTE: not handling the error here because of absurd error type
-fn initial_path(
-    level: Level, player: Player, checkpoints: Vec<Rect>,
-) -> Inputs {
+fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs {
     let initial_population: Population<Inputs> = build_population()
         .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f32, 359.99996f32))
         .of_size(500) // TODO: allow for an option to change this please
@@ -81,7 +79,7 @@ fn initial_path(
                     break step.result
                 }
                 Err(error) => panic!("{}", error),
-           }
+            }
         };
         let mut population = (*result.evaluated_population.individuals()).clone();
         if population[0].len() >= 6 {
