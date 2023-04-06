@@ -93,13 +93,13 @@ impl Player {
         let rang = ang.to_radians();
         let adjusted = precise_fix(rang, 1f32);
         self.speed_calc(adjusted, level);
-        let mut speed_x: f32 = self.speed.x;
-        let mut speed_y: f32 = self.speed.y;
-        let sign_x: f32 = speed_x.signum();
-        let sign_y: f32 = speed_y.signum();
+        let mut speed_x = self.speed.x;
+        let mut speed_y = self.speed.y;
+        let sign_x = speed_x.signum();
+        let sign_y = speed_y.signum();
         loop {
             if speed_x * sign_x > 0f32 {
-                let speed: f32 = if sign_x > 0f32 {
+                let speed = if sign_x > 0f32 {
                     speed_x.min(480f32)
                 } else {
                     speed_x.max(-480f32)
@@ -112,7 +112,7 @@ impl Player {
                 }
                 speed_x -= 480f32 * sign_x;
             } else {
-                let speed: f32 = if sign_y > 0f32 {
+                let speed = if sign_y > 0f32 {
                     speed_y.min(480f32)
                 } else {
                     speed_y.max(-480f32)
@@ -135,14 +135,14 @@ impl Player {
     // TODO: water surface bs
     pub fn speed_calc(&mut self, vector: Point, level: &Level) {
         self.retained_timer -= 1;
-        let target: Point = Point::new(60f32 * vector.x, 80f32 * vector.y);
+        let target = Point::new(60f32 * vector.x, 80f32 * vector.y);
         if f32::abs(target.x - self.speed.x) < 10f32 {
             self.speed.x = target.x;
         } else {
             self.speed.x += f32::clamp(target.x - self.speed.x, -10f32, 10f32);
         }
         if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
-            let temp_hitbox: Collider = self.hitbox;
+            let temp_hitbox = self.hitbox;
             self.hitbox.move_collider(self.speed.x.signum(), 0f32);
             if self.solids_collision(
                 &level.bounds,
@@ -177,11 +177,11 @@ impl Player {
         static_solids: &[bv::BitVec], checkpoint: &Rect, level: &Level,
     ) -> f32 {
         self.move_self(angle, level);
-        let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
-        let left: i32 = (hurtbox_rect.ul.x - bounds.ul.x).round() as i32;
-        let right: i32 = (hurtbox_rect.dr.x - bounds.ul.x).round() as i32 + 1;
-        let up: i32 = (hurtbox_rect.ul.y - bounds.ul.y).round() as i32;
-        let down: i32 = (hurtbox_rect.dr.y - bounds.ul.y).round() as i32 + 1;
+        let hurtbox_rect = self.hurtbox.rect().unwrap();
+        let left = (hurtbox_rect.ul.x - bounds.ul.x).round() as i32;
+        let right = (hurtbox_rect.dr.x - bounds.ul.x).round() as i32 + 1;
+        let up = (hurtbox_rect.ul.y - bounds.ul.y).round() as i32;
+        let down = (hurtbox_rect.dr.y - bounds.ul.y).round() as i32 + 1;
         // println!("{} {} {} {}", left, right, up, down);
         for x in left..right {
             for y in up..down {
@@ -192,8 +192,8 @@ impl Player {
         }
         // TODO: make it so this actually calcs distance properly
         let rect = self.hurtbox.rect().unwrap();
-        let player_cent: Point = (rect.ul + rect.dr) / 2f32;
-        let check_cent: Point = Point::new(
+        let player_cent = (rect.ul + rect.dr) / 2f32;
+        let check_cent = Point::new(
             (checkpoint.ul.x + checkpoint.dr.x) / 2f32,
             (checkpoint.ul.y + checkpoint.dr.y) / 2f32,
         );
@@ -230,7 +230,7 @@ impl Player {
         let mut last_seen = -1;
         for f in &first_v {
             for s in &second_v {
-                let b: bool = if switch_xy {
+                let b = if switch_xy {
                     static_solids[*f][*s]
                 } else {
                     static_solids[*s][*f]

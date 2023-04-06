@@ -39,7 +39,7 @@ impl Level {
         level.static_solids = level.static_death.clone();
         level.load_solids(caps.get(8).unwrap().as_str().to_owned());
         level.load_spinners(caps.get(5).unwrap().as_str().to_owned());
-        /*let mut img: RgbImage = ImageBuffer::new(
+        /*let mut img = ImageBuffer::new(
             self.static_death[0].len() as u32,
             self.static_death.len() as u32,
         );
@@ -90,11 +90,9 @@ impl Level {
                     dest[(h + y) as usize][x as usize..(src[0].len() as i32 + x) as usize]
                         .clone_from_bitslice(&src[h as usize][..]);
                 } else {
-                    let start: usize =
-                        f32::clamp(x as f32, 0f32, dest.len() as f32 - 1f32) as usize;
-                    let end: usize =
-                        f32::clamp((x + src[0].len() as i32) as f32, 0f32, dest.len() as f32)
-                            as usize;
+                    let start = f32::clamp(x as f32, 0f32, dest.len() as f32 - 1f32) as usize;
+                    let end = f32::clamp((x + src[0].len() as i32) as f32, 0f32, dest.len() as f32)
+                        as usize;
                     if start != end {
                         dest[(h + y) as usize][start..end].clone_from_bitslice(
                             &src[h as usize]
@@ -109,10 +107,10 @@ impl Level {
     #[inline]
     fn grift_line(dest: &mut Vec<bv::BitVec>, x: i32, y0: i32, y1: i32, switch: bool) {
         if switch {
-            let temp: Vec<bv::BitVec> = vec![bv::bitvec![1; (y1 - y0).unsigned_abs() as usize]];
+            let temp = vec![bv::bitvec![1; (y1 - y0).unsigned_abs() as usize]];
             Self::grift_bv(dest, &temp, if y0 < y1 { y0 } else { y1 }, x)
         } else {
-            let temp: Vec<bv::BitVec> = vec![bv::bitvec![1; 1]; (y1 - y0).unsigned_abs() as usize];
+            let temp = vec![bv::bitvec![1; 1]; (y1 - y0).unsigned_abs() as usize];
             Self::grift_bv(dest, &temp, x, if y0 < y1 { y0 } else { y1 });
         }
     }
@@ -146,10 +144,10 @@ impl Level {
             y = cy.ceil();
         }
 
-        let mut start_y: f32 = y;
-        let mut e: f32 = (x - cx) * (x - cx) + (y - cy) * (y - cy) - radius * radius;
-        let mut yc: f32 = flip_y as f32 * 2f32 * (y - cy) + 1f32;
-        let mut xc: f32 = flip_x as f32 * -2f32 * (x - cx) + 1f32;
+        let mut start_y = y;
+        let mut e = (x - cx) * (x - cx) + (y - cy) * (y - cy) - radius * radius;
+        let mut yc = flip_y as f32 * 2f32 * (y - cy) + 1f32;
+        let mut xc = flip_x as f32 * -2f32 * (x - cx) + 1f32;
 
         while flip_y as f32 * (y - cy) <= flip_x as f32 * (x - cx) {
             e += yc;
@@ -202,13 +200,13 @@ impl Level {
 
     // TODO: just use indicatif you fucking idiot
     fn load_spinners(&mut self, data: String) {
-        let mut split: Vec<&str> = data.split('[').collect();
+        let mut split = data.split('[').collect::<Vec<_>>();
         split.remove(0);
         stdout().flush().unwrap();
-        let mut circle: Vec<bv::BitVec> = vec![bv::bitvec![0; 12]; 12];
+        let mut circle = vec![bv::bitvec![0; 12]; 12];
         Self::grift_circle(&mut circle, Point::new(6f32, 6f32), 6f32);
         for (i, p) in split.into_iter().enumerate() {
-            let pair: Point = Self::get_pair(p);
+            let pair = Self::get_pair(p);
             Self::grift_bv(
                 &mut self.static_death,
                 &circle,
@@ -226,8 +224,8 @@ impl Level {
     }
 
     fn load_solids(&mut self, data: String) {
-        let rows: Vec<&str> = data.split(' ').collect();
-        let tile: Vec<bv::BitVec> = vec![bv::bitvec![1; 8]; 8];
+        let rows = data.split(' ').collect::<Vec<_>>();
+        let tile = vec![bv::bitvec![1; 8]; 8];
         for (y, row) in rows.iter().enumerate() {
             for x in 0..row.len() {
                 if let Some(c) = row.chars().nth(x) {
@@ -240,9 +238,9 @@ impl Level {
     }
 
     fn load_player(position: String, position_remainder: String, speed: String) -> Player {
-        let pair1: Point = Self::get_pair(&position);
-        let pair2: Point = Self::get_pair(&position_remainder);
-        let pair3: Point = Self::get_pair(&speed);
+        let pair1 = Self::get_pair(&position);
+        let pair2 = Self::get_pair(&position_remainder);
+        let pair3 = Self::get_pair(&speed);
         Player::new(pair3, pair1 + pair2)
     }
 }

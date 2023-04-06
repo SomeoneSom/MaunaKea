@@ -51,7 +51,7 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
 
 // NOTE: not handling the error here because of absurd error type
 fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs {
-    let initial_population: Population<Inputs> = build_population()
+    let initial_population = build_population()
         .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f32, 359.99996f32))
         .of_size(500) // TODO: allow for an option to change this please
         .uniform_at_random();
