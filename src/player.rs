@@ -4,6 +4,7 @@ use bitvec::prelude as bv;
 
 use crate::colliders::{Axes, Collider, Rect};
 use crate::point::Point;
+use crate::level::Level;
 
 fn precise_fix(angle: f32, magnitude: f32) -> Point {
     const DEADZONE: f64 = 0.239532471;
@@ -83,17 +84,17 @@ impl Player {
         }
     }
 
-    pub fn move_self(&mut self, angle: i32, bounds: &Rect, static_solids: &[bv::BitVec]) {
+    pub fn move_self(&mut self, angle: f32, level: &Level) {
         // TODO: add in stuff for when speed is outside octagon and should be pulled back to it
         // TODO: make speed capping actually work how its meant to
         // TODO: water surface bs
         self.retained_timer -= 1;
-        let mut ang: i32 = angle - 90000;
-        if ang < 0 {
-            ang += 360000;
+        let mut ang = angle - 90f32;
+        if ang < 0f32 {
+            ang += 360f32;
         }
-        ang = 360000 - ang;
-        let rang: f32 = (ang as f32 / 1000.).to_radians();
+        ang = 360f32 - ang;
+        let rang = ang.to_radians();
         let adjusted = precise_fix(rang, 1f32);
         let target: Point = Point::new(60f32 * adjusted.x, 80f32 * adjusted.y);
         if f32::abs(target.x - self.speed.x) < 10. {
@@ -104,7 +105,7 @@ impl Player {
         if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
             let temp_hitbox: Collider = self.hitbox;
             self.hitbox.move_collider(self.speed.x.signum(), 0.);
-            if self.solids_collision(bounds, static_solids, false, self.speed.x.signum() < 0.) {
+            if self.solids_collision(&level.bounds, &level.static_solids, false, self.speed.x.signum() < 0.) {
                 self.speed.x = self.retained;
             }
             self.hitbox = temp_hitbox;
@@ -129,7 +130,7 @@ impl Player {
                 };
                 self.hurtbox.move_collider(speed, 0.);
                 self.hitbox.move_collider(speed, 0.);
-                if self.solids_collision(bounds, static_solids, false, sign_x < 0.) {
+                if self.solids_collision(&level.bounds, &level.static_solids, false, sign_x < 0.) {
                     speed_x = 0.;
                 }
                 speed_x -= 480. * sign_x;
@@ -141,7 +142,7 @@ impl Player {
                 };
                 self.hurtbox.move_collider(0., speed);
                 self.hitbox.move_collider(0., speed);
-                if self.solids_collision(bounds, static_solids, true, sign_y < 0.) {
+                if self.solids_collision(&level.bounds, &level.static_solids, true, sign_y < 0.) {
                     break;
                 }
                 speed_y -= 480. * sign_y;
@@ -153,7 +154,7 @@ impl Player {
     }
 
     pub fn move_self_restricted() {
-        todo!()
+       todo!()
     }
 
     pub fn collision_check() -> bool {
@@ -161,18 +162,11 @@ impl Player {
     }
 
     // this function is getting removed soon im pretty sure
-    pub fn sim_frame(
-        &mut self, angle: i32, bounds: &Rect, static_death: &[bv::BitVec],
-        static_solids: &[bv::BitVec], checkpoint: &Rect,
+    pub fn sim_frame_legacy(
+        &mut self, angle: f32, bounds: &Rect, static_death: &[bv::BitVec],
+        static_solids: &[bv::BitVec], checkpoint: &Rect, level: &Level,
     ) -> f32 {
-        let temp_speed = self.speed;
-        let temp_hurtbox = self.hurtbox;
-        let temp_hitbox = self.hitbox;
-        let temp_retained = self.retained;
-        let temp_retained_timer = self.retained_timer;
-        self.move_self(angle, bounds, static_solids);
-        self.retained = temp_retained;
-        self.retained_timer = temp_retained_timer;
+        self.move_self(angle, level);
         let hurtbox_rect: &Rect = self.hurtbox.rect().unwrap();
         let left: i32 = (hurtbox_rect.ul.x - bounds.ul.x).round() as i32;
         let right: i32 = (hurtbox_rect.dr.x - bounds.ul.x).round() as i32 + 1;
@@ -182,10 +176,7 @@ impl Player {
         for x in left..right {
             for y in up..down {
                 if static_death[y as usize][x as usize] {
-                    self.speed = temp_speed;
-                    self.hurtbox = temp_hurtbox;
-                    self.hitbox = temp_hitbox;
-                    return 9999999.;
+                    return 9999999f32;
                 }
             }
         }
@@ -196,9 +187,6 @@ impl Player {
             (checkpoint.ul.x + checkpoint.dr.x) / 2.,
             (checkpoint.ul.y + checkpoint.dr.y) / 2.,
         );
-        self.speed = temp_speed;
-        self.hurtbox = temp_hurtbox;
-        self.hitbox = temp_hitbox;
         f32::sqrt((player_cent.x - check_cent.x).powi(2) + (player_cent.y - check_cent.y).powi(2))
     }
 
