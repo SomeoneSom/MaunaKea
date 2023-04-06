@@ -153,7 +153,11 @@ impl Player {
         }
     }
 
-    pub fn move_self_restricted() {
+    pub fn speed_calc(&mut self) {
+        todo!()
+    }
+
+    pub fn speed_calc_restricted(&mut self) {
        todo!()
     }
 
