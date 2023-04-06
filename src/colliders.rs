@@ -137,7 +137,7 @@ impl Rect {
         let sub: Point = Point::new(from.x - to.x, from.y - to.y);
         let sub2: Point = Point::new(from.x - circ.origin.x, from.y - circ.origin.y);
         let mut val: f32 = sub.x * sub2.x + sub.y * sub2.y / (sub2.x.powi(2) + sub2.y.powi(2));
-        val = val.clamp(0., 1.);
+        val = val.clamp(0f32, 1f32);
         let closest: Point = Point::new(from.x + sub2.x * val, from.y + sub2.y * val);
         let distance: f32 =
             (circ.origin.x - closest.x).powi(2) + (circ.origin.y - closest.y).powi(2);

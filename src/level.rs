@@ -90,9 +90,9 @@ impl Level {
                     dest[(h + y) as usize][x as usize..(src[0].len() as i32 + x) as usize]
                         .clone_from_bitslice(&src[h as usize][..]);
                 } else {
-                    let start: usize = f32::clamp(x as f32, 0., dest.len() as f32 - 1.) as usize;
+                    let start: usize = f32::clamp(x as f32, 0f32, dest.len() as f32 - 1f32) as usize;
                     let end: usize =
-                        f32::clamp((x + src[0].len() as i32) as f32, 0., dest.len() as f32)
+                        f32::clamp((x + src[0].len() as i32) as f32, 0f32, dest.len() as f32)
                             as usize;
                     if start != end {
                         dest[(h + y) as usize][start..end].clone_from_bitslice(
@@ -133,9 +133,9 @@ impl Level {
 
         let mut x: f32;
         if flip_x > 0 {
-            x = f32::ceil(cx + radius - 1.);
+            x = f32::ceil(cx + radius - 1f32);
         } else {
-            x = f32::floor(cx - radius + 1.);
+            x = f32::floor(cx - radius + 1f32);
         }
 
         let mut y: f32;
@@ -147,14 +147,14 @@ impl Level {
 
         let mut start_y: f32 = y;
         let mut e: f32 = (x - cx) * (x - cx) + (y - cy) * (y - cy) - radius * radius;
-        let mut yc: f32 = flip_y as f32 * 2. * (y - cy) + 1.;
-        let mut xc: f32 = flip_x as f32 * -2. * (x - cx) + 1.;
+        let mut yc: f32 = flip_y as f32 * 2f32 * (y - cy) + 1f32;
+        let mut xc: f32 = flip_x as f32 * -2f32 * (x - cx) + 1f32;
 
         while flip_y as f32 * (y - cy) <= flip_x as f32 * (x - cx) {
             e += yc;
             y += flip_y as f32;
-            yc += 2.;
-            if e >= 0. {
+            yc += 2f32;
+            if e >= 0f32 {
                 Self::grift_line(
                     dest,
                     x as i32 + (if flip_x < 0 { -1 } else { 0 }),
@@ -165,7 +165,7 @@ impl Level {
                 start_y = y;
                 e += xc;
                 x -= flip_x as f32;
-                xc += 2.;
+                xc += 2f32;
             }
         }
         Self::grift_line(
@@ -205,14 +205,14 @@ impl Level {
         split.remove(0);
         stdout().flush().unwrap();
         let mut circle: Vec<bv::BitVec> = vec![bv::bitvec![0; 12]; 12];
-        Self::grift_circle(&mut circle, Point::new(6., 6.), 6.);
+        Self::grift_circle(&mut circle, Point::new(6f32, 6f32), 6f32);
         for (i, p) in split.into_iter().enumerate() {
             let pair: Point = Self::get_pair(p);
             Self::grift_bv(
                 &mut self.static_death,
                 &circle,
-                (pair.x - 6.) as i32,
-                (pair.y - 6.) as i32,
+                (pair.x - 6f32) as i32,
+                (pair.y - 6f32) as i32,
             );
             Self::grift_bv(
                 &mut self.static_death,
