@@ -145,7 +145,7 @@ impl Level {
         }
 
         let mut start_y = y;
-        let mut e = (x - cx) * (x - cx) + (y - cy) * (y - cy) - radius * radius;
+        let mut e = (x - cx).powi(2) + (y - cy).powi(2) - radius.powi(2);
         let mut yc = flip_y as f32 * 2f32 * (y - cy) + 1f32;
         let mut xc = flip_x as f32 * -2f32 * (x - cx) + 1f32;
 
