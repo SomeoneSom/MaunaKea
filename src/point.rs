@@ -55,8 +55,8 @@ impl ops::Div<f32> for Point {
 
     fn div(self, rhs: f32) -> Self::Output {
         Self {
-            x: self.x * rhs,
-            y: self.y * rhs,
+            x: self.x / rhs,
+            y: self.y / rhs,
         }
     }
 }
@@ -67,12 +67,22 @@ impl Point {
     }
 
     #[inline]
-    pub fn dot(self, rhs: Point) -> f32 {
+    pub fn dot(&self, rhs: Point) -> f32 {
         self.x * rhs.x + self.y * rhs.y
     }
 
     #[inline]
-    pub fn distance(self, rhs: Point) -> f32 {
+    pub fn distance(&self, rhs: Point) -> f32 {
         f32::sqrt((rhs.x - self.x).powi(2) + (rhs.y - self.y).powi(2))
+    }
+
+    #[inline]
+    pub fn magnitude(&self) -> f32 {
+        self.distance(Point::new(0f32, 0f32))
+    }
+
+    #[inline]
+    pub fn normalize(self) -> Point {
+        self / self.magnitude()
     }
 }

@@ -89,14 +89,8 @@ impl Player {
         }
     }
 
-    pub fn move_self(&mut self, angle: f32, level: &Level) {
-        let mut ang = angle - 90f32;
-        if ang < 0f32 {
-            ang += 360f32;
-        }
-        ang = 360f32 - ang;
-        let rang = ang.to_radians();
-        let adjusted = precise_fix(rang as f64, 1f32);
+    pub fn move_self(&mut self, angle: f64, level: &Level) {
+        let adjusted = precise_fix(angle.to_radians(), 1f32);
         self.speed_calc(adjusted, level);
         let mut speed_x = self.speed.x;
         let mut speed_y = self.speed.y;
@@ -178,7 +172,7 @@ impl Player {
 
     // this function is getting removed soon im pretty sure
     pub fn sim_frame_legacy(
-        &mut self, angle: f32, bounds: &Rect, static_death: &[bv::BitVec],
+        &mut self, angle: f64, bounds: &Rect, static_death: &[bv::BitVec],
         static_solids: &[bv::BitVec], checkpoint: &Rect, level: &Level,
     ) -> f32 {
         self.move_self(angle, level);
@@ -298,8 +292,32 @@ mod tests {
             Point::new(0.4807418, 0.1988198)
         );
         assert_eq!(
+            super::precise_fix(270.27667232f64.to_radians(), 1f32),
+            Point::new(-0.6336017, 0.003059587)
+        );
+        assert_eq!(
+            super::precise_fix(200.622924623f64.to_radians(), 1f32),
+            Point::new(-0.25680944, -0.6824013)
+        );
+        assert_eq!(
+            super::precise_fix(156.9761642057f64.to_radians(), 1f32),
+            Point::new(0.4182976, -0.98430866)
+        );
+        assert_eq!(
+            super::precise_fix(347.3860480961f64.to_radians(), 1f32),
+            Point::new(-0.21728018, 0.970945)
+        );
+        assert_eq!(
+            super::precise_fix(83.9673004749f64.to_radians(), 1f32),
+            Point::new(0.9904488, 0.1046719)
+        );
+        assert_eq!(
             super::precise_fix(230.307557263f64.to_radians(), 1f32),
             Point::new(-0.94068605, -0.78076303)
+        );
+        assert_eq!(
+            super::precise_fix(191.2593688182f64.to_radians(), 1f32),
+            Point::new(-0.16723652, -0.84003687)
         );
     }
 }
