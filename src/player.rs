@@ -6,17 +6,22 @@ use crate::colliders::{Axes, Collider, Rect};
 use crate::level::Level;
 use crate::point::Point;
 
-fn precise_fix(angle: f32, magnitude: f32) -> Point {
+fn precise_fix(angle: f64, magnitude: f32) -> Point {
     const DEADZONE: f64 = 0.239532471;
     const AMPLOWERBOUND: f32 = (0.25 * (1f64 - DEADZONE) * (1f64 - DEADZONE)) as f32;
     const LOWERBOUND: i16 = 7849;
-    let raw_angle = Point::new(angle.cos(), angle.sin());
+    let angle = Point::new(angle.sin() as f32, angle.cos() as f32);
+    let raw_angle = if angle.x.abs() > angle.y.abs() {
+        angle
+    } else {
+        Point::new(angle.y, angle.x)
+    };
     let upper_bound = i16::max((magnitude * 32767f32) as i16, LOWERBOUND);
-    let approx = (raw_angle.x as f64) / (raw_angle.y as f64);
-    let multip = (raw_angle.y as f64) / (raw_angle.x as f64);
-    let upperl = (upper_bound / 32767) as f64;
+    let approx = (raw_angle.y.abs() as f64) / (raw_angle.x.abs() as f64);
+    let multip = (raw_angle.x.abs() as f64) / (raw_angle.y.abs() as f64);
+    let upperl = upper_bound as f64 / 32767f64;
     let mut least_error = approx;
-    let mut short_x = 32767i16;
+    let mut short_x = upper_bound;
     let mut short_y = 0i16;
     let mut y = LOWERBOUND;
     loop {
@@ -25,7 +30,7 @@ fn precise_fix(angle: f32, magnitude: f32) -> Point {
         let mut x = f64::floor(xx * 32767f64) as i16;
         let mut xs = x as f64 / 32767f64 - DEADZONE;
         let mut error = f64::abs(ys / xs - approx);
-        if xs * xs + ys * ys >= AMPLOWERBOUND as f64 && (error < least_error || error <= 0.5e-10) {
+        if xs * xs + ys * ys >= AMPLOWERBOUND as f64 && error < least_error {
             least_error = error;
             short_x = x;
             short_y = y;
@@ -34,9 +39,7 @@ fn precise_fix(angle: f32, magnitude: f32) -> Point {
             x += 1;
             xs = x as f64 / 32767f64 - DEADZONE;
             error = f64::abs(ys / xs - approx);
-            if xs * xs + ys * ys >= AMPLOWERBOUND as f64
-                && (error < least_error || error <= 0.5e-10)
-            {
+            if xs * xs + ys * ys >= AMPLOWERBOUND as f64 && error < least_error {
                 least_error = error;
                 short_x = x;
                 short_y = y;
@@ -47,13 +50,15 @@ fn precise_fix(angle: f32, magnitude: f32) -> Point {
         }
         y += 1;
     }
-    let final_x = short_x.signum() as f32
-        * (f64::max(f64::abs(short_x as f64) / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE))
-            as f32;
-    let final_y = short_y.signum() as f32
-        * (f64::max(f64::abs(short_y as f64) / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE))
-            as f32;
-    Point::new(final_x, final_y)
+    let final_x = raw_angle.x.signum()
+        * (f64::max(short_x as f64 / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
+    let final_y = raw_angle.y.signum()
+        * (f64::max(short_y as f64 / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
+    if angle.x.abs() > angle.y.abs() {
+        Point::new(final_x, final_y)
+    } else {
+        Point::new(final_y, final_x)
+    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -91,7 +96,7 @@ impl Player {
         }
         ang = 360f32 - ang;
         let rang = ang.to_radians();
-        let adjusted = precise_fix(rang, 1f32);
+        let adjusted = precise_fix(rang as f64, 1f32);
         self.speed_calc(adjusted, level);
         let mut speed_x = self.speed.x;
         let mut speed_y = self.speed.y;
@@ -284,8 +289,17 @@ impl Player {
 
 #[cfg(test)]
 mod tests {
+    use crate::point::Point;
+
     #[test]
     fn precise_fix_test() {
-        assert_eq!(2 + 2, 4);
+        assert_eq!(
+            super::precise_fix(67.53154007f64.to_radians(), 1f32),
+            Point::new(0.4807418, 0.1988198)
+        );
+        assert_eq!(
+            super::precise_fix(230.307557263f64.to_radians(), 1f32),
+            Point::new(-0.94068605, -0.78076303)
+        );
     }
 }

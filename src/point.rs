@@ -1,6 +1,6 @@
 use std::ops;
 
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Point {
     pub x: f32,
     pub y: f32,
