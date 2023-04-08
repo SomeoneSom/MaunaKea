@@ -177,7 +177,10 @@ impl Player {
         static_solids: &[bv::BitVec], checkpoint: &Rect, level: &Level,
     ) -> f32 {
         self.move_self(angle, level);
-        let hurtbox_rect = self.hurtbox.rect().unwrap();
+        let hurtbox_rect = match self.hurtbox.rect() {
+            Some(rect) => rect,
+            None => unreachable!(),
+        };
         let left = (hurtbox_rect.ul.x - bounds.ul.x).round() as i32;
         let right = (hurtbox_rect.dr.x - bounds.ul.x).round() as i32 + 1;
         let up = (hurtbox_rect.ul.y - bounds.ul.y).round() as i32;
@@ -191,8 +194,7 @@ impl Player {
             }
         }
         // TODO: make it so this actually calcs distance properly
-        let rect = self.hurtbox.rect().unwrap();
-        let player_cent = (rect.ul + rect.dr) / 2f32;
+        let player_cent = (hurtbox_rect.ul + hurtbox_rect.dr) / 2f32;
         let check_cent = Point::new(
             (checkpoint.ul.x + checkpoint.dr.x) / 2f32,
             (checkpoint.ul.y + checkpoint.dr.y) / 2f32,
@@ -203,7 +205,10 @@ impl Player {
     pub fn solids_collision(
         &mut self, bounds: &Rect, static_solids: &[bv::BitVec], switch_xy: bool, switch_lr: bool,
     ) -> bool {
-        let hitbox_rect = self.hitbox.rect().unwrap();
+        let hitbox_rect = match self.hitbox.rect() {
+            Some(rect) => rect,
+            None => unreachable!(),
+        };
         let left = (hitbox_rect.ul.x - bounds.ul.x).round() as usize;
         let right = (hitbox_rect.dr.x - bounds.ul.x).round() as usize + 1;
         let up = (hitbox_rect.ul.y - bounds.ul.y).round() as usize;
