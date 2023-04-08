@@ -1,3 +1,10 @@
+#![warn(
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::unwrap_used,
+    clippy::expect_used,
+)]
+
 mod algorithm;
 mod colliders;
 mod gui;
@@ -18,7 +25,7 @@ fn fix_conhost() {
 }
 
 #[cfg(not(windows))]
-fn fix_conhost() {}
+const fn fix_conhost() {}
 
 fn main() {
     if cfg!(windows) {
