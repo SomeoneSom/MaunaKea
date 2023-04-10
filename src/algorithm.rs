@@ -52,7 +52,7 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
 // NOTE: not handling the error here because of absurd error type
 fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs {
     let initial_population = build_population()
-        .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f32, 359.99996f32))
+        .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f64, 359.99999999999994))
         .of_size(500) // TODO: allow for an option to change this please
         .uniform_at_random();
     let simulator = Simulator::new(player, level, checkpoints);
@@ -62,7 +62,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
             .with_evaluation(&simulator)
             .with_selection(MaximizeSelector::new(0.85, 12)) //  TODO: add options for this too
             .with_crossover(SinglePointCrossBreeder::new())
-            .with_mutation(RandomValueMutator::new(0.2, 0f32, 359.99996f32)) // TODO: ditto
+            .with_mutation(RandomValueMutator::new(0.2, 0f64, 359.99999999999994)) // TODO: ditto
             .with_reinsertion(ElitistReinserter::new(&simulator, true, 0.85)) // TODO: again
             .with_initial_population(initial_population)
             .build(),
@@ -87,7 +87,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
             break result.best_solution.solution.genome;
         }
         let to_add = build_population()
-            .with_genome_builder(ValueEncodedGenomeBuilder::new(1, 0f32, 359.99996f32))
+            .with_genome_builder(ValueEncodedGenomeBuilder::new(1, 0f64, 359.99999999999994))
             .of_size(population.len())
             .uniform_at_random();
         for (p, t) in population.iter_mut().zip(to_add.individuals().iter()) {
@@ -99,7 +99,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
                 .with_evaluation(&simulator)
                 .with_selection(MaximizeSelector::new(0.85, 12))
                 .with_crossover(SinglePointCrossBreeder::new())
-                .with_mutation(RandomValueMutator::new(0.2, 0f32, 359.99996f32))
+                .with_mutation(RandomValueMutator::new(0.2, 0f64, 359.99999999999994))
                 .with_reinsertion(ElitistReinserter::new(&simulator, true, 0.85))
                 .with_initial_population(Population::with_individuals(population))
                 .build(),

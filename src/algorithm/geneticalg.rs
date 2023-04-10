@@ -18,7 +18,7 @@ impl Fitness for OrdFloat64 {
     }
 }
 
-pub type Inputs = Vec<f32>;
+pub type Inputs = Vec<f64>;
 
 /*#[derive(Clone, Debug)]
 struct PlayerSim<'a> {

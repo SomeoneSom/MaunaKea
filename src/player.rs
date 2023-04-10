@@ -90,7 +90,7 @@ impl Player {
     }
 
     pub fn move_self(&mut self, angle: f64, level: &Level) {
-        let adjusted = precise_fix(angle.to_radians(), 1f32);
+        let adjusted = precise_fix(angle.to_radians(), 1f32).normalize();
         self.speed_calc(adjusted, level);
         let mut speed_x = self.speed.x;
         let mut speed_y = self.speed.y;
