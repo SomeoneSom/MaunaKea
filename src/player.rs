@@ -6,6 +6,12 @@ use crate::colliders::{Axes, Collider, Rect};
 use crate::level::Level;
 use crate::point::Point;
 
+pub enum FrameResult {
+    Nothing,
+    CheckpointHit,
+    Death,
+}
+
 fn precise_fix(angle: f64, magnitude: f32) -> Point {
     const DEADZONE: f64 = 0.239532471;
     const AMPLOWERBOUND: f32 = (0.25 * (1f64 - DEADZONE) * (1f64 - DEADZONE)) as f32;
@@ -61,6 +67,7 @@ fn precise_fix(angle: f64, magnitude: f32) -> Point {
     }
 }
 
+
 #[derive(Clone, Debug, Default)]
 pub struct Player {
     pub speed: Point,
@@ -89,9 +96,7 @@ impl Player {
         }
     }
 
-    pub fn move_self(&mut self, angle: f64, level: &Level) {
-        let adjusted = precise_fix(angle.to_radians(), 1f32).normalize();
-        self.speed_calc(adjusted, level);
+    pub fn move_self(&mut self, level: &Level) {
         let mut speed_x = self.speed.x;
         let mut speed_y = self.speed.y;
         let sign_x = speed_x.signum();
@@ -132,9 +137,10 @@ impl Player {
     // TODO: add in stuff for when speed is outside octagon and should be pulled back to it
     // TODO: make speed capping actually work how its meant to
     // TODO: water surface bs
-    pub fn speed_calc(&mut self, vector: Point, level: &Level) {
+    pub fn speed_calc(&mut self, angle: f64, level: &Level) {
+        let adjusted = precise_fix(angle.to_radians(), 1f32).normalize();
         self.retained_timer -= 1;
-        let target = Point::new(60f32 * vector.x, 80f32 * vector.y);
+        let target = Point::new(60f32 * adjusted.x, 80f32 * adjusted.y);
         if f32::abs(target.x - self.speed.x) < 10f32 {
             self.speed.x = target.x;
         } else {
@@ -166,8 +172,24 @@ impl Player {
         todo!()
     }
 
-    pub fn collision_check() -> bool {
-        todo!()
+    pub fn collide(&mut self, level: &Level) -> FrameResult {
+        let hurtbox_rect = match self.hurtbox.rect() {
+            Some(rect) => rect,
+            None => unreachable!(),
+        };
+        let left = (hurtbox_rect.ul.x - level.bounds.ul.x).round() as i32;
+        let right = (hurtbox_rect.dr.x - level.bounds.ul.x).round() as i32 + 1;
+        let up = (hurtbox_rect.ul.y - level.bounds.ul.y).round() as i32;
+        let down = (hurtbox_rect.dr.y - level.bounds.ul.y).round() as i32 + 1;
+        // println!("{} {} {} {}", left, right, up, down);
+        for x in left..right {
+            for y in up..down {
+                if level.static_death[y as usize][x as usize] {
+                    return FrameResult::Death;
+                }
+            }
+        }
+        FrameResult::Nothing
     }
 
     // this function is getting removed soon im pretty sure
@@ -175,7 +197,7 @@ impl Player {
         &mut self, angle: f64, bounds: &Rect, static_death: &[bv::BitVec],
         static_solids: &[bv::BitVec], checkpoint: &Rect, level: &Level,
     ) -> f32 {
-        self.move_self(angle, level);
+        self.move_self(level);
         let hurtbox_rect = match self.hurtbox.rect() {
             Some(rect) => rect,
             None => unreachable!(),

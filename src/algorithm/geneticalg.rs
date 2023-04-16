@@ -64,10 +64,10 @@ impl Simulator {
         }
     }
 
-    fn sim_player(&self, inp: &Inputs) -> Player {
+    fn sim_player(&self, inp: &Inputs) -> (Player, usize) {
         let player = self.player.clone();
         todo!();
-        player
+        (player, 0)
     }
 }
 
