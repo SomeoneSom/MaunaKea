@@ -1,6 +1,6 @@
 use crate::colliders::Rect;
 use crate::level::Level;
-use crate::player::Player;
+use crate::player::{Player, FrameResult};
 
 use genevo::prelude::*;
 use ordered_float::OrderedFloat;
@@ -65,15 +65,25 @@ impl Simulator {
     }
 
     fn sim_player(&self, inp: &Inputs) -> (Player, usize) {
-        let player = self.player.clone();
-        todo!();
-        (player, 0)
+        let mut player = self.player.clone();
+        let mut checkpoint_index = 0usize;
+        for &i in inp {
+            player.speed_calc(i, &self.level); // TODO: restrict
+            player.move_self(&self.level);
+            match player.collide(&self.level, &self.checkpoints[checkpoint_index]) {
+                FrameResult::Death => break,
+                FrameResult::CheckpointHit => checkpoint_index += 1,
+                FrameResult::Nothing => (),
+            }
+        }
+        (player, checkpoint_index)
     }
 }
 
 impl<'a> FitnessFunction<Inputs, OrdFloat64> for &'a Simulator {
     fn fitness_of(&self, inp: &Inputs) -> OrdFloat64 {
-        let player = self.sim_player(inp);
+        let (player, checkpoint_index) = self.sim_player(inp);
+        let checkpoint = self.checkpoints[checkpoint_index];
         todo!()
     }
 

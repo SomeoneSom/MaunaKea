@@ -67,7 +67,6 @@ fn precise_fix(angle: f64, magnitude: f32) -> Point {
     }
 }
 
-
 #[derive(Clone, Debug, Default)]
 pub struct Player {
     pub speed: Point,
@@ -172,7 +171,7 @@ impl Player {
         todo!()
     }
 
-    pub fn collide(&mut self, level: &Level) -> FrameResult {
+    pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
         let hurtbox_rect = match self.hurtbox.rect() {
             Some(rect) => rect,
             None => unreachable!(),
@@ -189,38 +188,11 @@ impl Player {
                 }
             }
         }
-        FrameResult::Nothing
-    }
-
-    // this function is getting removed soon im pretty sure
-    pub fn sim_frame_legacy(
-        &mut self, angle: f64, bounds: &Rect, static_death: &[bv::BitVec],
-        static_solids: &[bv::BitVec], checkpoint: &Rect, level: &Level,
-    ) -> f32 {
-        self.move_self(level);
-        let hurtbox_rect = match self.hurtbox.rect() {
-            Some(rect) => rect,
-            None => unreachable!(),
-        };
-        let left = (hurtbox_rect.ul.x - bounds.ul.x).round() as i32;
-        let right = (hurtbox_rect.dr.x - bounds.ul.x).round() as i32 + 1;
-        let up = (hurtbox_rect.ul.y - bounds.ul.y).round() as i32;
-        let down = (hurtbox_rect.dr.y - bounds.ul.y).round() as i32 + 1;
-        // println!("{} {} {} {}", left, right, up, down);
-        for x in left..right {
-            for y in up..down {
-                if static_death[y as usize][x as usize] {
-                    return 9999999f32;
-                }
-            }
+        if self.hitbox.collide_check(&Collider::Rectangular(*checkpoint)) {
+            FrameResult::CheckpointHit
+        } else {
+            FrameResult::Nothing
         }
-        // TODO: make it so this actually calcs distance properly
-        let player_cent = (hurtbox_rect.ul + hurtbox_rect.dr) / 2f32;
-        let check_cent = Point::new(
-            (checkpoint.ul.x + checkpoint.dr.x) / 2f32,
-            (checkpoint.ul.y + checkpoint.dr.y) / 2f32,
-        );
-        f32::sqrt((player_cent.x - check_cent.x).powi(2) + (player_cent.y - check_cent.y).powi(2))
     }
 
     pub fn solids_collision(
