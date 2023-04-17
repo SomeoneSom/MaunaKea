@@ -7,7 +7,6 @@ edition = "2021"
 egui = "0.19.0"
 eframe = "0.19.0"
 regex = "1.6.0"
-clipboard = "0.5.0"
 reqwest = {version = "0.11.12", features = ["blocking"]}
 colored = "2.0.0"
 bitvec = "1.0.1"
@@ -16,6 +15,7 @@ thiserror = "1.0.38"
 genevo = "0.7.1"
 ordered-float = "3.4.0"
 typenum = "1.16.0"
+arboard = "3.2.0"
 
 [target.'cfg(windows)'.dependencies]
 winapi = "0.3.9"

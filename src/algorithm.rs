@@ -12,6 +12,7 @@ use crate::level::Level;
 use crate::player::Player;
 use crate::point::Point;
 
+use arboard::Clipboard;
 use bitvec::prelude as bv;
 use colored::Colorize;
 use genevo::{operator::prelude::*, population::ValueEncodedGenomeBuilder, prelude::*};
@@ -117,9 +118,39 @@ pub enum AlgorithmError {
 
 pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), AlgorithmError> {
     let base_inputs = initial_path(level, player, parse_checkpoint(checkpoints)?);
-    todo!();
+    // TODO: the rest of the damn thing
+    let out = format_inputs(base_inputs);
+    println!("{out}");
+    let mut clipboard = Clipboard::new().unwrap();
+    clipboard.set_text(out).unwrap();
     Ok(())
 }
 
+fn format_inputs(inp: Inputs) -> String {
+    let mut count = 1;
+    let mut current = inp[0];
+    let mut out = "".to_owned();
+    for i in inp[1..].iter() {
+        if *i == current {
+            count += 1;
+        } else {
+            out += &format!("{count},f,{current}\n");
+            count = 1;
+            current = *i;
+        }
+    }
+    out += &format!("{count},f,{current}\n");
+    out
+}
+
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use crate::algorithm::format_inputs;
+
+    #[test]
+    fn format_inputs_test() {
+        let expected = format!("1,f,{}\n5,f,{}\n2,f,{}\n", 4.2f64, 99.3f64, 55.9f64);
+        let got = format_inputs(vec![4.2, 99.3, 99.3, 99.3, 99.3, 99.3, 55.9, 55.9]);
+        assert_eq!(expected, got);
+    }
+}
