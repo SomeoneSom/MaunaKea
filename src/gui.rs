@@ -115,6 +115,22 @@ impl eframe::App for MaunaKea {
                     Err(_e) => println!("didnt work! :("),
                 }
             }
+            if ui.button("Reset Custom Info Template").clicked() {
+                let client = reqwest::blocking::Client::new();
+                let resp = client
+                    .head(format!(
+                        "http://localhost:32270/tas/custominfo?template={}",
+                        self.old_template
+                    ))
+                    .send();
+                match &resp {
+                    Ok(_v) => println!(
+                        "{}",
+                        "Setting the Custom Info Template succeeded!".bright_green()
+                    ),
+                    Err(_e) => println!("didnt work! :("),
+                }
+            }
             if ui.button("Run (INCOMPLETE)").clicked() {
                 println!("{}", "Running!".bright_green());
                 let (level, player) = Level::load(&self.options.info_path);
