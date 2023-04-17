@@ -81,6 +81,7 @@ impl Simulator {
                 FrameResult::Nothing => (),
             }
         }
+        println!("player simulated with inputs {inp:?}");
         (player, prev_player, checkpoint_index, frame_count)
     }
 }
