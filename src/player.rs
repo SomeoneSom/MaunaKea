@@ -95,6 +95,15 @@ impl Player {
         }
     }
 
+    pub fn pos(&self) -> Point {
+        let ul = match self.hurtbox.rect() {
+            Some(rect) => rect,
+            None => unreachable!(),
+        }
+        .ul;
+        Point::new(ul.x + 4f32, ul.y + 11f32)
+    }
+
     pub fn move_self(&mut self, level: &Level) {
         let mut speed_x = self.speed.x;
         let mut speed_y = self.speed.y;
@@ -188,7 +197,10 @@ impl Player {
                 }
             }
         }
-        if self.hitbox.collide_check(&Collider::Rectangular(*checkpoint)) {
+        if self
+            .hitbox
+            .collide_check(&Collider::Rectangular(*checkpoint))
+        {
             FrameResult::CheckpointHit
         } else {
             FrameResult::Nothing

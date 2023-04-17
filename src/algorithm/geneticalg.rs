@@ -1,6 +1,6 @@
 use crate::colliders::Rect;
 use crate::level::Level;
-use crate::player::{Player, FrameResult};
+use crate::player::{FrameResult, Player};
 
 use genevo::prelude::*;
 use ordered_float::OrderedFloat;
@@ -64,10 +64,15 @@ impl Simulator {
         }
     }
 
-    fn sim_player(&self, inp: &Inputs) -> (Player, usize) {
+    // TODO: break when hit final checkpoint
+    fn sim_player(&self, inp: &Inputs) -> (Player, Player, usize, usize) {
         let mut player = self.player.clone();
+        let mut prev_player: Player = player.clone();
         let mut checkpoint_index = 0usize;
+        let mut frame_count = 0usize;
         for &i in inp {
+            frame_count += 1;
+            prev_player = player.clone();
             player.speed_calc(i, &self.level); // TODO: restrict
             player.move_self(&self.level);
             match player.collide(&self.level, &self.checkpoints[checkpoint_index]) {
@@ -76,15 +81,37 @@ impl Simulator {
                 FrameResult::Nothing => (),
             }
         }
-        (player, checkpoint_index)
+        (player, prev_player, checkpoint_index, frame_count)
     }
 }
 
 impl<'a> FitnessFunction<Inputs, OrdFloat64> for &'a Simulator {
     fn fitness_of(&self, inp: &Inputs) -> OrdFloat64 {
-        let (player, checkpoint_index) = self.sim_player(inp);
+        let (player, prev_player, checkpoint_index, frame_count) = self.sim_player(inp);
         let checkpoint = self.checkpoints[checkpoint_index];
-        todo!()
+        if checkpoint_index == self.checkpoints.len() - 1 {
+            let (mut accurate_distance, touched) =
+                checkpoint.accurate_distance(player.pos(), prev_player.pos());
+            if !touched {
+                accurate_distance = 3.16666f64;
+            }
+            OrdFloat64(OrderedFloat(
+                checkpoint_index as f64 * 10000f64 - frame_count as f64 * 8f64 - accurate_distance,
+            ))
+        } else {
+            // NOTE: this doesnt have closestDist or atFrame, i might need to add those later
+            let checkpoint_center = checkpoint.center();
+            let player_center = match player.hitbox.rect() {
+                Some(rect) => rect,
+                None => unreachable!(),
+            }
+            .center();
+            OrdFloat64(OrderedFloat(
+                checkpoint_index as f64 * 10000f64
+                    - checkpoint_center.distance(player_center) as f64
+                    - frame_count as f64,
+            ))
+        }
     }
 
     fn average(&self, a: &[OrdFloat64]) -> OrdFloat64 {

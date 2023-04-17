@@ -116,6 +116,35 @@ impl Rect {
         Point::new((self.ul.x + self.dr.x) / 2.0, (self.ul.y + self.dr.y) / 2.0)
     }
 
+    pub fn accurate_distance(&self, pos: Point, prev_pos: Point) -> (f64, bool) {
+        let mut raw_l = self.ul.x - pos.x;
+        let mut raw_r = pos.x - self.dr.x;
+        let mut raw_u = self.ul.y - pos.y;
+        let mut raw_d = pos.y - self.dr.y;
+        let touched = raw_l < 0f32 || raw_r < 0f32 || raw_u < 0f32 || raw_d < 0f32;
+        if touched {
+            raw_l = self.ul.x - prev_pos.x;
+            raw_r = prev_pos.x - self.dr.x;
+            raw_u = self.ul.y - prev_pos.y;
+            raw_d = prev_pos.y - self.dr.y;
+        }
+        let x_diff = if raw_l > 0f32 {
+            raw_l as f64
+        } else if raw_r > 0f32 {
+            raw_r as f64
+        } else {
+            0f64
+        };
+        let y_diff = if raw_u > 0f32 {
+            raw_u as f64
+        } else if raw_d > 0f32 {
+            raw_d as f64
+        } else {
+            0f64
+        };
+        (f64::sqrt(x_diff.powi(2) + y_diff.powi(2)), touched)
+    }
+
     fn collide_check(&self, other: &Collider) -> bool {
         match other {
             Collider::Rectangular(rect) => {
