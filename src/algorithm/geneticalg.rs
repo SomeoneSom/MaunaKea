@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use crate::colliders::Rect;
 use crate::level::Level;
 use crate::player::{FrameResult, Player};
@@ -66,8 +68,9 @@ impl Simulator {
 
     // TODO: break when hit final checkpoint
     fn sim_player(&self, inp: &Inputs) -> (Player, Player, usize, usize) {
+        //let now = SystemTime::now();
         let mut player = self.player.clone();
-        let mut prev_player: Player = player.clone();
+        let mut prev_player = player.clone();
         let mut checkpoint_index = 0usize;
         let mut frame_count = 0usize;
         for &i in inp {
@@ -81,7 +84,7 @@ impl Simulator {
                 FrameResult::Nothing => (),
             }
         }
-        println!("player simulated with inputs {inp:?}");
+        //println!("{}", now.elapsed().unwrap().as_secs_f64());
         (player, prev_player, checkpoint_index, frame_count)
     }
 }
