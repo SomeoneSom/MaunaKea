@@ -75,12 +75,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
             let result = ga_sim.step();
             match result {
                 // TODO: actually handle this stuff
-                Ok(SimResult::Intermediate(step)) => {
-			println!("{}, {}", (*step.result.evaluated_population.individuals())[0].len(), step.iteration);
-			if step.iteration == 10 {
-				panic!("panicing for benchmark purposes");
-			}
-		},
+                Ok(SimResult::Intermediate(step)) => println!("{}, {}", (*step.result.evaluated_population.individuals())[0].len(), step.iteration),
                 Ok(SimResult::Final(step, processing_time, duration, stop_reason)) => {
                     break step.result
                 }
