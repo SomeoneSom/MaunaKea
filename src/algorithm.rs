@@ -70,12 +70,17 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
     )
     .until(GenerationLimit::new(200)) // TODO: yet again
     .build();
+    let mut hit_final = false;
     loop {
         let result = loop {
             let result = ga_sim.step();
             match result {
                 // TODO: actually handle this stuff
-                Ok(SimResult::Intermediate(step)) => println!("{}, {}", (*step.result.evaluated_population.individuals())[0].len(), step.iteration),
+                Ok(SimResult::Intermediate(step)) => println!(
+                    "{}, {}",
+                    (*step.result.evaluated_population.individuals())[0].len(),
+                    step.iteration
+                ),
                 Ok(SimResult::Final(step, processing_time, duration, stop_reason)) => {
                     break step.result
                 }
@@ -83,8 +88,9 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
             }
         };
         let mut population = (*result.evaluated_population.individuals()).clone();
-        if population[0].len() >= 6 {
-            // TODO: make breaking criteria correct
+        hit_final = simulator.check_if_hit_final(&result.best_solution.solution.genome);
+        if hit_final {
+            // TODO: make breaking criteria more correct
             break result.best_solution.solution.genome;
         }
         let to_add = build_population()

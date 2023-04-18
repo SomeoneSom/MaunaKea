@@ -50,11 +50,12 @@ impl<'a> Phenotype<Inputs> for PlayerSim<'a> {
     }
 }*/
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub(super) struct Simulator {
     player: Player,
     level: Level, // lets just say this owns the level for now
     checkpoints: Vec<Rect>,
+    hit_final: bool,
 }
 
 impl Simulator {
@@ -63,10 +64,10 @@ impl Simulator {
             player,
             level,
             checkpoints,
+            hit_final: false,
         }
     }
 
-    // TODO: break when hit final checkpoint
     fn sim_player(&self, inp: &Inputs) -> (Player, Player, usize, usize) {
         //let now = SystemTime::now();
         let mut player = self.player.clone();
@@ -86,6 +87,11 @@ impl Simulator {
         }
         //println!("{}", now.elapsed().unwrap().as_secs_f64());
         (player, prev_player, checkpoint_index, frame_count)
+    }
+
+    pub fn check_if_hit_final(&self, inp: &Inputs) -> bool {
+        let result = self.sim_player(inp);
+        result.2 == self.checkpoints.len() - 1
     }
 }
 
