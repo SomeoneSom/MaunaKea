@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use bitvec::prelude as bv;
 
-use crate::colliders::{Axes, Collider, Rect};
+use crate::colliders::{Axes, Collider, Direction, Rect};
 use crate::level::Level;
 use crate::point::Point;
 
@@ -63,8 +63,14 @@ impl Player {
                 };
                 self.hurtbox.move_collider(speed, 0f32);
                 self.hitbox.move_collider(speed, 0f32);
-                if self.solids_collision(&level.bounds, &level.static_solids, false, sign_x < 0f32)
-                {
+                if self.solids_collision(
+                    level,
+                    if sign_x < 0f32 {
+                        Direction::Left
+                    } else {
+                        Direction::Right
+                    },
+                ) {
                     speed_x = 0f32;
                 }
                 speed_x -= 480f32 * sign_x;
@@ -76,7 +82,14 @@ impl Player {
                 };
                 self.hurtbox.move_collider(0f32, speed);
                 self.hitbox.move_collider(0f32, speed);
-                if self.solids_collision(&level.bounds, &level.static_solids, true, sign_y < 0f32) {
+                if self.solids_collision(
+                    level,
+                    if sign_y < 0f32 {
+                        Direction::Up
+                    } else {
+                        Direction::Down
+                    },
+                ) {
                     break;
                 }
                 speed_y -= 480f32 * sign_y;
@@ -107,10 +120,12 @@ impl Player {
             let temp_hitbox = self.hitbox;
             self.hitbox.move_collider(self.speed.x.signum(), 0f32);
             if self.solids_collision(
-                &level.bounds,
-                &level.static_solids,
-                false,
-                self.speed.x.signum() < 0f32,
+                level,
+                if self.speed.x.signum() < 0f32 {
+                    Direction::Left
+                } else {
+                    Direction::Right
+                },
             ) {
                 self.speed.x = self.retained;
             }
@@ -156,7 +171,11 @@ impl Player {
         }
     }
 
-    pub fn solids_collision(
+    pub fn solids_collision(&mut self, level: &Level, direction: Direction) -> bool {
+        todo!()
+    }
+
+    pub fn solids_collision_old(
         &mut self, bounds: &Rect, static_solids: &[bv::BitVec], switch_xy: bool, switch_lr: bool,
     ) -> bool {
         let hitbox_rect = match self.hitbox.rect() {
