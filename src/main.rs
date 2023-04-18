@@ -38,6 +38,6 @@ fn main() {
     //    Box::new(|_cc| Box::<gui::MaunaKea>::default()),
     //);
     println!("current running headless for testing");
-    let (level, player) = level::Level::load("C:/Users/kidss/Desktop/Celeste/infodump.txt");
+    let (level, player) = level::Level::load("/home/atpx8/Celeste/infodump.txt");
     algorithm::run_alg(level, player, "-860, -265, -840, -185\n-802, -232, -778, -186\n-750, -279, -714, -236\n-726, -319, -697, -305");
 }

@@ -12,61 +12,6 @@ pub enum FrameResult {
     Death,
 }
 
-fn precise_fix(angle: f64, magnitude: f32) -> Point {
-    const DEADZONE: f64 = 0.239532471;
-    const AMPLOWERBOUND: f32 = (0.25 * (1f64 - DEADZONE) * (1f64 - DEADZONE)) as f32;
-    const LOWERBOUND: i16 = 7849;
-    let angle = Point::new(angle.sin() as f32, angle.cos() as f32);
-    let raw_angle = if angle.x.abs() > angle.y.abs() {
-        angle
-    } else {
-        Point::new(angle.y, angle.x)
-    };
-    let upper_bound = i16::max((magnitude * 32767f32) as i16, LOWERBOUND);
-    let approx = (raw_angle.y.abs() as f64) / (raw_angle.x.abs() as f64);
-    let multip = (raw_angle.x.abs() as f64) / (raw_angle.y.abs() as f64);
-    let upperl = upper_bound as f64 / 32767f64;
-    let mut least_error = approx;
-    let mut short_x = upper_bound;
-    let mut short_y = 0i16;
-    let mut y = LOWERBOUND;
-    loop {
-        let ys = y as f64 / 32767f64 - DEADZONE;
-        let xx = f64::min(DEADZONE + multip * ys, upperl);
-        let mut x = f64::floor(xx * 32767f64) as i16;
-        let mut xs = x as f64 / 32767f64 - DEADZONE;
-        let mut error = f64::abs(ys / xs - approx);
-        if xs * xs + ys * ys >= AMPLOWERBOUND as f64 && error < least_error {
-            least_error = error;
-            short_x = x;
-            short_y = y;
-        }
-        if x < upper_bound {
-            x += 1;
-            xs = x as f64 / 32767f64 - DEADZONE;
-            error = f64::abs(ys / xs - approx);
-            if xs * xs + ys * ys >= AMPLOWERBOUND as f64 && error < least_error {
-                least_error = error;
-                short_x = x;
-                short_y = y;
-            }
-        }
-        if xx >= upperl {
-            break;
-        }
-        y += 1;
-    }
-    let final_x = raw_angle.x.signum()
-        * (f64::max(short_x as f64 / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
-    let final_y = raw_angle.y.signum()
-        * (f64::max(short_y as f64 / 32767f64 - DEADZONE, 0f64) / (1f64 - DEADZONE)) as f32;
-    if angle.x.abs() > angle.y.abs() {
-        Point::new(final_x, final_y)
-    } else {
-        Point::new(final_y, final_x)
-    }
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct Player {
     pub speed: Point,
@@ -146,7 +91,7 @@ impl Player {
     // TODO: make speed capping actually work how its meant to
     // TODO: water surface bs
     pub fn speed_calc(&mut self, angle: f64, level: &Level) {
-        let adjusted = precise_fix(angle.to_radians(), 1f32).normalize();
+        let adjusted = Point::new(angle.to_radians().sin() as f32, angle.to_radians().cos() as f32);
         self.retained_timer -= 1;
         let target = Point::new(60f32 * adjusted.x, 80f32 * adjusted.y);
         if f32::abs(target.x - self.speed.x) < 10f32 {
@@ -288,42 +233,4 @@ impl Player {
 }
 
 #[cfg(test)]
-mod tests {
-    use crate::point::Point;
-
-    #[test]
-    fn precise_fix_test() {
-        assert_eq!(
-            super::precise_fix(67.53154007f64.to_radians(), 1f32),
-            Point::new(0.4807418, 0.1988198)
-        );
-        assert_eq!(
-            super::precise_fix(270.27667232f64.to_radians(), 1f32),
-            Point::new(-0.6336017, 0.003059587)
-        );
-        assert_eq!(
-            super::precise_fix(200.622924623f64.to_radians(), 1f32),
-            Point::new(-0.25680944, -0.6824013)
-        );
-        assert_eq!(
-            super::precise_fix(156.9761642057f64.to_radians(), 1f32),
-            Point::new(0.4182976, -0.98430866)
-        );
-        assert_eq!(
-            super::precise_fix(347.3860480961f64.to_radians(), 1f32),
-            Point::new(-0.21728018, 0.970945)
-        );
-        assert_eq!(
-            super::precise_fix(83.9673004749f64.to_radians(), 1f32),
-            Point::new(0.9904488, 0.1046719)
-        );
-        assert_eq!(
-            super::precise_fix(230.307557263f64.to_radians(), 1f32),
-            Point::new(-0.94068605, -0.78076303)
-        );
-        assert_eq!(
-            super::precise_fix(191.2593688182f64.to_radians(), 1f32),
-            Point::new(-0.16723652, -0.84003687)
-        );
-    }
-}
+mod tests {}

@@ -54,7 +54,7 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
 fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs {
     let initial_population = build_population()
         .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f64, 359.99999999999994))
-        .of_size(6) // TODO: allow for an option to change this please
+        .of_size(500) // TODO: allow for an option to change this please
         .uniform_at_random();
     let simulator = Simulator::new(player, level, checkpoints);
     // TODO: put this in a loop
