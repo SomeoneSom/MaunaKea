@@ -1,7 +1,9 @@
 use bitvec::prelude as bv;
 use colored::Colorize;
 use image::{ImageBuffer, Rgb, RgbImage};
+use quadtree_rs::{area::AreaBuilder, point::Point as QTPoint, Quadtree};
 use regex::Regex;
+
 use std::io::stdout;
 use std::io::Write;
 
@@ -9,11 +11,25 @@ use crate::colliders::{Collider, Rect};
 use crate::player::Player;
 use crate::point::Point;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Debug)]
 pub struct Level {
     pub bounds: Rect,
+    pub qt_solids: Quadtree<i32, Collider>,
+    pub qt_death: Quadtree<i32, Collider>,
     pub static_death: Vec<bv::BitVec>,
     pub static_solids: Vec<bv::BitVec>,
+}
+
+impl Default for Level {
+    fn default() -> Self {
+        Self {
+            bounds: Rect::default(),
+            qt_solids: Quadtree::new(1),
+            qt_death: Quadtree::new(1),
+            static_death: vec![],
+            static_solids: vec![],
+        }
+    }
 }
 
 impl Level {
@@ -32,6 +48,14 @@ impl Level {
         // TODO: make this not have to be mutable
         let mut level = Self::default();
         level.load_bounds(caps.get(7).unwrap().as_str().to_owned());
+        let anchor = QTPoint {
+            x: level.bounds.ul.x as i32,
+            y: level.bounds.ul.y as i32,
+        };
+        let depth_x = f32::ceil(f32::log2(level.bounds.dr.x - level.bounds.ul.x)) as usize;
+        let depth_y = f32::ceil(f32::log2(level.bounds.dr.y - level.bounds.ul.y)) as usize;
+        level.qt_solids = Quadtree::new_with_anchor(anchor, usize::max(depth_x, depth_y));
+        level.qt_death = Quadtree::new_with_anchor(anchor, usize::max(depth_x, depth_y));
         level.static_death = vec![
             bv::bitvec![0; (level.bounds.dr.x - level.bounds.ul.x) as usize];
             (level.bounds.dr.y - level.bounds.ul.y) as usize
@@ -223,6 +247,7 @@ impl Level {
         }
     }
 
+    // TODO: remove bitvec stuff
     fn load_solids(&mut self, data: String) {
         let rows = data.split(' ').collect::<Vec<_>>();
         let tile = vec![bv::bitvec![1; 8]; 8];
@@ -230,7 +255,26 @@ impl Level {
             for x in 0..row.len() {
                 if let Some(c) = row.chars().nth(x) {
                     if c != '0' && c != '\r' {
-                        Self::grift_bv(&mut self.static_solids, &tile, x as i32 * 8, y as i32 * 8)
+                        let anchor = self.qt_solids.anchor();
+                        let tile_r = Rect::new_xywh(
+                            (x as i32 + anchor.x) as f32 * 8f32,
+                            (y as i32 + anchor.y) as f32 * 8f32,
+                            8f32,
+                            8f32,
+                        );
+                        let tile_a = match AreaBuilder::default()
+                            .anchor(QTPoint {
+                                x: tile_r.ul.x as i32,
+                                y: tile_r.ul.y as i32,
+                            })
+                            .dimensions((8, 8))
+                            .build()
+                        {
+                            Ok(area) => area,
+                            Err(err) => panic!("{err}"), // TODO: handle this error
+                        };
+                        self.qt_solids.insert(tile_a, Collider::Rectangular(tile_r));
+                        Self::grift_bv(&mut self.static_solids, &tile, x as i32 * 8, y as i32 * 8);
                     }
                 }
             }
