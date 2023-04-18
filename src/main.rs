@@ -31,13 +31,10 @@ fn main() {
         "{}",
         "WARNING: This is unfinished, and likely will not fully work.".red()
     );
-    //let options = eframe::NativeOptions::default();
-    //eframe::run_native(
-    //    "MaunaKea ALPHA v0.0.3",
-    //    options,
-    //    Box::new(|_cc| Box::<gui::MaunaKea>::default()),
-    //);
-    println!("current running headless for testing");
-    let (level, player) = level::Level::load("/home/atpx8/Celeste/infodump.txt");
-    algorithm::run_alg(level, player, "-860, -265, -840, -185\n-802, -232, -778, -186\n-750, -279, -714, -236\n-726, -319, -697, -305");
+    let options = eframe::NativeOptions::default();
+    eframe::run_native(
+        "MaunaKea ALPHA v0.0.3",
+        options,
+        Box::new(|_cc| Box::<gui::MaunaKea>::default()),
+    );
 }
