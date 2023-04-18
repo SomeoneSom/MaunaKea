@@ -70,7 +70,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
     )
     .until(GenerationLimit::new(200)) // TODO: yet again
     .build();
-    let mut hit_final = false;
+    let mut hit_final: bool;
     loop {
         let result = loop {
             let result = ga_sim.step();
