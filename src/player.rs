@@ -155,7 +155,10 @@ impl Player {
     }
 
     pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
-        for collider in level.death.locate_in_envelope_intersecting(&self.hurtbox.to_aabb()) {
+        for collider in level
+            .death
+            .locate_in_envelope_intersecting(&self.hurtbox.to_aabb())
+        {
             match collider {
                 Collider::Rectangular(_) => return FrameResult::Death,
                 Collider::Circular(_) => {
