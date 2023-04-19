@@ -1,7 +1,3 @@
-use quadtree_rs::{
-    area::{Area, AreaBuilder},
-    point::Point as QTPoint,
-};
 use rstar::{RTreeObject, AABB};
 
 use crate::point::Point;
@@ -85,42 +81,6 @@ impl Collider {
         match self {
             Collider::Circular(value) => Some(value),
             _ => None,
-        }
-    }
-
-    // TODO: handle errors
-    pub fn to_qt_area(self) -> Area<i32> {
-        match self {
-            Collider::Rectangular(rect) => {
-                match AreaBuilder::default()
-                    .anchor(QTPoint {
-                        x: rect.ul.x.round() as i32,
-                        y: rect.ul.y.round() as i32,
-                    })
-                    .dimensions((
-                        rect.dr.x.round() as i32 - rect.ul.x.round() as i32 + 1,
-                        rect.dr.y.round() as i32 - rect.ul.y.round() as i32 + 1,
-                    ))
-                    .build()
-                {
-                    Ok(area) => area,
-                    Err(err) => panic!("{err}"),
-                }
-            }
-            Collider::Circular(circ) => {
-                // TODO: fix this match arm
-                match AreaBuilder::default()
-                    .anchor(QTPoint {
-                        x: (circ.origin.x - circ.radius) as i32,
-                        y: (circ.origin.y - circ.radius) as i32,
-                    })
-                    .dimensions(((circ.radius * 2f32) as i32, (circ.radius * 2f32) as i32))
-                    .build()
-                {
-                    Ok(area) => area,
-                    Err(err) => panic!("{err}"),
-                }
-            }
         }
     }
 
