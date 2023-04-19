@@ -126,7 +126,8 @@ impl Player {
         }
         if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
             let temp_hitbox = self.hitbox;
-            self.hitbox.move_collider(self.speed.x.signum() * 60f32, 0f32);
+            self.hitbox
+                .move_collider(self.speed.x.signum() * 60f32, 0f32);
             if self.solids_collision(
                 level,
                 if self.speed.x.signum() < 0f32 {
@@ -191,7 +192,11 @@ impl Player {
             Direction::Up => Rect::new_xywh(hitbox_rect.ul.x, hitbox_rect.ul.y, 8f32, 1f32),
             Direction::Down => Rect::new_xywh(hitbox_rect.dl.x, hitbox_rect.dl.y, 8f32, 1f32),
         });
-        level.qt_solids.query(to_check.to_qt_area()).next().is_some()
+        level
+            .qt_solids
+            .query(to_check.to_qt_area())
+            .next()
+            .is_some()
     }
 }
 
