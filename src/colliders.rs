@@ -1,3 +1,8 @@
+use quadtree_rs::{
+    area::{Area, AreaBuilder},
+    point::Point as QTPoint,
+};
+
 use crate::point::Point;
 
 const DELTATIME: f32 = 0.0166667;
@@ -81,6 +86,41 @@ impl Collider {
             _ => None,
         }
     }
+
+    // TODO: handle errors
+    pub fn to_qt_area(self) -> Area<i32> {
+        match self {
+            Collider::Rectangular(rect) => {
+                match AreaBuilder::default()
+                    .anchor(QTPoint {
+                        x: rect.ul.x as i32,
+                        y: rect.ul.y as i32,
+                    })
+                    .dimensions((
+                        (rect.dr.x - rect.ul.x + 1f32) as i32,
+                        (rect.dr.y - rect.ul.y + 1f32) as i32,
+                    ))
+                    .build()
+                {
+                    Ok(area) => area,
+                    Err(err) => panic!("{err}"),
+                }
+            }
+            Collider::Circular(circ) => {
+                match AreaBuilder::default()
+                    .anchor(QTPoint {
+                        x: (circ.origin.x - circ.radius) as i32,
+                        y: (circ.origin.y - circ.radius) as i32,
+                    })
+                    .dimensions(((circ.radius * 2f32) as i32, (circ.radius * 2f32) as i32))
+                    .build()
+                {
+                    Ok(area) => area,
+                    Err(err) => panic!("{err}"),
+                }
+            }
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -105,9 +145,9 @@ impl Rect {
     pub fn new_xywh(x: f32, y: f32, w: f32, h: f32) -> Self {
         Self {
             ul: Point::new(x, y),
-            ur: Point::new(x + w, y),
-            dl: Point::new(x, y + h),
-            dr: Point::new(x + w, y + h),
+            ur: Point::new(x + w - 1f32, y),
+            dl: Point::new(x, y + h - 1f32),
+            dr: Point::new(x + w - 1f32, y + h - 1f32),
         }
     }
 

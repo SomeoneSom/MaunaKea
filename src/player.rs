@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use bitvec::prelude as bv;
 
-use crate::colliders::{Axes, Collider, Rect};
+use crate::colliders::{Axes, Collider, Direction, Rect};
 use crate::level::Level;
 use crate::point::Point;
 
@@ -57,29 +57,50 @@ impl Player {
         loop {
             if speed_x * sign_x > 0f32 {
                 let speed = if sign_x > 0f32 {
-                    speed_x.min(480f32)
+                    speed_x.min(60f32)
                 } else {
-                    speed_x.max(-480f32)
+                    speed_x.max(-60f32)
                 };
                 self.hurtbox.move_collider(speed, 0f32);
                 self.hitbox.move_collider(speed, 0f32);
-                if self.solids_collision(&level.bounds, &level.static_solids, false, sign_x < 0f32)
-                {
+                if self.solids_collision(
+                    level,
+                    if sign_x < 0f32 {
+                        Direction::Left
+                    } else {
+                        Direction::Right
+                    },
+                ) {
+                    self.hurtbox.move_collider(-speed, 0f32);
+                    self.hitbox.move_collider(-speed, 0f32);
+                    self.retained = self.speed.x;
+                    self.retained_timer = 4;
+                    self.speed.x = 0f32;
                     speed_x = 0f32;
                 }
-                speed_x -= 480f32 * sign_x;
+                speed_x -= 60f32 * sign_x;
             } else {
                 let speed = if sign_y > 0f32 {
-                    speed_y.min(480f32)
+                    speed_y.min(60f32)
                 } else {
-                    speed_y.max(-480f32)
+                    speed_y.max(-60f32)
                 };
                 self.hurtbox.move_collider(0f32, speed);
                 self.hitbox.move_collider(0f32, speed);
-                if self.solids_collision(&level.bounds, &level.static_solids, true, sign_y < 0f32) {
+                if self.solids_collision(
+                    level,
+                    if sign_y < 0f32 {
+                        Direction::Up
+                    } else {
+                        Direction::Down
+                    },
+                ) {
+                    self.hurtbox.move_collider(0f32, -speed);
+                    self.hitbox.move_collider(0f32, -speed);
+                    self.speed.y = 0f32;
                     break;
                 }
-                speed_y -= 480f32 * sign_y;
+                speed_y -= 60f32 * sign_y;
             }
             if speed_x * sign_x <= 0f32 && speed_y * sign_y <= 0f32 {
                 break;
@@ -91,10 +112,10 @@ impl Player {
     // TODO: make speed capping actually work how its meant to
     // TODO: water surface bs
     pub fn speed_calc(&mut self, angle: f64, level: &Level) {
-        // TODO: truncate to fit within valid inputs, precise_fix is too costly
+        let truncated = f64::round(angle * 1000f64) / 1000f64;
         let adjusted = Point::new(
-            angle.to_radians().sin() as f32,
-            angle.to_radians().cos() as f32,
+            truncated.to_radians().sin() as f32,
+            truncated.to_radians().cos() as f32,
         );
         self.retained_timer -= 1;
         let target = Point::new(60f32 * adjusted.x, 80f32 * adjusted.y);
@@ -105,14 +126,17 @@ impl Player {
         }
         if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
             let temp_hitbox = self.hitbox;
-            self.hitbox.move_collider(self.speed.x.signum(), 0f32);
+            self.hitbox.move_collider(self.speed.x.signum() * 60f32, 0f32);
             if self.solids_collision(
-                &level.bounds,
-                &level.static_solids,
-                false,
-                self.speed.x.signum() < 0f32,
+                level,
+                if self.speed.x.signum() < 0f32 {
+                    Direction::Left
+                } else {
+                    Direction::Right
+                },
             ) {
                 self.speed.x = self.retained;
+                self.retained_timer = 0;
             }
             self.hitbox = temp_hitbox;
         }
@@ -156,83 +180,18 @@ impl Player {
         }
     }
 
-    pub fn solids_collision(
-        &mut self, bounds: &Rect, static_solids: &[bv::BitVec], switch_xy: bool, switch_lr: bool,
-    ) -> bool {
+    pub fn solids_collision(&mut self, level: &Level, direction: Direction) -> bool {
         let hitbox_rect = match self.hitbox.rect() {
             Some(rect) => rect,
             None => unreachable!(),
         };
-        let left = (hitbox_rect.ul.x - bounds.ul.x).round() as usize;
-        let right = (hitbox_rect.dr.x - bounds.ul.x).round() as usize + 1;
-        let up = (hitbox_rect.ul.y - bounds.ul.y).round() as usize;
-        let down = (hitbox_rect.dr.y - bounds.ul.y).round() as usize + 1;
-        let first: Range<usize>;
-        let second: Range<usize>;
-        if switch_xy {
-            first = up..down;
-            second = left..right;
-        } else {
-            first = left..right;
-            second = up..down;
-        }
-        let first_v = if switch_lr {
-            first.rev().collect::<Vec<_>>()
-        } else {
-            first.collect::<Vec<_>>()
-        };
-        let second_v = if switch_lr {
-            second.rev().collect::<Vec<_>>()
-        } else {
-            second.collect::<Vec<_>>()
-        };
-        let mut last_seen = -1;
-        for f in &first_v {
-            for s in &second_v {
-                let b = if switch_xy {
-                    static_solids[*f][*s]
-                } else {
-                    static_solids[*s][*f]
-                };
-                if b {
-                    last_seen = *f as i32 - if switch_xy { up as i32 } else { left as i32 };
-                }
-            }
-        }
-        if last_seen == -1 {
-            return false;
-        }
-        if !switch_lr {
-            last_seen = first_v.len() as i32 - last_seen;
-        } else {
-            last_seen += 1;
-        }
-        if self.retained_timer == 0 && !switch_xy {
-            self.retained = self.speed.x;
-            self.retained_timer = 4;
-        }
-        let multiplier = if switch_lr { 60f32 } else { -60f32 };
-        if switch_xy {
-            self.hitbox
-                .move_collider(0f32, last_seen as f32 * multiplier);
-            self.hurtbox
-                .move_collider(0f32, last_seen as f32 * multiplier);
-            self.speed.y = 0f32;
-        } else {
-            self.hitbox
-                .move_collider(last_seen as f32 * multiplier, 0f32);
-            self.hurtbox
-                .move_collider(last_seen as f32 * multiplier, 0f32);
-            self.speed.x = 0f32;
-        }
-        if !switch_xy {
-            self.hitbox.reset_subpixels(Axes::Horizontal);
-            self.hurtbox.reset_subpixels(Axes::Horizontal);
-        } else {
-            self.hitbox.reset_subpixels(Axes::Vertical);
-            self.hurtbox.reset_subpixels(Axes::Vertical);
-        }
-        true
+        let to_check = Collider::Rectangular(match direction {
+            Direction::Left => Rect::new_xywh(hitbox_rect.ul.x, hitbox_rect.ul.y, 1f32, 11f32),
+            Direction::Right => Rect::new_xywh(hitbox_rect.ur.x, hitbox_rect.ur.y, 1f32, 11f32),
+            Direction::Up => Rect::new_xywh(hitbox_rect.ul.x, hitbox_rect.ul.y, 8f32, 1f32),
+            Direction::Down => Rect::new_xywh(hitbox_rect.dl.x, hitbox_rect.dl.y, 8f32, 1f32),
+        });
+        level.qt_solids.query(to_check.to_qt_area()).next().is_some()
     }
 }
 

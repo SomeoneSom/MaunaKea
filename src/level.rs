@@ -7,6 +7,7 @@ use regex::Regex;
 use std::io::stdout;
 use std::io::Write;
 
+use crate::colliders::Circle;
 use crate::colliders::{Collider, Rect};
 use crate::player::Player;
 use crate::point::Point;
@@ -223,6 +224,7 @@ impl Level {
     }
 
     // TODO: just use indicatif you fucking idiot
+    // TODO: remove bitvec stuff
     fn load_spinners(&mut self, data: String) {
         let mut split = data.split('[').collect::<Vec<_>>();
         split.remove(0);
@@ -231,6 +233,11 @@ impl Level {
         Self::grift_circle(&mut circle, Point::new(6f32, 6f32), 6f32);
         for (i, p) in split.into_iter().enumerate() {
             let pair = Self::get_pair(p);
+            let circ = Collider::Circular(Circle::new(6f32, pair));
+            let rect =
+                Collider::Rectangular(Rect::new_xywh(pair.x - 8f32, pair.y + 5f32, 16f32, 4f32));
+            self.qt_death.insert(circ.to_qt_area(), circ);
+            self.qt_death.insert(rect.to_qt_area(), rect);
             Self::grift_bv(
                 &mut self.static_death,
                 &circle,
@@ -256,24 +263,13 @@ impl Level {
                 if let Some(c) = row.chars().nth(x) {
                     if c != '0' && c != '\r' {
                         let anchor = self.qt_solids.anchor();
-                        let tile_r = Rect::new_xywh(
+                        let tile_c = Collider::Rectangular(Rect::new_xywh(
                             (x as i32 + anchor.x) as f32 * 8f32,
                             (y as i32 + anchor.y) as f32 * 8f32,
                             8f32,
                             8f32,
-                        );
-                        let tile_a = match AreaBuilder::default()
-                            .anchor(QTPoint {
-                                x: tile_r.ul.x as i32,
-                                y: tile_r.ul.y as i32,
-                            })
-                            .dimensions((8, 8))
-                            .build()
-                        {
-                            Ok(area) => area,
-                            Err(err) => panic!("{err}"), // TODO: handle this error
-                        };
-                        self.qt_solids.insert(tile_a, Collider::Rectangular(tile_r));
+                        ));
+                        self.qt_solids.insert(tile_c.to_qt_area(), tile_c);
                         Self::grift_bv(&mut self.static_solids, &tile, x as i32 * 8, y as i32 * 8);
                     }
                 }
