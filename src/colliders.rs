@@ -93,12 +93,12 @@ impl Collider {
             Collider::Rectangular(rect) => {
                 match AreaBuilder::default()
                     .anchor(QTPoint {
-                        x: rect.ul.x as i32,
-                        y: rect.ul.y as i32,
+                        x: rect.ul.x.round() as i32,
+                        y: rect.ul.y.round() as i32,
                     })
                     .dimensions((
-                        (rect.dr.x - rect.ul.x + 1f32) as i32,
-                        (rect.dr.y - rect.ul.y + 1f32) as i32,
+                        rect.dr.x.round() as i32 - rect.ul.x.round() as i32 + 1,
+                        rect.dr.y.round() as i32 - rect.ul.y.round() as i32 + 1,
                     ))
                     .build()
                 {
@@ -106,7 +106,7 @@ impl Collider {
                     Err(err) => panic!("{err}"),
                 }
             }
-            Collider::Circular(circ) => {
+            Collider::Circular(circ) => { // TODO: fix this match arm
                 match AreaBuilder::default()
                     .anchor(QTPoint {
                         x: (circ.origin.x - circ.radius) as i32,

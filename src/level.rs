@@ -254,7 +254,6 @@ impl Level {
         }
     }
 
-    // TODO: remove bitvec stuff
     fn load_solids(&mut self, data: String) {
         let rows = data.split(' ').collect::<Vec<_>>();
         for (y, row) in rows.iter().enumerate() {
