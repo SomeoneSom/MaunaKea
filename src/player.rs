@@ -187,8 +187,8 @@ impl Player {
             Direction::Down => Rect::new_xywh(hitbox_rect.dl.x, hitbox_rect.dl.y, 8f32, 1f32),
         });
         level
-            .qt_solids
-            .query(to_check.to_qt_area())
+            .solids
+            .locate_in_envelope_intersecting(&to_check.to_aabb())
             .next()
             .is_some()
     }
