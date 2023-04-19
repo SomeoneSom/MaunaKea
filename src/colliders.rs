@@ -123,12 +123,8 @@ impl Collider {
             }
         }
     }
-}
 
-impl RTreeObject for Collider {
-    type Envelope = AABB<[f32; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
+    pub fn to_aabb(self) -> AABB<[f32; 2]> {
         match self {
             Collider::Rectangular(rect) => {
                 AABB::from_corners([rect.ul.x, rect.ul.y], [rect.dr.x, rect.dr.y])
@@ -138,6 +134,14 @@ impl RTreeObject for Collider {
                 [circ.origin.x + circ.radius, circ.origin.y + circ.radius],
             ),
         }
+    }
+}
+
+impl RTreeObject for Collider {
+    type Envelope = AABB<[f32; 2]>;
+
+    fn envelope(&self) -> Self::Envelope {
+        self.to_aabb()
     }
 }
 
