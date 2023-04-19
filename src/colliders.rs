@@ -97,8 +97,8 @@ impl Collider {
                         y: rect.ul.y as i32,
                     })
                     .dimensions((
-                        (rect.dr.x - rect.ul.x) as i32,
-                        (rect.dr.y - rect.ul.y) as i32,
+                        (rect.dr.x - rect.ul.x + 1f32) as i32,
+                        (rect.dr.y - rect.ul.y + 1f32) as i32,
                     ))
                     .build()
                 {
@@ -145,9 +145,9 @@ impl Rect {
     pub fn new_xywh(x: f32, y: f32, w: f32, h: f32) -> Self {
         Self {
             ul: Point::new(x, y),
-            ur: Point::new(x + w, y),
-            dl: Point::new(x, y + h),
-            dr: Point::new(x + w, y + h),
+            ur: Point::new(x + w - 1f32, y),
+            dl: Point::new(x, y + h - 1f32),
+            dr: Point::new(x + w - 1f32, y + h - 1f32),
         }
     }
 
