@@ -255,14 +255,13 @@ impl Level {
             for x in 0..row.len() {
                 if let Some(c) = row.chars().nth(x) {
                     if c != '0' && c != '\r' {
-                        let anchor = self.qt_solids.anchor();
                         let tile = Collider::Rectangular(Rect::new_xywh(
-                            (x as i32 + anchor.x) as f32 * 8f32,
-                            (y as i32 + anchor.y) as f32 * 8f32,
+                            (x as f32 + self.bounds.ul.x) * 8f32,
+                            (y as f32 + self.bounds.ul.y) * 8f32,
                             8f32,
                             8f32,
                         ));
-                        self.qt_solids.insert(tile.to_qt_area(), tile);
+                        self.temp_solids.push(tile);
                     }
                 }
             }
