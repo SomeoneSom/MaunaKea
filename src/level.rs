@@ -3,6 +3,7 @@ use colored::Colorize;
 use image::{ImageBuffer, Rgb, RgbImage};
 use quadtree_rs::{area::AreaBuilder, point::Point as QTPoint, Quadtree};
 use regex::Regex;
+use rstar::RTree;
 
 use std::io::stdout;
 use std::io::Write;
@@ -17,6 +18,10 @@ pub struct Level {
     pub bounds: Rect,
     pub qt_solids: Quadtree<i32, Collider>,
     pub qt_death: Quadtree<i32, Collider>,
+    pub solids: RTree<Collider>,
+    pub death: RTree<Collider>,
+    temp_solids: Vec<Collider>,
+    temp_death: Vec<Collider>,
     pub static_death: Vec<bv::BitVec>,
     pub static_solids: Vec<bv::BitVec>,
 }
@@ -27,6 +32,10 @@ impl Default for Level {
             bounds: Rect::default(),
             qt_solids: Quadtree::new(1),
             qt_death: Quadtree::new(1),
+            solids: RTree::default(),
+            death: RTree::default(),
+            temp_solids: vec![],
+            temp_death: vec![],
             static_death: vec![],
             static_solids: vec![],
         }
@@ -64,6 +73,10 @@ impl Level {
         level.static_solids = level.static_death.clone();
         level.load_solids(caps.get(8).unwrap().as_str().to_owned());
         level.load_spinners(caps.get(5).unwrap().as_str().to_owned());
+        level.solids = RTree::bulk_load(level.temp_solids.clone());
+        level.death = RTree::bulk_load(level.temp_death.clone());
+        level.temp_solids = vec![];
+        level.temp_death = vec![];
         /*let mut img = ImageBuffer::new(
             self.static_death[0].len() as u32,
             self.static_death.len() as u32,
@@ -224,33 +237,15 @@ impl Level {
     }
 
     // TODO: just use indicatif you fucking idiot
-    // TODO: remove bitvec stuff
     fn load_spinners(&mut self, data: String) {
         let mut split = data.split('[').collect::<Vec<_>>();
         split.remove(0);
-        stdout().flush().unwrap();
-        let mut circle = vec![bv::bitvec![0; 12]; 12];
-        Self::grift_circle(&mut circle, Point::new(6f32, 6f32), 6f32);
         for (i, p) in split.into_iter().enumerate() {
             let pair = Self::get_pair(p);
-            let circ = Collider::Circular(Circle::new(6f32, pair));
-            let rect =
-                Collider::Rectangular(Rect::new_xywh(pair.x - 8f32, pair.y + 5f32, 16f32, 4f32));
-            self.qt_death.insert(circ.to_qt_area(), circ);
-            self.qt_death.insert(rect.to_qt_area(), rect);
-            Self::grift_bv(
-                &mut self.static_death,
-                &circle,
-                (pair.x - 6f32) as i32,
-                (pair.y - 6f32) as i32,
+            self.temp_death.push(Collider::Circular(Circle::new(6f32, pair)));
+            self.temp_death.push(
+                Collider::Rectangular(Rect::new_xywh(pair.x - 8f32, pair.y + 5f32, 16f32, 4f32))
             );
-            Self::grift_bv(
-                &mut self.static_death,
-                &vec![bv::bitvec![1; 16]; 4],
-                pair.x as i32 - 8 + self.bounds.ul.x as i32,
-                pair.y as i32 + 5 + self.bounds.ul.y as i32,
-            );
-            stdout().flush().unwrap();
         }
     }
 
