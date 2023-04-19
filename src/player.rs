@@ -155,8 +155,10 @@ impl Player {
     }
 
     pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
-        for collider_entry in level.qt_death.query(self.hurtbox.to_qt_area()) {
-            let collider = collider_entry.value_ref();
+        for collider in level
+            .death
+            .locate_in_envelope_intersecting(&self.hurtbox.to_aabb())
+        {
             match collider {
                 Collider::Rectangular(_) => return FrameResult::Death,
                 Collider::Circular(_) => {
@@ -188,8 +190,8 @@ impl Player {
             Direction::Down => Rect::new_xywh(hitbox_rect.dl.x, hitbox_rect.dl.y, 8f32, 1f32),
         });
         level
-            .qt_solids
-            .query(to_check.to_qt_area())
+            .solids
+            .locate_in_envelope_intersecting(&to_check.to_aabb())
             .next()
             .is_some()
     }

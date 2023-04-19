@@ -2,6 +2,7 @@ use quadtree_rs::{
     area::{Area, AreaBuilder},
     point::Point as QTPoint,
 };
+use rstar::{RTreeObject, AABB};
 
 use crate::point::Point;
 
@@ -121,6 +122,26 @@ impl Collider {
                 }
             }
         }
+    }
+
+    pub fn to_aabb(self) -> AABB<[f32; 2]> {
+        match self {
+            Collider::Rectangular(rect) => {
+                AABB::from_corners([rect.ul.x, rect.ul.y], [rect.dr.x, rect.dr.y])
+            }
+            Collider::Circular(circ) => AABB::from_corners(
+                [circ.origin.x - circ.radius, circ.origin.y - circ.radius],
+                [circ.origin.x + circ.radius, circ.origin.y + circ.radius],
+            ),
+        }
+    }
+}
+
+impl RTreeObject for Collider {
+    type Envelope = AABB<[f32; 2]>;
+
+    fn envelope(&self) -> Self::Envelope {
+        self.to_aabb()
     }
 }
 
