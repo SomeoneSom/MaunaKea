@@ -155,19 +155,14 @@ impl Player {
     }
 
     pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
-        let hurtbox_rect = match self.hurtbox.rect() {
-            Some(rect) => rect,
-            None => unreachable!(),
-        };
-        let left = (hurtbox_rect.ul.x - level.bounds.ul.x).round() as i32;
-        let right = (hurtbox_rect.dr.x - level.bounds.ul.x).round() as i32 + 1;
-        let up = (hurtbox_rect.ul.y - level.bounds.ul.y).round() as i32;
-        let down = (hurtbox_rect.dr.y - level.bounds.ul.y).round() as i32 + 1;
-        // println!("{} {} {} {}", left, right, up, down);
-        for x in left..right {
-            for y in up..down {
-                if level.static_death[y as usize][x as usize] {
-                    return FrameResult::Death;
+        for collider_entry in level.qt_death.query(self.hurtbox.to_qt_area()) {
+            let collider = collider_entry.value_ref();
+            match collider {
+                Collider::Rectangular(_) => return FrameResult::Death,
+                Collider::Circular(_) => {
+                    if self.hurtbox.collide_check(collider) {
+                        return FrameResult::Death;
+                    }
                 }
             }
         }

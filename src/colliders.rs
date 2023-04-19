@@ -106,7 +106,8 @@ impl Collider {
                     Err(err) => panic!("{err}"),
                 }
             }
-            Collider::Circular(circ) => { // TODO: fix this match arm
+            Collider::Circular(circ) => {
+                // TODO: fix this match arm
                 match AreaBuilder::default()
                     .anchor(QTPoint {
                         x: (circ.origin.x - circ.radius) as i32,
