@@ -89,7 +89,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
         };
         let mut population = (*result.evaluated_population.individuals()).clone();
         hit_final = simulator.check_if_hit_final(&result.best_solution.solution.genome);
-        if hit_final {
+        if population[0].len() >= 5 {
             // TODO: make breaking criteria more correct
             break result.best_solution.solution.genome;
         }
