@@ -242,10 +242,14 @@ impl Level {
         split.remove(0);
         for (i, p) in split.into_iter().enumerate() {
             let pair = Self::get_pair(p);
-            self.temp_death.push(Collider::Circular(Circle::new(6f32, pair)));
-            self.temp_death.push(
-                Collider::Rectangular(Rect::new_xywh(pair.x - 8f32, pair.y + 5f32, 16f32, 4f32))
-            );
+            self.temp_death
+                .push(Collider::Circular(Circle::new(6f32, pair)));
+            self.temp_death.push(Collider::Rectangular(Rect::new_xywh(
+                pair.x - 8f32,
+                pair.y + 5f32,
+                16f32,
+                4f32,
+            )));
         }
     }
 
