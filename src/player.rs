@@ -126,7 +126,8 @@ impl Player {
         }
         if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
             let temp_hitbox = self.hitbox;
-            self.hitbox.move_collider(self.speed.x.signum() * 60f32, 0f32);
+            self.hitbox
+                .move_collider(self.speed.x.signum() * 60f32, 0f32);
             if self.solids_collision(
                 level,
                 if self.speed.x.signum() < 0f32 {
@@ -154,19 +155,14 @@ impl Player {
     }
 
     pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
-        let hurtbox_rect = match self.hurtbox.rect() {
-            Some(rect) => rect,
-            None => unreachable!(),
-        };
-        let left = (hurtbox_rect.ul.x - level.bounds.ul.x).round() as i32;
-        let right = (hurtbox_rect.dr.x - level.bounds.ul.x).round() as i32 + 1;
-        let up = (hurtbox_rect.ul.y - level.bounds.ul.y).round() as i32;
-        let down = (hurtbox_rect.dr.y - level.bounds.ul.y).round() as i32 + 1;
-        // println!("{} {} {} {}", left, right, up, down);
-        for x in left..right {
-            for y in up..down {
-                if level.static_death[y as usize][x as usize] {
-                    return FrameResult::Death;
+        for collider_entry in level.qt_death.query(self.hurtbox.to_qt_area()) {
+            let collider = collider_entry.value_ref();
+            match collider {
+                Collider::Rectangular(_) => return FrameResult::Death,
+                Collider::Circular(_) => {
+                    if self.hurtbox.collide_check(collider) {
+                        return FrameResult::Death;
+                    }
                 }
             }
         }
@@ -191,7 +187,11 @@ impl Player {
             Direction::Up => Rect::new_xywh(hitbox_rect.ul.x, hitbox_rect.ul.y, 8f32, 1f32),
             Direction::Down => Rect::new_xywh(hitbox_rect.dl.x, hitbox_rect.dl.y, 8f32, 1f32),
         });
-        level.qt_solids.query(to_check.to_qt_area()).next().is_some()
+        level
+            .qt_solids
+            .query(to_check.to_qt_area())
+            .next()
+            .is_some()
     }
 }
 
