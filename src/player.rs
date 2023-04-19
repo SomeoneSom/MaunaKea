@@ -104,10 +104,10 @@ impl Player {
     // TODO: make speed capping actually work how its meant to
     // TODO: water surface bs
     pub fn speed_calc(&mut self, angle: f64, level: &Level) {
-        // TODO: truncate to fit within valid inputs, precise_fix is too costly
+        let truncated = f64::round(angle * 1000f64) / 1000f64;
         let adjusted = Point::new(
-            angle.to_radians().sin() as f32,
-            angle.to_radians().cos() as f32,
+            truncated.to_radians().sin() as f32,
+            truncated.to_radians().cos() as f32,
         );
         self.retained_timer -= 1;
         let target = Point::new(60f32 * adjusted.x, 80f32 * adjusted.y);
