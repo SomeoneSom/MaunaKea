@@ -257,20 +257,18 @@ impl Level {
     // TODO: remove bitvec stuff
     fn load_solids(&mut self, data: String) {
         let rows = data.split(' ').collect::<Vec<_>>();
-        let tile = vec![bv::bitvec![1; 8]; 8];
         for (y, row) in rows.iter().enumerate() {
             for x in 0..row.len() {
                 if let Some(c) = row.chars().nth(x) {
                     if c != '0' && c != '\r' {
                         let anchor = self.qt_solids.anchor();
-                        let tile_c = Collider::Rectangular(Rect::new_xywh(
+                        let tile = Collider::Rectangular(Rect::new_xywh(
                             (x as i32 + anchor.x) as f32 * 8f32,
                             (y as i32 + anchor.y) as f32 * 8f32,
                             8f32,
                             8f32,
                         ));
-                        self.qt_solids.insert(tile_c.to_qt_area(), tile_c);
-                        Self::grift_bv(&mut self.static_solids, &tile, x as i32 * 8, y as i32 * 8);
+                        self.qt_solids.insert(tile.to_qt_area(), tile);
                     }
                 }
             }
