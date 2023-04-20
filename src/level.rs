@@ -4,10 +4,12 @@ use image::{ImageBuffer, Rgb, RgbImage};
 use regex::Regex;
 use rstar::RTree;
 
+use std::collections::HashMap;
 use std::io::stdout;
 use std::io::Write;
 
 use crate::colliders::Circle;
+use crate::colliders::Direction;
 use crate::colliders::{Collider, Rect};
 use crate::player::Player;
 use crate::point::Point;
@@ -17,6 +19,8 @@ pub struct Level {
     pub bounds: Rect,
     pub solids: RTree<Collider>,
     pub death: RTree<Collider>,
+    pub precompute_solids: HashMap<(i32, i32, Direction, i32), bool>,
+    pub precompute_death: HashMap<(i32, i32), u8>,
     temp_solids: Vec<Collider>,
     temp_death: Vec<Collider>,
     pub static_death: Vec<bv::BitVec>,
