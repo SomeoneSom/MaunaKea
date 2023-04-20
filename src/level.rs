@@ -19,7 +19,7 @@ pub struct Level {
     pub bounds: Rect,
     pub solids: RTree<Collider>,
     pub death: RTree<Collider>,
-    pub precomputed_solids: HashMap<(i32, i32, Direction, i32), bool>,
+    pub precomputed_solids: HashMap<(i32, i32, Direction, u8), bool>,
     pub precomputed_death: HashMap<(i32, i32, Direction), bool>,
     temp_solids: Vec<Collider>,
     temp_death: Vec<Collider>,
