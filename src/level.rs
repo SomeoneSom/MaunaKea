@@ -11,7 +11,7 @@ use std::io::Write;
 use crate::colliders::Circle;
 use crate::colliders::Direction;
 use crate::colliders::{Collider, Rect};
-use crate::player::Player;
+use crate::player::{MovementPrecomputer, Player};
 use crate::point::Point;
 
 #[derive(Debug, Default)]
@@ -19,8 +19,7 @@ pub struct Level {
     pub bounds: Rect,
     pub solids: RTree<Collider>,
     pub death: RTree<Collider>,
-    pub precomputed_solids: HashMap<((i32, i32), Direction, u8), bool>,
-    pub precomputed_death: HashMap<((i32, i32), Direction), bool>,
+    pub precomputed: MovementPrecomputer,
     temp_solids: Vec<Collider>,
     temp_death: Vec<Collider>,
     pub static_death: Vec<bv::BitVec>,

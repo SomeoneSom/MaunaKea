@@ -6,6 +6,12 @@ use crate::colliders::{Axes, Collider, Direction, Rect};
 use crate::level::Level;
 use crate::point::Point;
 
+#[derive(Debug, Default)]
+pub struct MovementPrecomputer {
+    solids: Vec<bool>,
+    death: Vec<bool>,
+}
+
 pub enum FrameResult {
     Nothing,
     CheckpointHit,
