@@ -12,6 +12,33 @@ pub struct MovementPrecomputer {
     death: Vec<bool>,
 }
 
+impl MovementPrecomputer {
+    pub fn new(bounds: &Rect, player: &Player) -> Self {
+        Self {
+            solids: Self::precompute_solids(bounds, player),
+            death: Self::precompute_death(bounds, player),
+        }
+    }
+
+    fn precompute_solids(bounds: &Rect, player: &Player) -> Vec<bool> {
+        todo!()
+    }
+
+    fn precompute_death(bounds: &Rect, player: &Player) -> Vec<bool> {
+        todo!()
+    }
+
+    #[inline]
+    pub fn get_solid() -> bool {
+        todo!()
+    }
+
+    #[inline]
+    pub fn get_death() -> bool {
+        todo!()
+    }
+}
+
 pub enum FrameResult {
     Nothing,
     CheckpointHit,
