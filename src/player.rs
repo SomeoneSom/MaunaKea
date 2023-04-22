@@ -12,6 +12,7 @@ pub struct MovementPrecomputer {
     death: Vec<bool>,
 }
 
+// TODO: switch to using bitvecs probably, may be slower though
 impl MovementPrecomputer {
     pub fn new(bounds: &Rect, player: &Player) -> Self {
         Self {
@@ -28,14 +29,29 @@ impl MovementPrecomputer {
         todo!()
     }
 
-    #[inline]
-    pub fn get_solid() -> bool {
-        todo!()
+    pub fn get_solid(&self, position: &Point, direction: Direction, amount: f32, bounds: &Rect) -> bool {
+        let dir = match direction {
+            Direction::Left => 0,
+            Direction::Up => 1,
+            Direction::Right => 2,
+            Direction::Down => 3,
+        };
+        let point_i = ((position.x - bounds.ul.x).round() as i32, (position.y - bounds.ul.y).round() as i32);
+        let width = (bounds.dr.x - bounds.ul.x) as i32;
+        let amount_i = amount.log2().floor() as i32;
+        self.solids[(point_i.0 + point_i.1 * width * dir + amount_i) as usize]
     }
 
-    #[inline]
-    pub fn get_death() -> bool {
-        todo!()
+    pub fn get_death(&self, position: &Point, direction: Direction, bounds: &Rect) -> bool {
+        let dir = match direction {
+            Direction::Left => 0,
+            Direction::Up => 1,
+            Direction::Right => 2,
+            Direction::Down => 3,
+        };
+        let point_i = ((position.x - bounds.ul.x).round() as i32, (position.y - bounds.ul.y).round() as i32);
+        let width = (bounds.dr.x - bounds.ul.x) as i32;
+        self.solids[(point_i.0 + point_i.1 * width + dir) as usize]
     }
 }
 
