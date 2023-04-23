@@ -55,7 +55,6 @@ pub(super) struct Simulator {
     player: Player,
     level: Level, // lets just say this owns the level for now
     checkpoints: Vec<Rect>,
-    hit_final: bool,
 }
 
 impl Simulator {
@@ -64,7 +63,6 @@ impl Simulator {
             player,
             level,
             checkpoints,
-            hit_final: false,
         }
     }
 
@@ -83,6 +81,9 @@ impl Simulator {
                 FrameResult::Death => break,
                 FrameResult::CheckpointHit => checkpoint_index += 1,
                 FrameResult::Nothing => (),
+            }
+            if checkpoint_index == self.checkpoints.len() {
+                break;
             }
         }
         //println!("{}", now.elapsed().unwrap().as_secs_f64());
