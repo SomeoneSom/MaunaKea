@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use bitvec::prelude as bv;
+use rstar::RTree;
 
 use crate::colliders::{Axes, Collider, Direction, Rect};
 use crate::level::Level;
@@ -14,18 +15,18 @@ pub struct MovementPrecomputer {
 
 // TODO: switch to using bitvecs probably, may be slower though
 impl MovementPrecomputer {
-    pub fn new(bounds: &Rect, player: &Player) -> Self {
+    pub fn new(bounds: &Rect, player: &Player, solids: &RTree<Collider>, death: &RTree<Collider>) -> Self {
         Self {
-            solids: Self::precompute_solids(bounds, player),
-            death: Self::precompute_death(bounds, player),
+            solids: Self::precompute_solids(bounds, player, solids),
+            death: Self::precompute_death(bounds, player, death),
         }
     }
 
-    fn precompute_solids(bounds: &Rect, player: &Player) -> Vec<bool> {
+    fn precompute_solids(bounds: &Rect, player: &Player, solids: &RTree<Collider>) -> Vec<bool> {
         todo!()
     }
 
-    fn precompute_death(bounds: &Rect, player: &Player) -> Vec<bool> {
+    fn precompute_death(bounds: &Rect, player: &Player, death: &RTree<Collider>) -> Vec<bool> {
         todo!()
     }
 
