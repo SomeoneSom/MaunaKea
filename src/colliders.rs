@@ -4,7 +4,7 @@ use crate::point::Point;
 
 const DELTATIME: f32 = 0.0166667;
 
-#[derive(PartialEq, Eq, Default, Debug, Hash)]
+#[derive(Default, Debug)]
 pub enum Direction {
     #[default]
     Left,
