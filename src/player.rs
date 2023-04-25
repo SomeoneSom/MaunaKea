@@ -23,7 +23,7 @@ impl MovementPrecomputer {
     }
 
     #[inline]
-    fn get_solid_index(
+    fn get_solids_index(
         position: &Point, direction: Direction, amount: f32, bounds: &Rect,
     ) -> usize {
         let dir = match direction {
@@ -68,7 +68,7 @@ impl MovementPrecomputer {
     pub fn get_solid(
         &self, position: &Point, direction: Direction, amount: f32, bounds: &Rect,
     ) -> bool {
-        self.solids[Self::get_solid_index(position, direction, amount, bounds)]
+        self.solids[Self::get_solids_index(position, direction, amount, bounds)]
     }
 
     pub fn get_death(&self, position: &Point, direction: Direction, bounds: &Rect) -> bool {
