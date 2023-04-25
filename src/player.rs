@@ -22,6 +22,33 @@ impl MovementPrecomputer {
         }
     }
 
+    #[inline]
+    fn get_solid_index(position: &Point, direction: Direction, amount: f32, bounds: &Rect) -> usize {
+        let dir = match direction {
+            Direction::Left => 1,
+            Direction::Up => 2,
+            Direction::Right => 3,
+            Direction::Down => 4,
+        };
+        let point_i = ((position.x - bounds.ul.x).round() as i32, (position.y - bounds.ul.y).round() as i32);
+        let width = (bounds.dr.x - bounds.ul.x) as i32;
+        let amount_i = amount.log2().floor() as i32;
+        ((point_i.0 + point_i.1 * width) * dir * amount_i) as usize
+    }
+
+    #[inline]
+    fn get_death_index(position: &Point, direction: Direction, bounds: &Rect) -> usize {
+        let dir = match direction {
+            Direction::Left => 1,
+            Direction::Up => 2,
+            Direction::Right => 3,
+            Direction::Down => 4,
+        };
+        let point_i = ((position.x - bounds.ul.x).round() as i32, (position.y - bounds.ul.y).round() as i32);
+        let width = (bounds.dr.x - bounds.ul.x) as i32;
+        (point_i.0 + point_i.1 * width * dir) as usize
+    }
+
     fn precompute_solids(bounds: &Rect, player: &Player, solids: &RTree<Collider>) -> Vec<bool> {
         todo!()
     }
@@ -31,28 +58,11 @@ impl MovementPrecomputer {
     }
 
     pub fn get_solid(&self, position: &Point, direction: Direction, amount: f32, bounds: &Rect) -> bool {
-        let dir = match direction {
-            Direction::Left => 0,
-            Direction::Up => 1,
-            Direction::Right => 2,
-            Direction::Down => 3,
-        };
-        let point_i = ((position.x - bounds.ul.x).round() as i32, (position.y - bounds.ul.y).round() as i32);
-        let width = (bounds.dr.x - bounds.ul.x) as i32;
-        let amount_i = amount.log2().floor() as i32;
-        self.solids[(point_i.0 + point_i.1 * width * dir + amount_i) as usize]
+        self.solids[Self::get_solid_index(position, direction, amount, bounds)]
     }
 
     pub fn get_death(&self, position: &Point, direction: Direction, bounds: &Rect) -> bool {
-        let dir = match direction {
-            Direction::Left => 0,
-            Direction::Up => 1,
-            Direction::Right => 2,
-            Direction::Down => 3,
-        };
-        let point_i = ((position.x - bounds.ul.x).round() as i32, (position.y - bounds.ul.y).round() as i32);
-        let width = (bounds.dr.x - bounds.ul.x) as i32;
-        self.solids[(point_i.0 + point_i.1 * width + dir) as usize]
+        self.solids[Self::get_death_index(position, direction, bounds)]
     }
 }
 
