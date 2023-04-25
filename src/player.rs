@@ -15,10 +15,10 @@ pub struct MovementPrecomputer {
 
 // TODO: switch to using bitvecs probably, may be slower though
 impl MovementPrecomputer {
-    pub fn new(bounds: &Rect, player: &Player, solids: &RTree<Collider>, death: &RTree<Collider>) -> Self {
+    pub fn new(bounds: &Rect, solids: &RTree<Collider>, death: &RTree<Collider>) -> Self {
         Self {
-            solids: Self::precompute_solids(bounds, player, solids),
-            death: Self::precompute_death(bounds, player, death),
+            solids: Self::precompute_solids(bounds, solids),
+            death: Self::precompute_death(bounds, death),
         }
     }
 
@@ -49,11 +49,11 @@ impl MovementPrecomputer {
         (point_i.0 + point_i.1 * width * dir) as usize
     }
 
-    fn precompute_solids(bounds: &Rect, player: &Player, solids: &RTree<Collider>) -> Vec<bool> {
+    fn precompute_solids(bounds: &Rect, solids: &RTree<Collider>) -> Vec<bool> {
         todo!()
     }
 
-    fn precompute_death(bounds: &Rect, player: &Player, death: &RTree<Collider>) -> Vec<bool> {
+    fn precompute_death(bounds: &Rect, death: &RTree<Collider>) -> Vec<bool> {
         todo!()
     }
 
