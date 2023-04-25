@@ -72,7 +72,7 @@ impl Level {
         )
     }
 
-    #[inline(always)]
+    #[inline]
     fn parse_f32(caps: &regex::Captures, num: usize) -> f32 {
         return caps.get(num).unwrap().as_str().parse::<f32>().unwrap();
     }
