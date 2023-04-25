@@ -23,14 +23,19 @@ impl MovementPrecomputer {
     }
 
     #[inline]
-    fn get_solid_index(position: &Point, direction: Direction, amount: f32, bounds: &Rect) -> usize {
+    fn get_solid_index(
+        position: &Point, direction: Direction, amount: f32, bounds: &Rect,
+    ) -> usize {
         let dir = match direction {
             Direction::Left => 1,
             Direction::Up => 2,
             Direction::Right => 3,
             Direction::Down => 4,
         };
-        let point_i = ((position.x - bounds.ul.x).round() as i32, (position.y - bounds.ul.y).round() as i32);
+        let point_i = (
+            (position.x - bounds.ul.x).round() as i32,
+            (position.y - bounds.ul.y).round() as i32,
+        );
         let width = (bounds.dr.x - bounds.ul.x) as i32;
         let amount_i = amount.log2().floor() as i32;
         ((point_i.0 + point_i.1 * width) * dir * amount_i) as usize
@@ -44,7 +49,10 @@ impl MovementPrecomputer {
             Direction::Right => 3,
             Direction::Down => 4,
         };
-        let point_i = ((position.x - bounds.ul.x).round() as i32, (position.y - bounds.ul.y).round() as i32);
+        let point_i = (
+            (position.x - bounds.ul.x).round() as i32,
+            (position.y - bounds.ul.y).round() as i32,
+        );
         let width = (bounds.dr.x - bounds.ul.x) as i32;
         (point_i.0 + point_i.1 * width * dir) as usize
     }
@@ -57,7 +65,9 @@ impl MovementPrecomputer {
         todo!()
     }
 
-    pub fn get_solid(&self, position: &Point, direction: Direction, amount: f32, bounds: &Rect) -> bool {
+    pub fn get_solid(
+        &self, position: &Point, direction: Direction, amount: f32, bounds: &Rect,
+    ) -> bool {
         self.solids[Self::get_solid_index(position, direction, amount, bounds)]
     }
 
