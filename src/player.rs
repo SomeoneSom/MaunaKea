@@ -73,10 +73,12 @@ impl MovementPrecomputer {
                 }
             }
         }
-        out.par_iter().map(|(x, y, dir, amount)| {
-            let rect = Collider::Rectangular(Rect::new_xywh(*x as f32, *y as f32, 8f32, 9f32));
-            true
-        }).collect::<Vec<_>>()
+        out.par_iter()
+            .map(|(x, y, dir, amount)| {
+                let rect = Collider::Rectangular(Rect::new_xywh(*x as f32, *y as f32, 8f32, 9f32));
+                true
+            })
+            .collect::<Vec<_>>()
     }
 
     fn precompute_death(bounds: &Rect, death: &RTree<Collider>) -> Vec<bool> {
