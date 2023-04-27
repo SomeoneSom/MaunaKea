@@ -62,27 +62,53 @@ impl MovementPrecomputer {
     fn precompute_solids(bounds: &Rect, solids: &RTree<Collider>) -> Vec<bool> {
         let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
         let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
-        let width = dr_i.0 - ul_i.0;
-        let mut out = vec![];
-        for x in ul_i.0..dr_i.0 {
-            for y in ul_i.1..dr_i.1 {
-                for dir in 1..=4 {
-                    for amount in 0..=8 {
-                        out.push((x, y, dir, amount));
-                    }
-                }
-            }
-        }
-        out.par_iter()
-            .map(|(x, y, dir, amount)| {
-                let rect = Collider::Rectangular(Rect::new_xywh(*x as f32, *y as f32, 8f32, 9f32));
-                true
+        (ul_i.0..dr_i.0)
+            .par_bridge()
+            .flat_map(|x| {
+                (ul_i.1..dr_i.1).par_bridge().flat_map(move |y| {
+                    (1..=4).par_bridge().flat_map(move |dir| {
+                        (0..=8).par_bridge().map(move |amount| {
+                            let mut rect = Collider::Rectangular(Rect::new_xywh(
+                                x as f32, y as f32, 8f32, 9f32,
+                            ));
+                            let to_move = 2f32.powi(amount);
+                            match dir {
+                                1 => rect.move_collider(-to_move, 0f32),
+                                2 => rect.move_collider(0f32, -to_move),
+                                3 => rect.move_collider(to_move, 0f32),
+                                4 => rect.move_collider(0f32, to_move),
+                                _ => unreachable!(),
+                            }
+                            solids
+                                .locate_in_envelope_intersecting(&rect.to_aabb())
+                                .next()
+                                .is_some()
+                        })
+                    })
+                })
             })
             .collect::<Vec<_>>()
     }
 
     fn precompute_death(bounds: &Rect, death: &RTree<Collider>) -> Vec<bool> {
-        todo!()
+        let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
+        let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
+        (ul_i.0..dr_i.0)
+            .par_bridge()
+            .flat_map(|x| {
+                (ul_i.1..dr_i.1).par_bridge().flat_map(move |y| {
+                    (1..=4).par_bridge().map(move |dir| {
+                        // NOTE: dir will eventually be used for spikes
+                        let rect =
+                            Collider::Rectangular(Rect::new_xywh(x as f32, y as f32, 8f32, 9f32));
+                        death
+                            .locate_in_envelope_intersecting(&rect.to_aabb())
+                            .next()
+                            .is_some()
+                    })
+                })
+            })
+            .collect::<Vec<_>>()
     }
 
     pub fn get_solid(
