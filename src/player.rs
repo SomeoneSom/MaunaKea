@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use bitvec::prelude as bv;
+use rayon::prelude::*;
 use rstar::RTree;
 
 use crate::colliders::{Axes, Collider, Direction, Rect};
@@ -22,6 +23,7 @@ impl MovementPrecomputer {
         }
     }
 
+    //TODO: these two should prob be removed
     #[inline]
     fn get_solids_index(
         position: &Point, direction: Direction, amount: f32, bounds: &Rect,
@@ -58,7 +60,23 @@ impl MovementPrecomputer {
     }
 
     fn precompute_solids(bounds: &Rect, solids: &RTree<Collider>) -> Vec<bool> {
-        todo!()
+        let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
+        let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
+        let width = dr_i.0 - ul_i.0;
+        let mut out = vec![];
+        for x in ul_i.0..dr_i.0 {
+            for y in ul_i.1..dr_i.1 {
+                for dir in 1..=4 {
+                    for amount in 0..=8 {
+                        out.push((x, y, dir, amount));
+                    }
+                }
+            }
+        }
+        out.par_iter().map(|(x, y, dir, amount)| {
+            let rect = Collider::Rectangular(Rect::new_xywh(*x as f32, *y as f32, 8f32, 9f32));
+            true
+        }).collect::<Vec<_>>()
     }
 
     fn precompute_death(bounds: &Rect, death: &RTree<Collider>) -> Vec<bool> {
