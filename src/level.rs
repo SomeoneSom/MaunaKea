@@ -46,6 +46,7 @@ impl Level {
         level.load_spinners(caps.get(5).unwrap().as_str().to_owned());
         level.solids = RTree::bulk_load(level.temp_solids.clone());
         level.death = RTree::bulk_load(level.temp_death.clone());
+        level.precomputed = MovementPrecomputer::new(&level.bounds, &level.solids, &level.death);
         level.temp_solids = vec![];
         level.temp_death = vec![];
         /*let mut img = ImageBuffer::new(
