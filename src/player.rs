@@ -314,4 +314,19 @@ impl Player {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+
+    #[test]
+    fn precompute_test() {
+        let solids = RTree::bulk_load(vec![
+            Collider::Rectangular(Rect::new_xywh(0f32, 0f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(8f32, 8f32, 8f32, 8f32)),
+        ]);
+        let death = RTree::bulk_load(vec![
+            Collider::Rectangular(Rect::new_xywh(8f32, 0f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(0f32, 8f32, 8f32, 8f32)),
+        ]);
+        let precomputer = MovementPrecomputer::new(&Rect::new_xywh(0f32, 0f32, 16f32, 16f32), &solids, &death);
+    }
+}
