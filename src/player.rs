@@ -104,10 +104,14 @@ impl MovementPrecomputer {
                         // NOTE: dir will eventually be used for spikes
                         let rect =
                             Collider::Rectangular(Rect::new_xywh(*x as f32, *y as f32, 8f32, 9f32));
-                        death
+                        let result = death
                             .locate_in_envelope_intersecting(&rect.to_aabb())
-                            .next()
-                            .is_some()
+                            .next();
+                        match result {
+                            None => false,
+                            Some(Collider::Rectangular(_)) => true,
+                            Some(circ) => circ.collide_check(&rect),
+                        }
                     })
                 })
             })
