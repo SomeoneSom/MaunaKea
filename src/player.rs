@@ -46,17 +46,17 @@ impl MovementPrecomputer {
     #[inline]
     fn get_death_index(position: &Point, direction: Direction, bounds: &Rect) -> usize {
         let dir = match direction {
-            Direction::Left => 1,
-            Direction::Up => 2,
-            Direction::Right => 3,
-            Direction::Down => 4,
+            Direction::Left => 0,
+            Direction::Up => 1,
+            Direction::Right => 2,
+            Direction::Down => 3,
         };
         let point_i = (
             (position.x - bounds.ul.x).round() as i32,
             (position.y - bounds.ul.y).round() as i32,
         );
         let width = (bounds.dr.x - bounds.ul.x) as i32 + 1;
-        ((point_i.0 + point_i.1 * width) * dir) as usize
+        ((point_i.0 + point_i.1 * width) * 4 + dir) as usize
     }
 
     fn precompute_solids(bounds: &Rect, solids: &RTree<Collider>) -> Vec<bool> {
@@ -93,14 +93,14 @@ impl MovementPrecomputer {
     fn precompute_death(bounds: &Rect, death: &RTree<Collider>) -> Vec<bool> {
         let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
         let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
-        let dir_range = (1..=4).collect::<Vec<_>>();
         let y_range = (ul_i.1..=dr_i.1).collect::<Vec<_>>();
-        let x_range = &(ul_i.0..=dr_i.0).collect::<Vec<_>>();
-        dir_range
+        let x_range = (ul_i.0..=dr_i.0).collect::<Vec<_>>();
+        let dir_range = &(1..=4).collect::<Vec<_>>();
+        y_range
             .par_iter()
-            .flat_map(|dir| {
-                y_range.par_iter().flat_map(move |y| {
-                    x_range.par_iter().map(move |x| {
+            .flat_map(|y| {
+                x_range.par_iter().flat_map(move |x| {
+                    dir_range.par_iter().map(move |dir| {
                         // NOTE: dir will eventually be used for spikes
                         let rect =
                             Collider::Rectangular(Rect::new_xywh(*x as f32, *y as f32, 8f32, 9f32));
@@ -336,9 +336,15 @@ mod tests {
         for y in 0..=15 {
             for x in 0..=15 {
                 let expected = !(x >= 8 && y >= 8);
-                println!("{x} {y} {expected}");
-                println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Left, &bounds));
+                // println!("{x} {y} {expected}");
+                // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Left, &bounds));
+                // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Up, &bounds));
+                // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Right, &bounds));
+                // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Down, &bounds));
                 assert_eq!(precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Left, &bounds), expected);
+                assert_eq!(precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Up, &bounds), expected);
+                assert_eq!(precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Right, &bounds), expected);
+                assert_eq!(precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Down, &bounds), expected);
             }
         }
     }
