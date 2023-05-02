@@ -341,10 +341,34 @@ mod tests {
                 // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Up, &bounds));
                 // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Right, &bounds));
                 // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Down, &bounds));
-                assert_eq!(precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Left, &bounds), expected);
-                assert_eq!(precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Up, &bounds), expected);
-                assert_eq!(precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Right, &bounds), expected);
-                assert_eq!(precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Down, &bounds), expected);
+                assert_eq!(
+                    precomputer.get_death(
+                        &Point::new(x as f32, y as f32),
+                        Direction::Left,
+                        &bounds
+                    ),
+                    expected
+                );
+                assert_eq!(
+                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Up, &bounds),
+                    expected
+                );
+                assert_eq!(
+                    precomputer.get_death(
+                        &Point::new(x as f32, y as f32),
+                        Direction::Right,
+                        &bounds
+                    ),
+                    expected
+                );
+                assert_eq!(
+                    precomputer.get_death(
+                        &Point::new(x as f32, y as f32),
+                        Direction::Down,
+                        &bounds
+                    ),
+                    expected
+                );
             }
         }
     }
