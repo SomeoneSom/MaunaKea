@@ -55,8 +55,8 @@ impl MovementPrecomputer {
             (position.x - bounds.ul.x).round() as i32,
             (position.y - bounds.ul.y).round() as i32,
         );
-        let width = (bounds.dr.x - bounds.ul.x) as i32;
-        (point_i.0 + point_i.1 * width * dir) as usize
+        let width = (bounds.dr.x - bounds.ul.x) as i32 + 1;
+        ((point_i.0 + point_i.1 * width) * dir) as usize
     }
 
     fn precompute_solids(bounds: &Rect, solids: &RTree<Collider>) -> Vec<bool> {
@@ -93,14 +93,17 @@ impl MovementPrecomputer {
     fn precompute_death(bounds: &Rect, death: &RTree<Collider>) -> Vec<bool> {
         let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
         let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
-        (ul_i.0..dr_i.0)
-            .par_bridge()
-            .flat_map(|x| {
-                (ul_i.1..dr_i.1).par_bridge().flat_map(move |y| {
-                    (1..=4).par_bridge().map(move |dir| {
+        let dir_range = (1..=4).collect::<Vec<_>>();
+        let y_range = (ul_i.1..=dr_i.1).collect::<Vec<_>>();
+        let x_range = &(ul_i.0..=dr_i.0).collect::<Vec<_>>();
+        dir_range
+            .par_iter()
+            .flat_map(|dir| {
+                y_range.par_iter().flat_map(move |y| {
+                    x_range.par_iter().map(move |x| {
                         // NOTE: dir will eventually be used for spikes
                         let rect =
-                            Collider::Rectangular(Rect::new_xywh(x as f32, y as f32, 8f32, 9f32));
+                            Collider::Rectangular(Rect::new_xywh(*x as f32, *y as f32, 8f32, 9f32));
                         death
                             .locate_in_envelope_intersecting(&rect.to_aabb())
                             .next()
@@ -118,7 +121,7 @@ impl MovementPrecomputer {
     }
 
     pub fn get_death(&self, position: &Point, direction: Direction, bounds: &Rect) -> bool {
-        self.solids[Self::get_death_index(position, direction, bounds)]
+        self.death[Self::get_death_index(position, direction, bounds)]
     }
 }
 
@@ -318,15 +321,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn precompute_test() {
-        let solids = RTree::bulk_load(vec![
-            Collider::Rectangular(Rect::new_xywh(0f32, 0f32, 8f32, 8f32)),
-            Collider::Rectangular(Rect::new_xywh(8f32, 8f32, 8f32, 8f32)),
-        ]);
+    fn precompute_test_death() {
+        let solids = RTree::bulk_load(vec![]);
         let death = RTree::bulk_load(vec![
             Collider::Rectangular(Rect::new_xywh(8f32, 0f32, 8f32, 8f32)),
             Collider::Rectangular(Rect::new_xywh(0f32, 8f32, 8f32, 8f32)),
         ]);
-        let precomputer = MovementPrecomputer::new(&Rect::new_xywh(0f32, 0f32, 16f32, 16f32), &solids, &death);
+        let bounds = Rect::new_xywh(0f32, 0f32, 16f32, 16f32);
+        let precomputer = MovementPrecomputer::new(&bounds, &solids, &death);
+        for y in 0..=15 {
+            for x in 0..=15 {
+                let expected = !(x >= 8 && y >= 8);
+                println!("{x} {y} {expected}");
+                println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Left, &bounds));
+                assert_eq!(precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Left, &bounds), expected);
+            }
+        }
     }
 }
