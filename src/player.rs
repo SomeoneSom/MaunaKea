@@ -29,10 +29,10 @@ impl MovementPrecomputer {
         position: &Point, direction: Direction, amount: f32, bounds: &Rect,
     ) -> usize {
         let dir = match direction {
-            Direction::Left => 1,
-            Direction::Up => 2,
-            Direction::Right => 3,
-            Direction::Down => 4,
+            Direction::Left => 0,
+            Direction::Up => 1,
+            Direction::Right => 2,
+            Direction::Down => 3,
         };
         let point_i = (
             (position.x - bounds.ul.x).round() as i32,
@@ -40,7 +40,7 @@ impl MovementPrecomputer {
         );
         let width = (bounds.dr.x - bounds.ul.x) as i32;
         let amount_i = amount.log2().floor() as i32;
-        ((point_i.0 + point_i.1 * width) * dir * amount_i) as usize
+        (((point_i.0 + point_i.1 * width) * 4 + dir) * 8 + amount_i) as usize
     }
 
     #[inline]
@@ -62,23 +62,46 @@ impl MovementPrecomputer {
     fn precompute_solids(bounds: &Rect, solids: &RTree<Collider>) -> Vec<bool> {
         let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
         let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
-        (ul_i.0..dr_i.0)
-            .par_bridge()
-            .flat_map(|x| {
-                (ul_i.1..dr_i.1).par_bridge().flat_map(move |y| {
-                    (1..=4).par_bridge().flat_map(move |dir| {
-                        (0..=8).par_bridge().map(move |amount| {
-                            let mut rect = Collider::Rectangular(Rect::new_xywh(
-                                x as f32, y as f32, 8f32, 9f32,
-                            ));
-                            let to_move = 2f32.powi(amount);
-                            match dir {
-                                1 => rect.move_collider(-to_move, 0f32),
-                                2 => rect.move_collider(0f32, -to_move),
-                                3 => rect.move_collider(to_move, 0f32),
-                                4 => rect.move_collider(0f32, to_move),
+        let y_range = (ul_i.1..=dr_i.1).collect::<Vec<_>>();
+        let x_range = (ul_i.0..=dr_i.0).collect::<Vec<_>>();
+        let dir_range = &(1..=4).collect::<Vec<_>>();
+        let amount_range = &(0..=7).collect::<Vec<_>>();
+        y_range
+            .par_iter()
+            .flat_map(|y| {
+                x_range.par_iter().flat_map(move |x| {
+                    dir_range.par_iter().flat_map(move |dir| {
+                        amount_range.par_iter().map(move |amount| {
+                            let to_move = 2f32.powi(*amount);
+                            let xf = *x as f32;
+                            let yf = *y as f32;
+                            let rect = match dir {
+                                1 => Collider::Rectangular(Rect::new_xywh(
+                                    xf - to_move,
+                                    yf,
+                                    8f32 + to_move,
+                                    11f32,
+                                )),
+                                2 => Collider::Rectangular(Rect::new_xywh(
+                                    xf,
+                                    yf - to_move,
+                                    8f32,
+                                    11f32 + to_move,
+                                )),
+                                3 => Collider::Rectangular(Rect::new_xywh(
+                                    xf - to_move,
+                                    yf,
+                                    8f32 + to_move,
+                                    11f32,
+                                )),
+                                4 => Collider::Rectangular(Rect::new_xywh(
+                                    xf,
+                                    yf - to_move,
+                                    8f32,
+                                    11f32 + to_move,
+                                )),
                                 _ => unreachable!(),
-                            }
+                            };
                             solids
                                 .locate_in_envelope_intersecting(&rect.to_aabb())
                                 .next()
@@ -371,5 +394,18 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn precompute_test_solids() {
+        let solids = RTree::bulk_load(vec![
+            Collider::Rectangular(Rect::new_xywh(-8f32, 0f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(0f32, -9f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(10f32, 0f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
+        ]);
+        let death = RTree::bulk_load(vec![]);
+        let bounds = Rect::new_xywh(-128f32, -128f32, 257f32, 257f32);
+        let precomputer = MovementPrecomputer::new(&bounds, &solids, &death);
     }
 }
