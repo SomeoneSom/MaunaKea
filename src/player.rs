@@ -398,14 +398,15 @@ mod tests {
 
     #[test]
     fn precompute_test_solids() {
-        let solids = RTree::bulk_load(vec![
+        let death = RTree::bulk_load(vec![]);
+        let solids1 = RTree::bulk_load(vec![
             Collider::Rectangular(Rect::new_xywh(-8f32, 0f32, 8f32, 8f32)),
             Collider::Rectangular(Rect::new_xywh(0f32, -9f32, 8f32, 8f32)),
             Collider::Rectangular(Rect::new_xywh(10f32, 0f32, 8f32, 8f32)),
             Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
         ]);
-        let death = RTree::bulk_load(vec![]);
-        let bounds = Rect::new_xywh(-128f32, -128f32, 257f32, 257f32);
-        let precomputer = MovementPrecomputer::new(&bounds, &solids, &death);
+        let bounds1 = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
+        let precomputer1 = MovementPrecomputer::new(&bounds1, &solids1, &death);
+        // TODO: finish this test exci
     }
 }
