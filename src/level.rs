@@ -77,6 +77,7 @@ impl Level {
         return caps.get(num).unwrap().as_str().parse::<f32>().unwrap();
     }
 
+    // TODO: use lazy_static here
     fn get_pair(string: &str) -> Point {
         let re = Regex::new(r"(-?\d+\.?\d*), (-?\d+\.?\d*)").unwrap();
         let caps = re.captures(string).unwrap();
