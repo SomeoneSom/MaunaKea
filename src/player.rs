@@ -362,11 +362,6 @@ mod tests {
         for y in 0..=15 {
             for x in 0..=15 {
                 let expected = !(x >= 8 && y >= 8);
-                // println!("{x} {y} {expected}");
-                // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Left, &bounds));
-                // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Up, &bounds));
-                // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Right, &bounds));
-                // println!("{}", precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Down, &bounds));
                 assert_eq!(
                     precomputer.get_death(
                         &Point::new(x as f32, y as f32),
@@ -402,14 +397,14 @@ mod tests {
     #[test]
     fn precompute_test_solids() {
         let death = RTree::bulk_load(vec![]);
-        let solids1 = RTree::bulk_load(vec![
+        let solids = RTree::bulk_load(vec![
             Collider::Rectangular(Rect::new_xywh(-8f32, 0f32, 8f32, 8f32)),
             Collider::Rectangular(Rect::new_xywh(0f32, -9f32, 8f32, 8f32)),
             Collider::Rectangular(Rect::new_xywh(10f32, 0f32, 8f32, 8f32)),
             Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
         ]);
-        let bounds1 = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
-        let precomputer1 = MovementPrecomputer::new(&bounds1, &solids1, &death);
+        let bounds = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
+        let precomputer = MovementPrecomputer::new(&bounds, &solids, &death);
         for be_true in 0..=3 {
             for amount in 0..=7 {
                 let dir = match be_true {
@@ -419,26 +414,16 @@ mod tests {
                     3 => Direction::Down,
                     _ => unreachable!(),
                 };
-                /*println!("{be_true} {dir:?} {amount}");
-                println!("{}",
-                    precomputer1.get_solid(
-                        &Point::new(0f32, 0f32),
-                        dir,
-                        f32::powi(2f32, amount),
-                        &bounds1
-                    )
-                );*/
                 assert_eq!(
-                    precomputer1.get_solid(
+                    precomputer.get_solid(
                         &Point::new(0f32, 0f32),
                         dir,
                         f32::powi(2f32, amount),
-                        &bounds1
+                        &bounds
                     ),
                     amount >= be_true
                 );
             }
         }
-        // TODO: finish this test exci
     }
 }
