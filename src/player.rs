@@ -8,6 +8,7 @@ use crate::colliders::{Axes, Collider, Direction, Rect};
 use crate::level::Level;
 use crate::point::Point;
 
+// TODO: store the bounds
 #[derive(Debug, Default)]
 pub struct MovementPrecomputer {
     solids: Vec<bool>,
@@ -38,7 +39,7 @@ impl MovementPrecomputer {
             (position.x - bounds.ul.x).round() as i32,
             (position.y - bounds.ul.y).round() as i32,
         );
-        let width = (bounds.dr.x - bounds.ul.x) as i32;
+        let width = (bounds.dr.x - bounds.ul.x) as i32 + 1;
         let amount_i = amount.log2().floor() as i32;
         (((point_i.0 + point_i.1 * width) * 4 + dir) * 8 + amount_i) as usize
     }
@@ -90,14 +91,14 @@ impl MovementPrecomputer {
                                     11f32 + to_move,
                                 )),
                                 3 => Collider::Rectangular(Rect::new_xywh(
-                                    xf - to_move,
+                                    xf,
                                     yf,
                                     8f32 + to_move,
                                     11f32,
                                 )),
                                 4 => Collider::Rectangular(Rect::new_xywh(
                                     xf,
-                                    yf - to_move,
+                                    yf,
                                     8f32,
                                     11f32 + to_move,
                                 )),
@@ -409,6 +410,35 @@ mod tests {
         ]);
         let bounds1 = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
         let precomputer1 = MovementPrecomputer::new(&bounds1, &solids1, &death);
+        for be_true in 0..=3 {
+            for amount in 0..=7 {
+                let dir = match be_true {
+                    0 => Direction::Left,
+                    1 => Direction::Up,
+                    2 => Direction::Right,
+                    3 => Direction::Down,
+                    _ => unreachable!(),
+                };
+                /*println!("{be_true} {dir:?} {amount}");
+                println!("{}",
+                    precomputer1.get_solid(
+                        &Point::new(0f32, 0f32),
+                        dir,
+                        f32::powi(2f32, amount),
+                        &bounds1
+                    )
+                );*/
+                assert_eq!(
+                    precomputer1.get_solid(
+                        &Point::new(0f32, 0f32),
+                        dir,
+                        f32::powi(2f32, amount),
+                        &bounds1
+                    ),
+                    amount >= be_true
+                );
+            }
+        }
         // TODO: finish this test exci
     }
 }
