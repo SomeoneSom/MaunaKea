@@ -59,6 +59,7 @@ impl MovementPrecomputer {
         ((point_i.0 + point_i.1 * width) * 4 + dir) as usize
     }
 
+    // TODO: use itertools iproduct macro here
     fn precompute_solids(bounds: &Rect, solids: &RTree<Collider>) -> Vec<bool> {
         let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
         let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
@@ -113,6 +114,7 @@ impl MovementPrecomputer {
             .collect::<Vec<_>>()
     }
 
+    // TODO: use itertools iproduct macro here
     fn precompute_death(bounds: &Rect, death: &RTree<Collider>) -> Vec<bool> {
         let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
         let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
