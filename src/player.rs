@@ -18,7 +18,7 @@ pub struct MovementPrecomputer {
 
 // TODO: switch to using bitvecs probably, may be slower though
 impl MovementPrecomputer {
-    pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: &Rect)  -> Self {
+    pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: &Rect) -> Self {
         Self {
             solids: Self::precompute_solids(bounds, solids),
             death: Self::precompute_death(bounds, death),
@@ -146,9 +146,7 @@ impl MovementPrecomputer {
             .collect::<Vec<_>>()
     }
 
-    pub fn get_solid(
-        &self, position: &Point, direction: Direction, amount: f32
-    ) -> bool {
+    pub fn get_solid(&self, position: &Point, direction: Direction, amount: f32) -> bool {
         self.solids[Self::get_solids_index(position, direction, amount, &self.bounds)]
     }
 
@@ -365,10 +363,7 @@ mod tests {
             for x in 0..=15 {
                 let expected = !(x >= 8 && y >= 8);
                 assert_eq!(
-                    precomputer.get_death(
-                        &Point::new(x as f32, y as f32),
-                        Direction::Left,
-                    ),
+                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Left,),
                     expected
                 );
                 assert_eq!(
@@ -376,17 +371,11 @@ mod tests {
                     expected
                 );
                 assert_eq!(
-                    precomputer.get_death(
-                        &Point::new(x as f32, y as f32),
-                        Direction::Right,
-                    ),
+                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Right,),
                     expected
                 );
                 assert_eq!(
-                    precomputer.get_death(
-                        &Point::new(x as f32, y as f32),
-                        Direction::Down,
-                    ),
+                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Down,),
                     expected
                 );
             }
@@ -414,11 +403,7 @@ mod tests {
                     _ => unreachable!(),
                 };
                 assert_eq!(
-                    precomputer.get_solid(
-                        &Point::new(0f32, 0f32),
-                        dir,
-                        f32::powi(2f32, amount),
-                    ),
+                    precomputer.get_solid(&Point::new(0f32, 0f32), dir, f32::powi(2f32, amount),),
                     amount >= be_true
                 );
             }
