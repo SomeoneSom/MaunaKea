@@ -363,7 +363,7 @@ mod tests {
             for x in 0..=15 {
                 let expected = !(x >= 8 && y >= 8);
                 assert_eq!(
-                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Left,),
+                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Left),
                     expected
                 );
                 assert_eq!(
@@ -371,11 +371,11 @@ mod tests {
                     expected
                 );
                 assert_eq!(
-                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Right,),
+                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Right),
                     expected
                 );
                 assert_eq!(
-                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Down,),
+                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Down),
                     expected
                 );
             }
@@ -403,7 +403,7 @@ mod tests {
                     _ => unreachable!(),
                 };
                 assert_eq!(
-                    precomputer.get_solid(&Point::new(0f32, 0f32), dir, f32::powi(2f32, amount),),
+                    precomputer.get_solid(&Point::new(0f32, 0f32), dir, f32::powi(2f32, amount)),
                     amount >= be_true
                 );
             }
