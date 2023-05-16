@@ -85,6 +85,13 @@ impl Collider {
         }
     }
 
+    pub fn pos(&self) -> Point {
+        match self {
+            Collider::Rectangular(rect) => rect.ul,
+            Collider::Circular(circ) => circ.origin,
+        }
+    }
+
     pub fn to_aabb(self) -> AABB<[f32; 2]> {
         match self {
             Collider::Rectangular(rect) => {
