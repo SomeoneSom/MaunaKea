@@ -304,17 +304,22 @@ impl Player {
     }
 
     pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
-        for collider in level
-            .death
-            .locate_in_envelope_intersecting(&self.hurtbox.to_aabb())
-        {
-            match collider {
-                Collider::Rectangular(_) => return FrameResult::Death,
-                Collider::Circular(_) => {
-                    if self.hurtbox.collide_check(collider) {
-                        return FrameResult::Death;
-                    }
-                }
+        let mut dirs = vec![];
+        if self.speed.x <= 0f32 {
+            dirs.push(Direction::Left);
+        }
+        if self.speed.x >= 0f32 {
+            dirs.push(Direction::Right);
+        }
+        if self.speed.y <= 0f32 {
+            dirs.push(Direction::Up);
+        }
+        if self.speed.y >= 0f32 {
+            dirs.push(Direction::Down);
+        }
+        for dir in dirs {
+            if level.precomputed.get_death(&self.hurtbox.pos(), dir) {
+                return FrameResult::Death
             }
         }
         if self
