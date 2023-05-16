@@ -13,18 +13,20 @@ use crate::point::Point;
 pub struct MovementPrecomputer {
     solids: Vec<bool>,
     death: Vec<bool>,
+    bounds: Rect,
 }
 
 // TODO: switch to using bitvecs probably, may be slower though
 impl MovementPrecomputer {
-    pub fn new(bounds: &Rect, solids: &RTree<Collider>, death: &RTree<Collider>) -> Self {
+    pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: &Rect)  -> Self {
         Self {
             solids: Self::precompute_solids(bounds, solids),
             death: Self::precompute_death(bounds, death),
+            bounds: *bounds,
         }
     }
 
-    //TODO: these two should prob be removed
+    // TODO: these two should prob be removed
     #[inline]
     fn get_solids_index(
         position: &Point, direction: Direction, amount: f32, bounds: &Rect,
@@ -145,13 +147,13 @@ impl MovementPrecomputer {
     }
 
     pub fn get_solid(
-        &self, position: &Point, direction: Direction, amount: f32, bounds: &Rect,
+        &self, position: &Point, direction: Direction, amount: f32
     ) -> bool {
-        self.solids[Self::get_solids_index(position, direction, amount, bounds)]
+        self.solids[Self::get_solids_index(position, direction, amount, &self.bounds)]
     }
 
-    pub fn get_death(&self, position: &Point, direction: Direction, bounds: &Rect) -> bool {
-        self.death[Self::get_death_index(position, direction, bounds)]
+    pub fn get_death(&self, position: &Point, direction: Direction) -> bool {
+        self.death[Self::get_death_index(position, direction, &self.bounds)]
     }
 }
 
@@ -358,7 +360,7 @@ mod tests {
             Collider::Rectangular(Rect::new_xywh(0f32, 8f32, 8f32, 8f32)),
         ]);
         let bounds = Rect::new_xywh(0f32, 0f32, 16f32, 16f32);
-        let precomputer = MovementPrecomputer::new(&bounds, &solids, &death);
+        let precomputer = MovementPrecomputer::new(&solids, &death, &bounds);
         for y in 0..=15 {
             for x in 0..=15 {
                 let expected = !(x >= 8 && y >= 8);
@@ -366,19 +368,17 @@ mod tests {
                     precomputer.get_death(
                         &Point::new(x as f32, y as f32),
                         Direction::Left,
-                        &bounds
                     ),
                     expected
                 );
                 assert_eq!(
-                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Up, &bounds),
+                    precomputer.get_death(&Point::new(x as f32, y as f32), Direction::Up),
                     expected
                 );
                 assert_eq!(
                     precomputer.get_death(
                         &Point::new(x as f32, y as f32),
                         Direction::Right,
-                        &bounds
                     ),
                     expected
                 );
@@ -386,7 +386,6 @@ mod tests {
                     precomputer.get_death(
                         &Point::new(x as f32, y as f32),
                         Direction::Down,
-                        &bounds
                     ),
                     expected
                 );
@@ -404,7 +403,7 @@ mod tests {
             Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
         ]);
         let bounds = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
-        let precomputer = MovementPrecomputer::new(&bounds, &solids, &death);
+        let precomputer = MovementPrecomputer::new(&solids, &death, &bounds);
         for be_true in 0..=3 {
             for amount in 0..=7 {
                 let dir = match be_true {
@@ -419,7 +418,6 @@ mod tests {
                         &Point::new(0f32, 0f32),
                         dir,
                         f32::powi(2f32, amount),
-                        &bounds
                     ),
                     amount >= be_true
                 );
