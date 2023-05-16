@@ -303,6 +303,7 @@ impl Player {
         todo!()
     }
 
+    // NOTE: there still needs to probably be a fallback here but that can be dealt with later
     pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
         let mut dirs = vec![];
         if self.speed.x <= 0f32 {
