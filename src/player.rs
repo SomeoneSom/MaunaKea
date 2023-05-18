@@ -198,9 +198,36 @@ impl Player {
         Point::new(ul.x + 4f32, ul.y + 11f32)
     }
 
+    // NOTE: again, fallback prob needed, might implement later
+    fn move_in_direction(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
+        if speed == 0f32 {
+            return false;
+        }
+        todo!()
+    }
+
     pub fn move_self(&mut self, level: &Level) {
+        self.move_in_direction(
+            level,
+            self.speed.x,
+            if self.speed.x <= 0f32 {
+                Direction::Left
+            } else {
+                Direction::Right
+            },
+        );
+        self.move_in_direction(
+            level,
+            self.speed.y,
+            if self.speed.y <= 0f32 {
+                Direction::Up
+            } else {
+                Direction::Down
+            },
+        );
         let mut speed_x = self.speed.x;
         let mut speed_y = self.speed.y;
+
         let sign_x = speed_x.signum();
         let sign_y = speed_y.signum();
         loop {
@@ -320,7 +347,7 @@ impl Player {
         }
         for dir in dirs {
             if level.precomputed.get_death(&self.hurtbox.pos(), dir) {
-                return FrameResult::Death
+                return FrameResult::Death;
             }
         }
         if self
