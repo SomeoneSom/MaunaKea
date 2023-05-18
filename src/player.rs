@@ -198,6 +198,50 @@ impl Player {
         Point::new(ul.x + 4f32, ul.y + 11f32)
     }
 
+    // TODO: add in stuff for when speed is outside octagon and should be pulled back to it
+    // TODO: make speed capping actually work how its meant to
+    // TODO: water surface bs
+    pub fn speed_calc(&mut self, angle: f64, level: &Level) {
+        let truncated = f64::round(angle * 1000f64) / 1000f64;
+        let adjusted = Point::new(
+            truncated.to_radians().sin() as f32,
+            truncated.to_radians().cos() as f32,
+        );
+        self.retained_timer -= 1;
+        let target = Point::new(60f32 * adjusted.x, 80f32 * adjusted.y);
+        if f32::abs(target.x - self.speed.x) < 10f32 {
+            self.speed.x = target.x;
+        } else {
+            self.speed.x += f32::clamp(target.x - self.speed.x, -10f32, 10f32);
+        }
+        if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
+            if level.precomputed.get_solid(
+                &self.pos(),
+                if self.speed.x.signum() < 0f32 {
+                    Direction::Left
+                } else {
+                    Direction::Right
+                },
+                1f32,
+            ) {
+                self.speed.x = self.retained;
+                self.retained = 0f32;
+                self.retained_timer = 0;
+            }
+        }
+        self.speed.x = self.speed.x.clamp(-60f32, 60f32);
+        if f32::abs(target.y - self.speed.y) < 10f32 {
+            self.speed.y = target.y;
+        } else {
+            self.speed.y += f32::clamp(target.y - self.speed.y, -10f32, 10f32);
+        }
+        self.speed.y = self.speed.y.clamp(-80f32, 80f32);
+    }
+
+    pub fn speed_calc_restricted(&mut self) {
+        todo!()
+    }
+
     // NOTE: again, fallback prob needed, might implement later
     fn move_in_direction(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
         if speed == 0f32 {
@@ -207,7 +251,7 @@ impl Player {
     }
 
     pub fn move_self(&mut self, level: &Level) {
-        self.move_in_direction(
+        if self.move_in_direction(
             level,
             self.speed.x,
             if self.speed.x <= 0f32 {
@@ -215,8 +259,12 @@ impl Player {
             } else {
                 Direction::Right
             },
-        );
-        self.move_in_direction(
+        ) {
+            self.retained = self.speed.x;
+            self.retained_timer = 4;
+            self.speed.x = 0f32;
+        }
+        if self.move_in_direction(
             level,
             self.speed.y,
             if self.speed.y <= 0f32 {
@@ -224,7 +272,9 @@ impl Player {
             } else {
                 Direction::Down
             },
-        );
+        ) {
+            self.speed.y = 0f32;
+        }
         let mut speed_x = self.speed.x;
         let mut speed_y = self.speed.y;
 
@@ -284,52 +334,6 @@ impl Player {
         }
     }
 
-    // TODO: add in stuff for when speed is outside octagon and should be pulled back to it
-    // TODO: make speed capping actually work how its meant to
-    // TODO: water surface bs
-    pub fn speed_calc(&mut self, angle: f64, level: &Level) {
-        let truncated = f64::round(angle * 1000f64) / 1000f64;
-        let adjusted = Point::new(
-            truncated.to_radians().sin() as f32,
-            truncated.to_radians().cos() as f32,
-        );
-        self.retained_timer -= 1;
-        let target = Point::new(60f32 * adjusted.x, 80f32 * adjusted.y);
-        if f32::abs(target.x - self.speed.x) < 10f32 {
-            self.speed.x = target.x;
-        } else {
-            self.speed.x += f32::clamp(target.x - self.speed.x, -10f32, 10f32);
-        }
-        if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
-            let temp_hitbox = self.hitbox;
-            self.hitbox
-                .move_collider(self.speed.x.signum() * 60f32, 0f32);
-            if self.solids_collision(
-                level,
-                if self.speed.x.signum() < 0f32 {
-                    Direction::Left
-                } else {
-                    Direction::Right
-                },
-            ) {
-                self.speed.x = self.retained;
-                self.retained_timer = 0;
-            }
-            self.hitbox = temp_hitbox;
-        }
-        self.speed.x = self.speed.x.clamp(-60f32, 60f32);
-        if f32::abs(target.y - self.speed.y) < 10f32 {
-            self.speed.y = target.y;
-        } else {
-            self.speed.y += f32::clamp(target.y - self.speed.y, -10f32, 10f32);
-        }
-        self.speed.y = self.speed.y.clamp(-80f32, 80f32);
-    }
-
-    pub fn speed_calc_restricted(&mut self) {
-        todo!()
-    }
-
     // NOTE: there still needs to probably be a fallback here but that can be dealt with later
     pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
         let mut dirs = vec![];
@@ -360,6 +364,8 @@ impl Player {
         }
     }
 
+    // NOTE: this is really just here for when i need to implement a fallback
+    // this might just get removed entirely
     pub fn solids_collision(&mut self, level: &Level, direction: Direction) -> bool {
         let hitbox_rect = match self.hitbox.rect() {
             Some(rect) => rect,
