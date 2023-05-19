@@ -248,6 +248,7 @@ impl Player {
     // NOTE: again, fallback prob needed, might implement later
     // NOTE: yes this uses both DELTATIME_RECIP and DELTATIME, but it works
     // TODO: this code is absolutely awful and needs to be cleaned up
+    // TODO: ok actually i just have to redo this entire function
     fn move_in_direction(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
         if speed == 0f32 {
             return false;
