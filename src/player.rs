@@ -8,6 +8,9 @@ use crate::colliders::{Axes, Collider, Direction, Rect};
 use crate::level::Level;
 use crate::point::Point;
 
+const DELTATIME: f32 = 0.0166667;
+const DELTATIME_RECIP: f32 = 1f32 / 0.0166667;
+
 // TODO: store the bounds
 #[derive(Debug, Default)]
 pub struct MovementPrecomputer {
@@ -243,27 +246,34 @@ impl Player {
     }
 
     // NOTE: again, fallback prob needed, might implement later
+    // NOTE: yes this uses both DELTATIME_RECIP and DELTATIME, but it works
+    // TODO: this code is absolutely awful and needs to be cleaned up
     fn move_in_direction(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
         if speed == 0f32 {
             return false;
         }
         let mut ret = false;
-        let pixels = speed / 60f32;
+        let pixels = speed * DELTATIME;
         let pixels_f = pixels.fract();
         let pixels_l = pixels.log2() as i32;
+        let mut pixels_max = pixels as i32;
         for a in (0..=pixels_l).rev() {
             let to_move = 2f32.powi(a);
             if level.precomputed.get_solid(&self.pos(), dir, to_move) {
                 ret = true;
             } else {
+                pixels_max -= 2i32.pow(a as u32);
                 let (x, y) = match dir {
-                    Direction::Left => (-to_move, 0f32),
-                    Direction::Up => (0f32, -to_move),
-                    Direction::Right => (to_move, 0f32),
-                    Direction::Down => (0f32, to_move),
+                    Direction::Left => (-to_move * DELTATIME_RECIP, 0f32),
+                    Direction::Up => (0f32, -to_move * DELTATIME_RECIP),
+                    Direction::Right => (to_move * DELTATIME_RECIP, 0f32),
+                    Direction::Down => (0f32, to_move * DELTATIME_RECIP),
                 };
                 self.hurtbox.move_collider(x, y);
                 self.hitbox.move_collider(x, y);
+            }
+            if pixels_max <= 0 {
+                break;
             }
         }
         let to_move_temp = match dir {
@@ -273,17 +283,12 @@ impl Player {
             Direction::Down => Point::new(0f32, pixels_f),
         };
         let changed = self.pos() + to_move_temp;
-        let to_move = if self.pos().x.round() != changed.x.round() {
+        let to_move = if self.pos().x.round() != changed.x.round()
+            || self.pos().y.round() != changed.y.round()
+        {
             if level.precomputed.get_solid(&self.pos(), dir, 1f32) {
                 ret = true;
-                f32::abs(self.pos().x - changed.x.round())
-            } else {
-                pixels_f
-            }
-        } else if self.pos().y.round() != changed.y.round() {
-            if level.precomputed.get_solid(&self.pos(), dir, 1f32) {
-                ret = true;
-                f32::abs(self.pos().y - changed.y.round())
+                0f32
             } else {
                 pixels_f
             }
@@ -291,10 +296,10 @@ impl Player {
             pixels_f
         };
         let (x, y) = match dir {
-            Direction::Left => (-to_move, 0f32),
-            Direction::Up => (0f32, -to_move),
-            Direction::Right => (to_move, 0f32),
-            Direction::Down => (0f32, to_move),
+            Direction::Left => (-to_move * DELTATIME_RECIP, 0f32),
+            Direction::Up => (0f32, -to_move * DELTATIME_RECIP),
+            Direction::Right => (to_move * DELTATIME_RECIP, 0f32),
+            Direction::Down => (0f32, to_move * DELTATIME_RECIP),
         };
         self.hurtbox.move_collider(x, y);
         self.hitbox.move_collider(x, y);
@@ -439,6 +444,50 @@ mod tests {
                     precomputer.get_solid(&Point::new(0f32, 0f32), dir, f32::powi(2f32, amount)),
                     amount >= be_true
                 );
+            }
+        }
+    }
+
+    #[test]
+    fn precompute_test_solids_player() {
+        let death = RTree::bulk_load(vec![]);
+        let solids = RTree::bulk_load(vec![
+            Collider::Rectangular(Rect::new_xywh(-8f32, 0f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(0f32, -9f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(10f32, 0f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
+        ]);
+        let bounds = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
+        let precomputer = MovementPrecomputer::new(&solids, &death, &bounds);
+        let mut level = Level::default();
+        level.bounds = bounds;
+        level.precomputed = precomputer;
+        let mut player = Player::new(Point::new(0f32, 0f32), Point::new(0f32, 0f32));
+        for be_true in 0..=3 {
+            for amount in 0..=128 {
+                let to_move = amount as f32 * DELTATIME_RECIP;
+                match be_true {
+                    0 => player.speed = Point::new(-to_move, 0f32),
+                    1 => player.speed = Point::new(0f32, -to_move),
+                    2 => player.speed = Point::new(to_move, 0f32),
+                    3 => player.speed = Point::new(0f32, to_move),
+                    _ => unreachable!(),
+                }
+                let to_move_expected = if be_true == 0 {
+                    0f32
+                } else {
+                    amount.min(i32::pow(2, be_true - 1)) as f32
+                };
+                let expected_pos = match be_true {
+                    0 => Point::new(-to_move_expected, 0f32),
+                    1 => Point::new(0f32, -to_move_expected),
+                    2 => Point::new(to_move_expected, 0f32),
+                    3 => Point::new(0f32, to_move_expected),
+                    _ => unreachable!(),
+                };
+                player.move_self(&level);
+                assert_eq!(player.pos(), expected_pos);
+                player = Player::new(Point::new(0f32, 0f32), Point::new(0f32, 0f32));
             }
         }
     }
