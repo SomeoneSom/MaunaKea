@@ -247,7 +247,58 @@ impl Player {
         if speed == 0f32 {
             return false;
         }
-        todo!()
+        let mut ret = false;
+        let pixels = speed / 60f32;
+        let pixels_f = pixels.fract();
+        let pixels_l = pixels.log2() as i32;
+        for a in (0..=pixels_l).rev() {
+            let to_move = 2f32.powi(a);
+            if level.precomputed.get_solid(&self.pos(), dir, to_move) {
+                ret = true;
+            } else {
+                let (x, y) = match dir {
+                    Direction::Left => (-to_move, 0f32),
+                    Direction::Up => (0f32, -to_move),
+                    Direction::Right => (to_move, 0f32),
+                    Direction::Down => (0f32, to_move),
+                };
+                self.hurtbox.move_collider(x, y);
+                self.hitbox.move_collider(x, y);
+            }
+        }
+        let to_move_temp = match dir {
+            Direction::Left => Point::new(-pixels_f, 0f32),
+            Direction::Up => Point::new(0f32, -pixels_f),
+            Direction::Right => Point::new(pixels_f, 0f32),
+            Direction::Down => Point::new(0f32, pixels_f),
+        };
+        let changed = self.pos() + to_move_temp;
+        let to_move = if self.pos().x.round() != changed.x.round() {
+            if level.precomputed.get_solid(&self.pos(), dir, 1f32) {
+                ret = true;
+                f32::abs(self.pos().x - changed.x.round())
+            } else {
+                pixels_f
+            }
+        } else if self.pos().y.round() != changed.y.round() {
+            if level.precomputed.get_solid(&self.pos(), dir, 1f32) {
+                ret = true;
+                f32::abs(self.pos().y - changed.y.round())
+            } else {
+                pixels_f
+            }
+        } else {
+            pixels_f
+        };
+        let (x, y) = match dir {
+            Direction::Left => (-to_move, 0f32),
+            Direction::Up => (0f32, -to_move),
+            Direction::Right => (to_move, 0f32),
+            Direction::Down => (0f32, to_move),
+        };
+        self.hurtbox.move_collider(x, y);
+        self.hitbox.move_collider(x, y);
+        ret
     }
 
     pub fn move_self(&mut self, level: &Level) {
@@ -274,63 +325,6 @@ impl Player {
             },
         ) {
             self.speed.y = 0f32;
-        }
-        let mut speed_x = self.speed.x;
-        let mut speed_y = self.speed.y;
-
-        let sign_x = speed_x.signum();
-        let sign_y = speed_y.signum();
-        loop {
-            if speed_x * sign_x > 0f32 {
-                let speed = if sign_x > 0f32 {
-                    speed_x.min(60f32)
-                } else {
-                    speed_x.max(-60f32)
-                };
-                self.hurtbox.move_collider(speed, 0f32);
-                self.hitbox.move_collider(speed, 0f32);
-                if self.solids_collision(
-                    level,
-                    if sign_x < 0f32 {
-                        Direction::Left
-                    } else {
-                        Direction::Right
-                    },
-                ) {
-                    self.hurtbox.move_collider(-speed, 0f32);
-                    self.hitbox.move_collider(-speed, 0f32);
-                    self.retained = self.speed.x;
-                    self.retained_timer = 4;
-                    self.speed.x = 0f32;
-                    speed_x = 0f32;
-                }
-                speed_x -= 60f32 * sign_x;
-            } else {
-                let speed = if sign_y > 0f32 {
-                    speed_y.min(60f32)
-                } else {
-                    speed_y.max(-60f32)
-                };
-                self.hurtbox.move_collider(0f32, speed);
-                self.hitbox.move_collider(0f32, speed);
-                if self.solids_collision(
-                    level,
-                    if sign_y < 0f32 {
-                        Direction::Up
-                    } else {
-                        Direction::Down
-                    },
-                ) {
-                    self.hurtbox.move_collider(0f32, -speed);
-                    self.hitbox.move_collider(0f32, -speed);
-                    self.speed.y = 0f32;
-                    break;
-                }
-                speed_y -= 60f32 * sign_y;
-            }
-            if speed_x * sign_x <= 0f32 && speed_y * sign_y <= 0f32 {
-                break;
-            }
         }
     }
 
