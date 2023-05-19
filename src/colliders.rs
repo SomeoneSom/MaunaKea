@@ -4,8 +4,9 @@ use crate::point::Point;
 
 const DELTATIME: f32 = 0.0166667;
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, Default, Debug)]
 pub enum Direction {
+    #[default]
     Left,
     Up,
     Right,
@@ -81,6 +82,13 @@ impl Collider {
         match self {
             Collider::Circular(value) => Some(value),
             _ => None,
+        }
+    }
+
+    pub fn pos(&self) -> Point {
+        match self {
+            Collider::Rectangular(rect) => rect.ul,
+            Collider::Circular(circ) => circ.origin,
         }
     }
 
