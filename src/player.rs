@@ -11,7 +11,6 @@ use crate::point::Point;
 const DELTATIME: f32 = 0.0166667;
 const DELTATIME_RECIP: f32 = 1f32 / 0.0166667;
 
-// TODO: store the bounds
 #[derive(Debug, Default)]
 pub struct MovementPrecomputer {
     solids: Vec<bool>,
@@ -242,6 +241,11 @@ impl Player {
     }
 
     pub fn speed_calc_restricted(&mut self) {
+        todo!()
+    }
+
+    // NOTE: this will replace the existing function when it's done
+    fn move_in_direction_new(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
         todo!()
     }
 
