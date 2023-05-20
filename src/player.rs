@@ -216,8 +216,9 @@ impl Player {
         } else {
             self.speed.x += f32::clamp(target.x - self.speed.x, -10f32, 10f32);
         }
-        if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
-            if level.precomputed.get_solid(
+        if self.speed.x.signum() == self.retained.signum()
+            && self.retained_timer > 0
+            && level.precomputed.get_solid(
                 &self.pos(),
                 if self.speed.x.signum() < 0f32 {
                     Direction::Left
@@ -225,11 +226,11 @@ impl Player {
                     Direction::Right
                 },
                 1f32,
-            ) {
-                self.speed.x = self.retained;
-                self.retained = 0f32;
-                self.retained_timer = 0;
-            }
+            )
+        {
+            self.speed.x = self.retained;
+            self.retained = 0f32;
+            self.retained_timer = 0;
         }
         self.speed.x = self.speed.x.clamp(-60f32, 60f32);
         if f32::abs(target.y - self.speed.y) < 10f32 {
