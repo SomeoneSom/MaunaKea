@@ -316,10 +316,10 @@ impl Player {
                     pixels_f.ceil()
                 }
             }
-        }.abs();
+        }
+        .abs();
         let mut to_move = level.precomputed.get_new_solid(&self.pos(), dir) as f32;
-        let ret = to_move < pixels_i;
-        if !ret {
+        if to_move > pixels_i {
             to_move = pixels_i
                 + match dir {
                     Direction::Left | Direction::Right => self.pos().x.round() - self.pos().x,
@@ -334,7 +334,7 @@ impl Player {
         };
         self.hitbox.move_collider(x, y);
         self.hurtbox.move_collider(x, y);
-        ret
+        to_move <= pixels_i
     }
 
     // NOTE: again, fallback prob needed, might implement later
