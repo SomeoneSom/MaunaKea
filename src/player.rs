@@ -85,10 +85,18 @@ impl MovementPrecomputer {
                     4 => Collider::Rectangular(Rect::new_xywh(xf, yf, 8f32, 11f32 + 255f32)),
                     _ => unreachable!(),
                 };
-                match solids
+                // TODO: this is probably slow, needs to be optimized
+                let mut intersected = solids
                     .locate_in_envelope_intersecting(&rect.to_aabb())
-                    .next()
-                {
+                    .collect::<Vec<_>>();
+                match dir {
+                    1 => intersected.sort_by(|ca, cb| cb.pos().x.partial_cmp(&ca.pos().x).unwrap()),
+                    2 => intersected.sort_by(|ca, cb| cb.pos().y.partial_cmp(&ca.pos().y).unwrap()),
+                    3 => intersected.sort_by(|ca, cb| ca.pos().x.partial_cmp(&cb.pos().x).unwrap()),
+                    4 => intersected.sort_by(|ca, cb| ca.pos().y.partial_cmp(&cb.pos().y).unwrap()),
+                    _ => unreachable!(),
+                }
+                match intersected.first() {
                     Some(c) => {
                         (match dir {
                             1 => xf - c.pos().x,
