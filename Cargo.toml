@@ -18,6 +18,7 @@ typenum = "1.16.0"
 arboard = "3.2.0"
 rstar = "0.10.0"
 rayon = "1.7.0"
+itertools = "0.10.5"
 
 [target.'cfg(windows)'.dependencies]
 winapi = "0.3.9"

@@ -11,9 +11,9 @@ use crate::point::Point;
 const DELTATIME: f32 = 0.0166667;
 const DELTATIME_RECIP: f32 = 1f32 / 0.0166667;
 
-// TODO: store the bounds
 #[derive(Debug, Default)]
 pub struct MovementPrecomputer {
+    new_solids: Vec<u8>,
     solids: Vec<bool>,
     death: Vec<bool>,
     bounds: Rect,
@@ -21,11 +21,12 @@ pub struct MovementPrecomputer {
 
 // TODO: switch to using bitvecs probably, may be slower though
 impl MovementPrecomputer {
-    pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: &Rect) -> Self {
+    pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: Rect) -> Self {
         Self {
-            solids: Self::precompute_solids(bounds, solids),
-            death: Self::precompute_death(bounds, death),
-            bounds: *bounds,
+            new_solids: Self::precompute_solids_new(&bounds, solids),
+            solids: Self::precompute_solids(&bounds, solids),
+            death: Self::precompute_death(&bounds, death),
+            bounds,
         }
     }
 
@@ -50,7 +51,7 @@ impl MovementPrecomputer {
     }
 
     #[inline]
-    fn get_death_index(position: &Point, direction: Direction, bounds: &Rect) -> usize {
+    fn get_index(&self, position: &Point, direction: Direction) -> usize {
         let dir = match direction {
             Direction::Left => 0,
             Direction::Up => 1,
@@ -58,11 +59,58 @@ impl MovementPrecomputer {
             Direction::Down => 3,
         };
         let point_i = (
-            (position.x - bounds.ul.x).round() as i32,
-            (position.y - bounds.ul.y).round() as i32,
+            (position.x - self.bounds.ul.x).round() as i32,
+            (position.y - self.bounds.ul.y).round() as i32,
         );
-        let width = (bounds.dr.x - bounds.ul.x) as i32 + 1;
+        let width = (self.bounds.dr.x - self.bounds.ul.x) as i32 + 1;
         ((point_i.0 + point_i.1 * width) * 4 + dir) as usize
+    }
+
+    fn precompute_solids_new(bounds: &Rect, solids: &RTree<Collider>) -> Vec<u8> {
+        let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
+        let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
+        let vals =
+            itertools::iproduct!(ul_i.1..=dr_i.1, ul_i.0..=dr_i.0, 1..=4).collect::<Vec<_>>();
+        vals.par_iter()
+            .map(|(y, x, dir)| {
+                let xf = *x as f32;
+                let yf = *y as f32;
+                let rect = match dir {
+                    1 => {
+                        Collider::Rectangular(Rect::new_xywh(xf - 255f32, yf, 8f32 + 255f32, 11f32))
+                    }
+                    2 => {
+                        Collider::Rectangular(Rect::new_xywh(xf, yf - 255f32, 8f32, 11f32 + 255f32))
+                    }
+                    3 => Collider::Rectangular(Rect::new_xywh(xf, yf, 8f32 + 255f32, 11f32)),
+                    4 => Collider::Rectangular(Rect::new_xywh(xf, yf, 8f32, 11f32 + 255f32)),
+                    _ => unreachable!(),
+                };
+                // TODO: this is probably slow, needs to be optimized
+                let mut intersected = solids
+                    .locate_in_envelope_intersecting(&rect.to_aabb())
+                    .collect::<Vec<_>>();
+                match dir {
+                    1 => intersected.sort_by(|ca, cb| cb.pos().x.partial_cmp(&ca.pos().x).unwrap()),
+                    2 => intersected.sort_by(|ca, cb| cb.pos().y.partial_cmp(&ca.pos().y).unwrap()),
+                    3 => intersected.sort_by(|ca, cb| ca.pos().x.partial_cmp(&cb.pos().x).unwrap()),
+                    4 => intersected.sort_by(|ca, cb| ca.pos().y.partial_cmp(&cb.pos().y).unwrap()),
+                    _ => unreachable!(),
+                }
+                match intersected.first() {
+                    Some(c) => {
+                        (match dir {
+                            1 => xf - c.rect().unwrap().dr.x - 1f32,
+                            2 => yf - c.rect().unwrap().dr.y - 1f32,
+                            3 => c.rect().unwrap().ul.x - xf - 8f32,
+                            4 => c.rect().unwrap().ul.y - yf - 11f32,
+                            _ => unreachable!(),
+                        }) as u8
+                    }
+                    None => 255u8,
+                }
+            })
+            .collect::<Vec<_>>()
     }
 
     // TODO: use itertools iproduct macro here
@@ -149,12 +197,16 @@ impl MovementPrecomputer {
             .collect::<Vec<_>>()
     }
 
+    pub fn get_new_solid(&self, position: &Point, direction: Direction) -> u8 {
+        self.new_solids[self.get_index(position, direction)]
+    }
+
     pub fn get_solid(&self, position: &Point, direction: Direction, amount: f32) -> bool {
         self.solids[Self::get_solids_index(position, direction, amount, &self.bounds)]
     }
 
     pub fn get_death(&self, position: &Point, direction: Direction) -> bool {
-        self.death[Self::get_death_index(position, direction, &self.bounds)]
+        self.death[self.get_index(position, direction)]
     }
 }
 
@@ -217,8 +269,9 @@ impl Player {
         } else {
             self.speed.x += f32::clamp(target.x - self.speed.x, -10f32, 10f32);
         }
-        if self.speed.x.signum() == self.retained.signum() && self.retained_timer > 0 {
-            if level.precomputed.get_solid(
+        if self.speed.x.signum() == self.retained.signum()
+            && self.retained_timer > 0
+            && level.precomputed.get_solid(
                 &self.pos(),
                 if self.speed.x.signum() < 0f32 {
                     Direction::Left
@@ -226,11 +279,11 @@ impl Player {
                     Direction::Right
                 },
                 1f32,
-            ) {
-                self.speed.x = self.retained;
-                self.retained = 0f32;
-                self.retained_timer = 0;
-            }
+            )
+        {
+            self.speed.x = self.retained;
+            self.retained = 0f32;
+            self.retained_timer = 0;
         }
         self.speed.x = self.speed.x.clamp(-60f32, 60f32);
         if f32::abs(target.y - self.speed.y) < 10f32 {
@@ -245,9 +298,49 @@ impl Player {
         todo!()
     }
 
+    // NOTE: this will replace the existing function when it's done
+    fn move_in_direction_new(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
+        let pixels_f = speed * DELTATIME;
+        let pixels_i = match dir {
+            Direction::Left | Direction::Right => {
+                if self.pos().x.round() == f32::round(self.pos().x + pixels_f) {
+                    pixels_f.floor()
+                } else {
+                    pixels_f.ceil()
+                }
+            }
+            Direction::Up | Direction::Down => {
+                if self.pos().y.round() == f32::round(self.pos().y + pixels_f) {
+                    pixels_f.floor()
+                } else {
+                    pixels_f.ceil()
+                }
+            }
+        }
+        .abs();
+        let mut to_move = level.precomputed.get_new_solid(&self.pos(), dir) as f32;
+        if to_move > pixels_i {
+            to_move = pixels_i
+                + match dir {
+                    Direction::Left | Direction::Right => self.pos().x.round() - self.pos().x,
+                    Direction::Up | Direction::Down => self.pos().y.round() - self.pos().y,
+                };
+        }
+        let (x, y) = match dir {
+            Direction::Left => (-to_move * DELTATIME_RECIP, 0f32),
+            Direction::Up => (0f32, -to_move * DELTATIME_RECIP),
+            Direction::Right => (to_move * DELTATIME_RECIP, 0f32),
+            Direction::Down => (0f32, to_move * DELTATIME_RECIP),
+        };
+        self.hitbox.move_collider(x, y);
+        self.hurtbox.move_collider(x, y);
+        to_move <= pixels_i
+    }
+
     // NOTE: again, fallback prob needed, might implement later
     // NOTE: yes this uses both DELTATIME_RECIP and DELTATIME, but it works
     // TODO: this code is absolutely awful and needs to be cleaned up
+    // TODO: ok actually i just have to redo this entire function
     fn move_in_direction(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
         if speed == 0f32 {
             return false;
@@ -307,7 +400,7 @@ impl Player {
     }
 
     pub fn move_self(&mut self, level: &Level) {
-        if self.move_in_direction(
+        if self.move_in_direction_new(
             level,
             self.speed.x,
             if self.speed.x <= 0f32 {
@@ -320,7 +413,7 @@ impl Player {
             self.retained_timer = 4;
             self.speed.x = 0f32;
         }
-        if self.move_in_direction(
+        if self.move_in_direction_new(
             level,
             self.speed.y,
             if self.speed.y <= 0f32 {
@@ -396,7 +489,7 @@ mod tests {
             Collider::Rectangular(Rect::new_xywh(0f32, 8f32, 8f32, 8f32)),
         ]);
         let bounds = Rect::new_xywh(0f32, 0f32, 16f32, 16f32);
-        let precomputer = MovementPrecomputer::new(&solids, &death, &bounds);
+        let precomputer = MovementPrecomputer::new(&solids, &death, bounds);
         for y in 0..=15 {
             for x in 0..=15 {
                 let expected = !(x >= 8 && y >= 8);
@@ -421,6 +514,32 @@ mod tests {
     }
 
     #[test]
+    fn precompute_test_new_solids() {
+        let death = RTree::bulk_load(vec![]);
+        let solids = RTree::bulk_load(vec![
+            Collider::Rectangular(Rect::new_xywh(-8f32, 0f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(0f32, -9f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(10f32, 0f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
+        ]);
+        let bounds = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
+        let precomputer = MovementPrecomputer::new(&solids, &death, bounds);
+        for d in 0..=3 {
+            let dir = match d {
+                0 => Direction::Left,
+                1 => Direction::Up,
+                2 => Direction::Right,
+                3 => Direction::Down,
+                _ => unreachable!(),
+            };
+            assert_eq!(
+                precomputer.get_new_solid(&Point::new(0f32, 0f32), dir),
+                if d == 0 { 0 } else { 2u8.pow(d - 1) }
+            );
+        }
+    }
+
+    #[test]
     fn precompute_test_solids() {
         let death = RTree::bulk_load(vec![]);
         let solids = RTree::bulk_load(vec![
@@ -430,7 +549,7 @@ mod tests {
             Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
         ]);
         let bounds = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
-        let precomputer = MovementPrecomputer::new(&solids, &death, &bounds);
+        let precomputer = MovementPrecomputer::new(&solids, &death, bounds);
         for be_true in 0..=3 {
             for amount in 0..=7 {
                 let dir = match be_true {
@@ -458,7 +577,7 @@ mod tests {
             Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
         ]);
         let bounds = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
-        let precomputer = MovementPrecomputer::new(&solids, &death, &bounds);
+        let precomputer = MovementPrecomputer::new(&solids, &death, bounds);
         let mut level = Level::default();
         level.bounds = bounds;
         level.precomputed = precomputer;
