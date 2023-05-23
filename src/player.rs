@@ -13,6 +13,7 @@ const DELTATIME_RECIP: f32 = 1f32 / 0.0166667;
 
 #[derive(Debug, Default)]
 pub struct MovementPrecomputer {
+    new_solids: Vec<u8>,
     solids: Vec<bool>,
     death: Vec<bool>,
     bounds: Rect,
@@ -22,6 +23,7 @@ pub struct MovementPrecomputer {
 impl MovementPrecomputer {
     pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: &Rect) -> Self {
         Self {
+            new_solids: vec![],
             solids: Self::precompute_solids(bounds, solids),
             death: Self::precompute_death(bounds, death),
             bounds: *bounds,
