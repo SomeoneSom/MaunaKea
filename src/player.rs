@@ -428,21 +428,24 @@ impl Player {
 
     // NOTE: there still needs to probably be a fallback here but that can be dealt with later
     pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
-        let mut dirs = vec![];
+        // looks messy, avoids allocations though
         if self.speed.x <= 0f32 {
-            dirs.push(Direction::Left);
+            if level.precomputed.get_death(&self.hurtbox.pos(), Direction::Left) {
+                return FrameResult::Death;
+            }
         }
         if self.speed.x >= 0f32 {
-            dirs.push(Direction::Right);
+            if level.precomputed.get_death(&self.hurtbox.pos(), Direction::Right) {
+                return FrameResult::Death;
+            }
         }
         if self.speed.y <= 0f32 {
-            dirs.push(Direction::Up);
+            if level.precomputed.get_death(&self.hurtbox.pos(), Direction::Up) {
+                return FrameResult::Death;
+            }
         }
         if self.speed.y >= 0f32 {
-            dirs.push(Direction::Down);
-        }
-        for dir in dirs {
-            if level.precomputed.get_death(&self.hurtbox.pos(), dir) {
+            if level.precomputed.get_death(&self.hurtbox.pos(), Direction::Down) {
                 return FrameResult::Death;
             }
         }
