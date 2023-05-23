@@ -21,12 +21,12 @@ pub struct MovementPrecomputer {
 
 // TODO: switch to using bitvecs probably, may be slower though
 impl MovementPrecomputer {
-    pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: &Rect) -> Self {
+    pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: Rect) -> Self {
         Self {
-            new_solids: vec![],
-            solids: Self::precompute_solids(bounds, solids),
-            death: Self::precompute_death(bounds, death),
-            bounds: *bounds,
+            new_solids: Self::precompute_solids_new(&bounds, solids),
+            solids: Self::precompute_solids(&bounds, solids),
+            death: Self::precompute_death(&bounds, death),
+            bounds,
         }
     }
 
@@ -64,6 +64,44 @@ impl MovementPrecomputer {
         );
         let width = (bounds.dr.x - bounds.ul.x) as i32 + 1;
         ((point_i.0 + point_i.1 * width) * 4 + dir) as usize
+    }
+
+    fn precompute_solids_new(bounds: &Rect, solids: &RTree<Collider>) -> Vec<u8> {
+        let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
+        let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
+        itertools::iproduct!(ul_i.1..=dr_i.1, ul_i.0..=dr_i.0, 1..=4)
+            .par_bridge()
+            .map(|(y, x, dir)| {
+                let xf = x as f32;
+                let yf = y as f32;
+                let rect = match dir {
+                    1 => {
+                        Collider::Rectangular(Rect::new_xywh(xf - 255f32, yf, 8f32 + 255f32, 11f32))
+                    }
+                    2 => {
+                        Collider::Rectangular(Rect::new_xywh(xf, yf - 255f32, 8f32, 11f32 + 255f32))
+                    }
+                    3 => Collider::Rectangular(Rect::new_xywh(xf, yf, 8f32 + 255f32, 11f32)),
+                    4 => Collider::Rectangular(Rect::new_xywh(xf, yf, 8f32, 11f32 + 255f32)),
+                    _ => unreachable!(),
+                };
+                match solids
+                    .locate_in_envelope_intersecting(&rect.to_aabb())
+                    .next()
+                {
+                    Some(c) => {
+                        (match dir {
+                            1 => xf - c.pos().x,
+                            2 => yf - c.pos().y,
+                            3 => c.pos().x - xf,
+                            4 => c.pos().y - yf,
+                            _ => unreachable!(),
+                        }) as u8
+                    }
+                    None => 255u8,
+                }
+            })
+            .collect::<Vec<_>>()
     }
 
     // TODO: use itertools iproduct macro here
@@ -404,7 +442,7 @@ mod tests {
             Collider::Rectangular(Rect::new_xywh(0f32, 8f32, 8f32, 8f32)),
         ]);
         let bounds = Rect::new_xywh(0f32, 0f32, 16f32, 16f32);
-        let precomputer = MovementPrecomputer::new(&solids, &death, &bounds);
+        let precomputer = MovementPrecomputer::new(&solids, &death, bounds);
         for y in 0..=15 {
             for x in 0..=15 {
                 let expected = !(x >= 8 && y >= 8);
@@ -438,7 +476,7 @@ mod tests {
             Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
         ]);
         let bounds = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
-        let precomputer = MovementPrecomputer::new(&solids, &death, &bounds);
+        let precomputer = MovementPrecomputer::new(&solids, &death, bounds);
         for be_true in 0..=3 {
             for amount in 0..=7 {
                 let dir = match be_true {
@@ -466,7 +504,7 @@ mod tests {
             Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
         ]);
         let bounds = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
-        let precomputer = MovementPrecomputer::new(&solids, &death, &bounds);
+        let precomputer = MovementPrecomputer::new(&solids, &death, bounds);
         let mut level = Level::default();
         level.bounds = bounds;
         level.precomputed = precomputer;
