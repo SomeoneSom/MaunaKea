@@ -300,7 +300,41 @@ impl Player {
 
     // NOTE: this will replace the existing function when it's done
     fn move_in_direction_new(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
-        todo!()
+        let pixels_f = speed * DELTATIME;
+        let pixels_i = match dir {
+            Direction::Left | Direction::Right => {
+                if self.pos().x.round() == f32::round(self.pos().x + pixels_f) {
+                    pixels_f.floor()
+                } else {
+                    pixels_f.ceil()
+                }
+            }
+            Direction::Up | Direction::Down => {
+                if self.pos().y.round() == f32::round(self.pos().y + pixels_f) {
+                    pixels_f.floor()
+                } else {
+                    pixels_f.ceil()
+                }
+            }
+        }.abs();
+        let mut to_move = level.precomputed.get_new_solid(&self.pos(), dir) as f32;
+        let ret = to_move < pixels_i;
+        if !ret {
+            to_move = pixels_i
+                + match dir {
+                    Direction::Left | Direction::Right => self.pos().x.round() - self.pos().x,
+                    Direction::Up | Direction::Down => self.pos().y.round() - self.pos().y,
+                };
+        }
+        let (x, y) = match dir {
+            Direction::Left => (-to_move * DELTATIME_RECIP, 0f32),
+            Direction::Up => (0f32, -to_move * DELTATIME_RECIP),
+            Direction::Right => (to_move * DELTATIME_RECIP, 0f32),
+            Direction::Down => (0f32, to_move * DELTATIME_RECIP),
+        };
+        self.hitbox.move_collider(x, y);
+        self.hurtbox.move_collider(x, y);
+        ret
     }
 
     // NOTE: again, fallback prob needed, might implement later
@@ -366,7 +400,7 @@ impl Player {
     }
 
     pub fn move_self(&mut self, level: &Level) {
-        if self.move_in_direction(
+        if self.move_in_direction_new(
             level,
             self.speed.x,
             if self.speed.x <= 0f32 {
@@ -379,7 +413,7 @@ impl Player {
             self.retained_timer = 4;
             self.speed.x = 0f32;
         }
-        if self.move_in_direction(
+        if self.move_in_direction_new(
             level,
             self.speed.y,
             if self.speed.y <= 0f32 {
@@ -500,7 +534,7 @@ mod tests {
             };
             assert_eq!(
                 precomputer.get_new_solid(&Point::new(0f32, 0f32), dir),
-                if d == 0 {0} else {2u8.pow(d - 1)}
+                if d == 0 { 0 } else { 2u8.pow(d - 1) }
             );
         }
     }
