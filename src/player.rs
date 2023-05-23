@@ -69,11 +69,12 @@ impl MovementPrecomputer {
     fn precompute_solids_new(bounds: &Rect, solids: &RTree<Collider>) -> Vec<u8> {
         let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
         let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
-        itertools::iproduct!(ul_i.1..=dr_i.1, ul_i.0..=dr_i.0, 1..=4)
-            .par_bridge()
+        let vals =
+            itertools::iproduct!(ul_i.1..=dr_i.1, ul_i.0..=dr_i.0, 1..=4).collect::<Vec<_>>();
+        vals.par_iter()
             .map(|(y, x, dir)| {
-                let xf = x as f32;
-                let yf = y as f32;
+                let xf = *x as f32;
+                let yf = *y as f32;
                 let rect = match dir {
                     1 => {
                         Collider::Rectangular(Rect::new_xywh(xf - 255f32, yf, 8f32 + 255f32, 11f32))
@@ -99,10 +100,10 @@ impl MovementPrecomputer {
                 match intersected.first() {
                     Some(c) => {
                         (match dir {
-                            1 => xf - c.pos().x,
-                            2 => yf - c.pos().y,
-                            3 => c.pos().x - xf,
-                            4 => c.pos().y - yf,
+                            1 => xf - c.rect().unwrap().dr.x - 1f32,
+                            2 => yf - c.rect().unwrap().dr.y - 1f32,
+                            3 => c.rect().unwrap().ul.x - xf - 8f32,
+                            4 => c.rect().unwrap().ul.y - yf - 11f32,
                             _ => unreachable!(),
                         }) as u8
                     }
@@ -475,6 +476,32 @@ mod tests {
                     expected
                 );
             }
+        }
+    }
+
+    #[test]
+    fn precompute_test_new_solids() {
+        let death = RTree::bulk_load(vec![]);
+        let solids = RTree::bulk_load(vec![
+            Collider::Rectangular(Rect::new_xywh(-8f32, 0f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(0f32, -9f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(10f32, 0f32, 8f32, 8f32)),
+            Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
+        ]);
+        let bounds = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
+        let precomputer = MovementPrecomputer::new(&solids, &death, bounds);
+        for d in 0..=3 {
+            let dir = match d {
+                0 => Direction::Left,
+                1 => Direction::Up,
+                2 => Direction::Right,
+                3 => Direction::Down,
+                _ => unreachable!(),
+            };
+            assert_eq!(
+                precomputer.get_new_solid(&Point::new(0f32, 0f32), dir),
+                if d == 0 {0} else {2u8.pow(d - 1)}
+            );
         }
     }
 
