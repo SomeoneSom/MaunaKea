@@ -51,7 +51,7 @@ impl MovementPrecomputer {
     }
 
     #[inline]
-    fn get_death_index(position: &Point, direction: Direction, bounds: &Rect) -> usize {
+    fn get_index(&self, position: &Point, direction: Direction) -> usize {
         let dir = match direction {
             Direction::Left => 0,
             Direction::Up => 1,
@@ -59,10 +59,10 @@ impl MovementPrecomputer {
             Direction::Down => 3,
         };
         let point_i = (
-            (position.x - bounds.ul.x).round() as i32,
-            (position.y - bounds.ul.y).round() as i32,
+            (position.x - self.bounds.ul.x).round() as i32,
+            (position.y - self.bounds.ul.y).round() as i32,
         );
-        let width = (bounds.dr.x - bounds.ul.x) as i32 + 1;
+        let width = (self.bounds.dr.x - self.bounds.ul.x) as i32 + 1;
         ((point_i.0 + point_i.1 * width) * 4 + dir) as usize
     }
 
@@ -188,12 +188,16 @@ impl MovementPrecomputer {
             .collect::<Vec<_>>()
     }
 
+    pub fn get_new_solid(&self, position: &Point, direction: Direction) -> u8 {
+        self.new_solids[self.get_index(position, direction)]
+    }
+
     pub fn get_solid(&self, position: &Point, direction: Direction, amount: f32) -> bool {
         self.solids[Self::get_solids_index(position, direction, amount, &self.bounds)]
     }
 
     pub fn get_death(&self, position: &Point, direction: Direction) -> bool {
-        self.death[Self::get_death_index(position, direction, &self.bounds)]
+        self.death[self.get_index(position, direction)]
     }
 }
 
