@@ -59,8 +59,8 @@ impl MovementPrecomputer {
             Direction::Down => 3,
         };
         let point_i = (
-            (position.x - self.bounds.ul.x).round() as i32,
-            (position.y - self.bounds.ul.y).round() as i32,
+            (position.x - self.bounds.ul.x) as i32,
+            (position.y - self.bounds.ul.y) as i32,
         );
         let width = (self.bounds.dr.x - self.bounds.ul.x) as i32 + 1;
         ((point_i.0 + point_i.1 * width) * 4 + dir) as usize
@@ -198,6 +198,10 @@ impl MovementPrecomputer {
     }
 
     pub fn get_new_solid(&self, position: &Point, direction: Direction) -> u8 {
+        self.new_solids[self.get_index(&position.round(), direction)]
+    }
+
+    pub fn get_new_solid_prerounded(&self, position: &Point, direction: Direction) -> u8 {
         self.new_solids[self.get_index(position, direction)]
     }
 
@@ -206,6 +210,11 @@ impl MovementPrecomputer {
     }
 
     pub fn get_death(&self, position: &Point, direction: Direction) -> bool {
+        self.death[self.get_index(&position.round(), direction)]
+    }
+
+    // TODO: make prerounded functions the only functions
+    pub fn get_death_prerounded(&self, position: &Point, direction: Direction) -> bool {
         self.death[self.get_index(position, direction)]
     }
 }
@@ -301,7 +310,7 @@ impl Player {
     // NOTE: this will replace the existing function when it's done
     fn move_in_direction_new(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
         let pos = self.pos();
-        let pos_r = Point::new(pos.x.round(), pos.y.round());
+        let pos_r = pos.round();
         let pixels_f = speed * DELTATIME;
         let pixels_i = match dir {
             Direction::Left | Direction::Right => {
@@ -320,7 +329,7 @@ impl Player {
             }
         }
         .abs();
-        let mut to_move = level.precomputed.get_new_solid(&pos, dir) as f32;
+        let mut to_move = level.precomputed.get_new_solid_prerounded(&pos_r, dir) as f32;
         if to_move > pixels_i {
             to_move = pixels_i
                 + match dir {
@@ -431,10 +440,11 @@ impl Player {
     // NOTE: there still needs to probably be a fallback here but that can be dealt with later
     pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
         // looks messy, avoids allocations though
+        let pos_r = self.pos().round();
         if self.speed.x <= 0f32 {
             if level
                 .precomputed
-                .get_death(&self.hurtbox.pos(), Direction::Left)
+                .get_death_prerounded(&pos_r, Direction::Left)
             {
                 return FrameResult::Death;
             }
@@ -442,7 +452,7 @@ impl Player {
         if self.speed.x >= 0f32 {
             if level
                 .precomputed
-                .get_death(&self.hurtbox.pos(), Direction::Right)
+                .get_death_prerounded(&pos_r, Direction::Right)
             {
                 return FrameResult::Death;
             }
@@ -450,7 +460,7 @@ impl Player {
         if self.speed.y <= 0f32 {
             if level
                 .precomputed
-                .get_death(&self.hurtbox.pos(), Direction::Up)
+                .get_death_prerounded(&pos_r, Direction::Up)
             {
                 return FrameResult::Death;
             }
@@ -458,7 +468,7 @@ impl Player {
         if self.speed.y >= 0f32 {
             if level
                 .precomputed
-                .get_death(&self.hurtbox.pos(), Direction::Down)
+                .get_death_prerounded(&pos_r, Direction::Down)
             {
                 return FrameResult::Death;
             }
