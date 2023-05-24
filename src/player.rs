@@ -348,68 +348,6 @@ impl Player {
         to_move <= pixels_i
     }
 
-    // NOTE: again, fallback prob needed, might implement later
-    // NOTE: yes this uses both DELTATIME_RECIP and DELTATIME, but it works
-    // TODO: this code is absolutely awful and needs to be cleaned up
-    // TODO: ok actually i just have to redo this entire function
-    fn move_in_direction(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
-        if speed == 0f32 {
-            return false;
-        }
-        let mut ret = false;
-        let pixels = speed * DELTATIME;
-        let pixels_f = pixels.fract();
-        let pixels_l = pixels.log2() as i32;
-        let mut pixels_max = pixels as i32;
-        for a in (0..=pixels_l).rev() {
-            let to_move = 2f32.powi(a);
-            if level.precomputed.get_solid(&self.pos(), dir, to_move) {
-                ret = true;
-            } else {
-                pixels_max -= 2i32.pow(a as u32);
-                let (x, y) = match dir {
-                    Direction::Left => (-to_move * DELTATIME_RECIP, 0f32),
-                    Direction::Up => (0f32, -to_move * DELTATIME_RECIP),
-                    Direction::Right => (to_move * DELTATIME_RECIP, 0f32),
-                    Direction::Down => (0f32, to_move * DELTATIME_RECIP),
-                };
-                self.hurtbox.move_collider(x, y);
-                self.hitbox.move_collider(x, y);
-            }
-            if pixels_max <= 0 {
-                break;
-            }
-        }
-        let to_move_temp = match dir {
-            Direction::Left => Point::new(-pixels_f, 0f32),
-            Direction::Up => Point::new(0f32, -pixels_f),
-            Direction::Right => Point::new(pixels_f, 0f32),
-            Direction::Down => Point::new(0f32, pixels_f),
-        };
-        let changed = self.pos() + to_move_temp;
-        let to_move = if self.pos().x.round() != changed.x.round()
-            || self.pos().y.round() != changed.y.round()
-        {
-            if level.precomputed.get_solid(&self.pos(), dir, 1f32) {
-                ret = true;
-                0f32
-            } else {
-                pixels_f
-            }
-        } else {
-            pixels_f
-        };
-        let (x, y) = match dir {
-            Direction::Left => (-to_move * DELTATIME_RECIP, 0f32),
-            Direction::Up => (0f32, -to_move * DELTATIME_RECIP),
-            Direction::Right => (to_move * DELTATIME_RECIP, 0f32),
-            Direction::Down => (0f32, to_move * DELTATIME_RECIP),
-        };
-        self.hurtbox.move_collider(x, y);
-        self.hitbox.move_collider(x, y);
-        ret
-    }
-
     pub fn move_self(&mut self, level: &Level) {
         if self.move_in_direction_new(
             level,
