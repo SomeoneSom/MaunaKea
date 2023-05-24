@@ -77,12 +77,17 @@ impl Point {
     }
 
     #[inline]
+    pub fn round(&self) -> Self {
+        Self::new(self.x.round(), self.y.round())
+    }
+
+    #[inline]
     pub fn magnitude(&self) -> f32 {
         self.distance(Point::new(0f32, 0f32))
     }
 
     #[inline]
-    pub fn normalize(self) -> Point {
+    pub fn normalize(self) -> Self {
         self / self.magnitude()
     }
 }
