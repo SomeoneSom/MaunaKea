@@ -68,7 +68,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
             .with_initial_population(initial_population)
             .build(),
     )
-    .until(GenerationLimit::new(200)) // TODO: yet again
+    .until(GenerationLimit::new(20)) // TODO: yet again
     .build();
     let mut hit_final: bool;
     loop {
@@ -112,7 +112,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
                 .with_initial_population(Population::with_individuals(population))
                 .build(),
         )
-        .until(GenerationLimit::new(200)) // TOO
+        .until(GenerationLimit::new(20)) // TOO
         .build();
     }
 }
