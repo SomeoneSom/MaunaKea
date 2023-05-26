@@ -14,7 +14,6 @@ const DELTATIME_RECIP: f32 = 1f32 / 0.0166667;
 #[derive(Debug, Default)]
 pub struct MovementPrecomputer {
     new_solids: Vec<u8>,
-    solids: Vec<bool>,
     death: Vec<bool>,
     bounds: Rect,
 }
@@ -24,30 +23,9 @@ impl MovementPrecomputer {
     pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: Rect) -> Self {
         Self {
             new_solids: Self::precompute_solids_new(&bounds, solids),
-            solids: Self::precompute_solids(&bounds, solids),
             death: Self::precompute_death(&bounds, death),
             bounds,
         }
-    }
-
-    // TODO: these two should prob be removed
-    #[inline]
-    fn get_solids_index(
-        position: &Point, direction: Direction, amount: f32, bounds: &Rect,
-    ) -> usize {
-        let dir = match direction {
-            Direction::Left => 0,
-            Direction::Up => 1,
-            Direction::Right => 2,
-            Direction::Down => 3,
-        };
-        let point_i = (
-            (position.x - bounds.ul.x).round() as i32,
-            (position.y - bounds.ul.y).round() as i32,
-        );
-        let width = (bounds.dr.x - bounds.ul.x) as i32 + 1;
-        let amount_i = amount.log2().floor() as i32;
-        (((point_i.0 + point_i.1 * width) * 4 + dir) * 8 + amount_i) as usize
     }
 
     #[inline]
@@ -114,61 +92,6 @@ impl MovementPrecomputer {
     }
 
     // TODO: use itertools iproduct macro here
-    fn precompute_solids(bounds: &Rect, solids: &RTree<Collider>) -> Vec<bool> {
-        let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
-        let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
-        let y_range = (ul_i.1..=dr_i.1).collect::<Vec<_>>();
-        let x_range = (ul_i.0..=dr_i.0).collect::<Vec<_>>();
-        let dir_range = &(1..=4).collect::<Vec<_>>();
-        let amount_range = &(0..=7).collect::<Vec<_>>();
-        y_range
-            .par_iter()
-            .flat_map(|y| {
-                x_range.par_iter().flat_map(move |x| {
-                    dir_range.par_iter().flat_map(move |dir| {
-                        amount_range.par_iter().map(move |amount| {
-                            let to_move = 2f32.powi(*amount);
-                            let xf = *x as f32;
-                            let yf = *y as f32;
-                            let rect = match dir {
-                                1 => Collider::Rectangular(Rect::new_xywh(
-                                    xf - to_move,
-                                    yf,
-                                    8f32 + to_move,
-                                    11f32,
-                                )),
-                                2 => Collider::Rectangular(Rect::new_xywh(
-                                    xf,
-                                    yf - to_move,
-                                    8f32,
-                                    11f32 + to_move,
-                                )),
-                                3 => Collider::Rectangular(Rect::new_xywh(
-                                    xf,
-                                    yf,
-                                    8f32 + to_move,
-                                    11f32,
-                                )),
-                                4 => Collider::Rectangular(Rect::new_xywh(
-                                    xf,
-                                    yf,
-                                    8f32,
-                                    11f32 + to_move,
-                                )),
-                                _ => unreachable!(),
-                            };
-                            solids
-                                .locate_in_envelope_intersecting(&rect.to_aabb())
-                                .next()
-                                .is_some()
-                        })
-                    })
-                })
-            })
-            .collect::<Vec<_>>()
-    }
-
-    // TODO: use itertools iproduct macro here
     fn precompute_death(bounds: &Rect, death: &RTree<Collider>) -> Vec<bool> {
         let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
         let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
@@ -203,10 +126,6 @@ impl MovementPrecomputer {
 
     pub fn get_new_solid_prerounded(&self, position: &Point, direction: Direction) -> u8 {
         self.new_solids[self.get_index(position, direction)]
-    }
-
-    pub fn get_solid(&self, position: &Point, direction: Direction, amount: f32) -> bool {
-        self.solids[Self::get_solids_index(position, direction, amount, &self.bounds)]
     }
 
     pub fn get_death(&self, position: &Point, direction: Direction) -> bool {
@@ -280,15 +199,14 @@ impl Player {
         }
         if self.speed.x.signum() == self.retained.signum()
             && self.retained_timer > 0
-            && level.precomputed.get_solid(
+            && level.precomputed.get_new_solid(
                 &self.pos(),
                 if self.speed.x.signum() < 0f32 {
                     Direction::Left
                 } else {
                     Direction::Right
                 },
-                1f32,
-            )
+            ) > 0
         {
             self.speed.x = self.retained;
             self.retained = 0f32;
@@ -479,7 +397,7 @@ mod tests {
     }
 
     #[test]
-    fn precompute_test_new_solids() {
+    fn precompute_test_solids() {
         let death = RTree::bulk_load(vec![]);
         let solids = RTree::bulk_load(vec![
             Collider::Rectangular(Rect::new_xywh(-8f32, 0f32, 8f32, 8f32)),
@@ -501,34 +419,6 @@ mod tests {
                 precomputer.get_new_solid(&Point::new(0f32, 0f32), dir),
                 if d == 0 { 0 } else { 2u8.pow(d - 1) }
             );
-        }
-    }
-
-    #[test]
-    fn precompute_test_solids() {
-        let death = RTree::bulk_load(vec![]);
-        let solids = RTree::bulk_load(vec![
-            Collider::Rectangular(Rect::new_xywh(-8f32, 0f32, 8f32, 8f32)),
-            Collider::Rectangular(Rect::new_xywh(0f32, -9f32, 8f32, 8f32)),
-            Collider::Rectangular(Rect::new_xywh(10f32, 0f32, 8f32, 8f32)),
-            Collider::Rectangular(Rect::new_xywh(0f32, 15f32, 8f32, 8f32)),
-        ]);
-        let bounds = Rect::new_xywh(-8f32, -9f32, 27f32, 33f32);
-        let precomputer = MovementPrecomputer::new(&solids, &death, bounds);
-        for be_true in 0..=3 {
-            for amount in 0..=7 {
-                let dir = match be_true {
-                    0 => Direction::Left,
-                    1 => Direction::Up,
-                    2 => Direction::Right,
-                    3 => Direction::Down,
-                    _ => unreachable!(),
-                };
-                assert_eq!(
-                    precomputer.get_solid(&Point::new(0f32, 0f32), dir, f32::powi(2f32, amount)),
-                    amount >= be_true
-                );
-            }
         }
     }
 
