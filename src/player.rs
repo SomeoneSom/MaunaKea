@@ -225,7 +225,6 @@ impl Player {
         todo!()
     }
 
-    // NOTE: this will replace the existing function when it's done
     fn move_in_direction(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
         let pos = self.pos();
         let pos_r = pos.round();
