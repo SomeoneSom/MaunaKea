@@ -13,7 +13,7 @@ const DELTATIME_RECIP: f32 = 1f32 / 0.0166667;
 
 #[derive(Debug, Default)]
 pub struct MovementPrecomputer {
-    new_solids: Vec<u8>,
+    solids: Vec<u8>,
     death: Vec<bool>,
     bounds: Rect,
 }
@@ -22,7 +22,7 @@ pub struct MovementPrecomputer {
 impl MovementPrecomputer {
     pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: Rect) -> Self {
         Self {
-            new_solids: Self::precompute_solids_new(&bounds, solids),
+            solids: Self::precompute_solids(&bounds, solids),
             death: Self::precompute_death(&bounds, death),
             bounds,
         }
@@ -44,7 +44,7 @@ impl MovementPrecomputer {
         ((point_i.0 + point_i.1 * width) * 4 + dir) as usize
     }
 
-    fn precompute_solids_new(bounds: &Rect, solids: &RTree<Collider>) -> Vec<u8> {
+    fn precompute_solids(bounds: &Rect, solids: &RTree<Collider>) -> Vec<u8> {
         let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
         let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
         let vals =
@@ -120,12 +120,12 @@ impl MovementPrecomputer {
             .collect::<Vec<_>>()
     }
 
-    pub fn get_new_solid(&self, position: &Point, direction: Direction) -> u8 {
-        self.new_solids[self.get_index(&position.round(), direction)]
+    pub fn get_solid(&self, position: &Point, direction: Direction) -> u8 {
+        self.solids[self.get_index(&position.round(), direction)]
     }
 
-    pub fn get_new_solid_prerounded(&self, position: &Point, direction: Direction) -> u8 {
-        self.new_solids[self.get_index(position, direction)]
+    pub fn get_solid_prerounded(&self, position: &Point, direction: Direction) -> u8 {
+        self.solids[self.get_index(position, direction)]
     }
 
     pub fn get_death(&self, position: &Point, direction: Direction) -> bool {
@@ -199,7 +199,7 @@ impl Player {
         }
         if self.speed.x.signum() == self.retained.signum()
             && self.retained_timer > 0
-            && level.precomputed.get_new_solid(
+            && level.precomputed.get_solid(
                 &self.pos(),
                 if self.speed.x.signum() < 0f32 {
                     Direction::Left
@@ -226,7 +226,7 @@ impl Player {
     }
 
     // NOTE: this will replace the existing function when it's done
-    fn move_in_direction_new(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
+    fn move_in_direction(&mut self, level: &Level, speed: f32, dir: Direction) -> bool {
         let pos = self.pos();
         let pos_r = pos.round();
         let pixels_f = speed * DELTATIME;
@@ -247,7 +247,7 @@ impl Player {
             }
         }
         .abs();
-        let mut to_move = level.precomputed.get_new_solid_prerounded(&pos_r, dir) as f32;
+        let mut to_move = level.precomputed.get_solid_prerounded(&pos_r, dir) as f32;
         if to_move > pixels_i {
             to_move = pixels_i
                 + match dir {
@@ -267,7 +267,7 @@ impl Player {
     }
 
     pub fn move_self(&mut self, level: &Level) {
-        if self.move_in_direction_new(
+        if self.move_in_direction(
             level,
             self.speed.x,
             if self.speed.x <= 0f32 {
@@ -280,7 +280,7 @@ impl Player {
             self.retained_timer = 4;
             self.speed.x = 0f32;
         }
-        if self.move_in_direction_new(
+        if self.move_in_direction(
             level,
             self.speed.y,
             if self.speed.y <= 0f32 {
@@ -416,7 +416,7 @@ mod tests {
                 _ => unreachable!(),
             };
             assert_eq!(
-                precomputer.get_new_solid(&Point::new(0f32, 0f32), dir),
+                precomputer.get_solid(&Point::new(0f32, 0f32), dir),
                 if d == 0 { 0 } else { 2u8.pow(d - 1) }
             );
         }
