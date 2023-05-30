@@ -18,7 +18,6 @@ pub struct MovementPrecomputer {
     bounds: Rect,
 }
 
-// TODO: switch to using bitvecs probably, may be slower though
 impl MovementPrecomputer {
     pub fn new(solids: &RTree<Collider>, death: &RTree<Collider>, bounds: Rect) -> Self {
         Self {
@@ -296,37 +295,33 @@ impl Player {
     pub fn collide(&mut self, level: &Level, checkpoint: &Rect) -> FrameResult {
         // looks messy, avoids allocations though
         let pos_r = self.pos().round();
-        if self.speed.x <= 0f32 {
-            if level
+        if self.speed.x <= 0f32
+            && level
                 .precomputed
                 .get_death_prerounded(&pos_r, Direction::Left)
-            {
-                return FrameResult::Death;
-            }
+        {
+            return FrameResult::Death;
         }
-        if self.speed.x >= 0f32 {
-            if level
+        if self.speed.x >= 0f32
+            && level
                 .precomputed
                 .get_death_prerounded(&pos_r, Direction::Right)
-            {
-                return FrameResult::Death;
-            }
+        {
+            return FrameResult::Death;
         }
-        if self.speed.y <= 0f32 {
-            if level
+        if self.speed.y <= 0f32
+            && level
                 .precomputed
                 .get_death_prerounded(&pos_r, Direction::Up)
-            {
-                return FrameResult::Death;
-            }
+        {
+            return FrameResult::Death;
         }
-        if self.speed.y >= 0f32 {
-            if level
+        if self.speed.y >= 0f32
+            && level
                 .precomputed
                 .get_death_prerounded(&pos_r, Direction::Down)
-            {
-                return FrameResult::Death;
-            }
+        {
+            return FrameResult::Death;
         }
         if self
             .hitbox
