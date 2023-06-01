@@ -264,6 +264,7 @@ impl Player {
         to_move <= pixels_i
     }
 
+    #[inline]
     pub fn move_self(&mut self, level: &Level) {
         if self.move_in_direction(
             level,
