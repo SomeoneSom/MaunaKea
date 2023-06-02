@@ -1,7 +1,7 @@
 use rayon::prelude::*;
 use rstar::RTree;
 
-use crate::colliders::{Axes, Collider, Direction, Rect};
+use crate::colliders::{Collider, Direction, Rect};
 use crate::level::Level;
 use crate::point::Point;
 
