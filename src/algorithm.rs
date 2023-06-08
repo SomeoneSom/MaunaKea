@@ -54,7 +54,7 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
 fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs {
     let initial_population = build_population()
         .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f64, 359.99999999999994))
-        .of_size(500) // TODO: allow for an option to change this please
+        .of_size(50) // TODO: allow for an option to change this please
         .uniform_at_random();
     let simulator = Simulator::new(player, level, checkpoints);
     // TODO: put this in a loop
@@ -68,7 +68,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
             .with_initial_population(initial_population)
             .build(),
     )
-    .until(GenerationLimit::new(200)) // TODO: yet again
+    .until(GenerationLimit::new(20)) // TODO: yet again
     .build();
     let mut hit_final: bool;
     loop {
@@ -99,6 +99,9 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
             .uniform_at_random();
         for (p, t) in population.iter_mut().zip(to_add.individuals().iter()) {
             p.extend(t);
+            if p.len() > 50 {
+                *p = p[25..].to_vec();
+            }
         }
         ga_sim = simulate(
             // TODO: all the options need to be checked here too
@@ -111,7 +114,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
                 .with_initial_population(Population::with_individuals(population))
                 .build(),
         )
-        .until(GenerationLimit::new(200)) // TOO
+        .until(GenerationLimit::new(20)) // TODO: yes, here too
         .build();
     }
 }
