@@ -87,31 +87,23 @@ impl MovementPrecomputer {
             .collect::<Vec<_>>()
     }
 
-    // TODO: use itertools iproduct macro here
     fn precompute_death(bounds: &Rect, death: &RTree<Collider>) -> Vec<bool> {
         let ul_i = (bounds.ul.x as i32, bounds.ul.y as i32);
         let dr_i = (bounds.dr.x as i32, bounds.dr.y as i32);
-        let y_range = (ul_i.1..=dr_i.1).collect::<Vec<_>>();
-        let x_range = (ul_i.0..=dr_i.0).collect::<Vec<_>>();
-        let dir_range = &(1..=4).collect::<Vec<_>>();
-        y_range
-            .par_iter()
-            .flat_map(|y| {
-                x_range.par_iter().flat_map(move |x| {
-                    dir_range.par_iter().map(move |dir| {
-                        // NOTE: dir will eventually be used for spikes
-                        let rect =
-                            Collider::Rectangular(Rect::new_xywh(*x as f32, *y as f32, 8f32, 9f32));
-                        let result = death
-                            .locate_in_envelope_intersecting(&rect.to_aabb())
-                            .next();
-                        match result {
-                            None => false,
-                            Some(Collider::Rectangular(_)) => true,
-                            Some(circ) => circ.collide_check(&rect),
-                        }
-                    })
-                })
+        let vals =
+            itertools::iproduct!(ul_i.1..=dr_i.1, ul_i.0..=dr_i.0, 1..=4).collect::<Vec<_>>();
+        vals.par_iter()
+            .map(|(y, x, dir)| {
+                // NOTE: dir will eventually be used for spikes
+                let rect = Collider::Rectangular(Rect::new_xywh(*x as f32, *y as f32, 8f32, 9f32));
+                let result = death
+                    .locate_in_envelope_intersecting(&rect.to_aabb())
+                    .next();
+                match result {
+                    None => false,
+                    Some(Collider::Rectangular(_)) => true,
+                    Some(circ) => circ.collide_check(&rect),
+                }
             })
             .collect::<Vec<_>>()
     }
