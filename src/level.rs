@@ -4,12 +4,14 @@ use image::{ImageBuffer, Rgb, RgbImage};
 use regex::Regex;
 use rstar::RTree;
 
+use std::collections::HashMap;
 use std::io::stdout;
 use std::io::Write;
 
 use crate::colliders::Circle;
+use crate::colliders::Direction;
 use crate::colliders::{Collider, Rect};
-use crate::player::Player;
+use crate::player::{MovementPrecomputer, Player};
 use crate::point::Point;
 
 #[derive(Debug, Default)]
@@ -17,6 +19,7 @@ pub struct Level {
     pub bounds: Rect,
     pub solids: RTree<Collider>,
     pub death: RTree<Collider>,
+    pub precomputed: MovementPrecomputer,
     temp_solids: Vec<Collider>,
     temp_death: Vec<Collider>,
     pub static_death: Vec<bv::BitVec>,
@@ -43,6 +46,7 @@ impl Level {
         level.load_spinners(caps.get(5).unwrap().as_str().to_owned());
         level.solids = RTree::bulk_load(level.temp_solids.clone());
         level.death = RTree::bulk_load(level.temp_death.clone());
+        level.precomputed = MovementPrecomputer::new(&level.solids, &level.death, level.bounds);
         level.temp_solids = vec![];
         level.temp_death = vec![];
         /*let mut img = ImageBuffer::new(
