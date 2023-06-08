@@ -60,7 +60,7 @@ impl MovementPrecomputer {
                     4 => Collider::Rectangular(Rect::new_xywh(xf, yf, 8f32, 11f32 + 255f32)),
                     _ => unreachable!(),
                 };
-                let mut intersected = solids
+                let intersected = solids
                     .locate_in_envelope_intersecting(&rect.to_aabb())
                     .collect::<Vec<_>>();
                 let first = match dir {
