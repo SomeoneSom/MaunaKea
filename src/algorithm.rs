@@ -51,26 +51,27 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
 }
 
 // NOTE: not handling the error here because of absurd error type
-fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs {
+fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs {
     let initial_population = build_population()
         .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f64, 359.99999999999994))
         .of_size(50) // TODO: allow for an option to change this please
         .uniform_at_random();
-    let simulator = Simulator::new(player, level, checkpoints);
+    let mut simulator = Simulator::new(player, level, checkpoints);
     // TODO: put this in a loop
     let mut ga_sim = simulate(
         genetic_algorithm()
-            .with_evaluation(&simulator)
+            .with_evaluation(simulator.clone())
             .with_selection(MaximizeSelector::new(0.85, 12)) //  TODO: add options for this too
             .with_crossover(SinglePointCrossBreeder::new())
             .with_mutation(RandomValueMutator::new(0.2, 0f64, 359.99999999999994)) // TODO: ditto
-            .with_reinsertion(ElitistReinserter::new(&simulator, true, 0.85)) // TODO: again
+            .with_reinsertion(ElitistReinserter::new(simulator.clone(), true, 0.85)) // TODO: again
             .with_initial_population(initial_population)
             .build(),
     )
     .until(GenerationLimit::new(20)) // TODO: yet again
     .build();
-    let mut hit_final: bool;
+    let mut frame_count: u32 = 5;
+    let mut inputs = vec![];
     loop {
         let result = loop {
             let result = ga_sim.step();
@@ -78,7 +79,7 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
                 // TODO: actually handle this stuff
                 Ok(SimResult::Intermediate(step)) => println!(
                     "{}, {}",
-                    (*step.result.evaluated_population.individuals())[0].len(),
+                    frame_count,
                     step.iteration
                 ),
                 Ok(SimResult::Final(step, processing_time, duration, stop_reason)) => {
@@ -87,11 +88,13 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
                 Err(error) => panic!("{}", error),
             }
         };
+        frame_count += 1;
         let mut population = (*result.evaluated_population.individuals()).clone();
-        hit_final = simulator.check_if_hit_final(&result.best_solution.solution.genome);
+        let hit_final = simulator.check_if_hit_final(&result.best_solution.solution.genome);
         if hit_final {
             // TODO: make breaking criteria more correct
-            break result.best_solution.solution.genome;
+            inputs.extend_from_slice(&result.best_solution.solution.genome);
+            break inputs;
         }
         let to_add = build_population()
             .with_genome_builder(ValueEncodedGenomeBuilder::new(1, 0f64, 359.99999999999994))
@@ -100,17 +103,19 @@ fn initial_path(level: Level, player: Player, checkpoints: Vec<Rect>) -> Inputs 
         for (p, t) in population.iter_mut().zip(to_add.individuals().iter()) {
             p.extend(t);
             if p.len() > 50 {
+                simulator.move_own_player(&p[0..25].to_vec());
+                inputs.extend_from_slice(&p[0..25]);
                 *p = p[25..].to_vec();
             }
         }
         ga_sim = simulate(
             // TODO: all the options need to be checked here too
             genetic_algorithm()
-                .with_evaluation(&simulator)
+                .with_evaluation(simulator.clone())
                 .with_selection(MaximizeSelector::new(0.85, 12))
                 .with_crossover(SinglePointCrossBreeder::new())
                 .with_mutation(RandomValueMutator::new(0.2, 0f64, 359.99999999999994))
-                .with_reinsertion(ElitistReinserter::new(&simulator, true, 0.85))
+                .with_reinsertion(ElitistReinserter::new(simulator.clone(), true, 0.85))
                 .with_initial_population(Population::with_individuals(population))
                 .build(),
         )
@@ -126,7 +131,7 @@ pub enum AlgorithmError {
 }
 
 pub fn run_alg(level: Level, player: Player, checkpoints: &str) -> Result<(), AlgorithmError> {
-    let base_inputs = initial_path(level, player, parse_checkpoint(checkpoints)?);
+    let base_inputs = initial_path(&level, player, parse_checkpoint(checkpoints)?);
     // TODO: the rest of the damn thing
     let out = format_inputs(base_inputs);
     println!("{out}");

@@ -50,19 +50,23 @@ impl<'a> Phenotype<Inputs> for PlayerSim<'a> {
     }
 }*/
 
-#[derive(Debug)]
-pub(super) struct Simulator {
+#[derive(Clone, Debug)]
+pub(super) struct Simulator<'a> {
     player: Player,
-    level: Level, // lets just say this owns the level for now
+    level: &'a Level,
     checkpoints: Vec<Rect>,
+    base_checkpoint: usize,
+    base_frame: usize,
 }
 
-impl Simulator {
-    pub fn new(player: Player, level: Level, checkpoints: Vec<Rect>) -> Self {
+impl<'a> Simulator<'a> {
+    pub fn new(player: Player, level: &'a Level, checkpoints: Vec<Rect>) -> Self {
         Self {
             player,
             level,
             checkpoints,
+            base_checkpoint: 0,
+            base_frame: 0,
         }
     }
 
@@ -70,14 +74,14 @@ impl Simulator {
         //let now = SystemTime::now();
         let mut player = self.player.clone();
         let mut prev_player = player.clone();
-        let mut checkpoint_index = 0usize;
-        let mut frame_count = 0usize;
+        let mut checkpoint_index = self.base_checkpoint;
+        let mut frame_count = self.base_frame;
         for &i in inp {
             frame_count += 1;
             prev_player = player.clone();
-            player.speed_calc(i, &self.level); // TODO: restrict
-            player.move_self(&self.level);
-            match player.collide(&self.level, &self.checkpoints[checkpoint_index]) {
+            player.speed_calc(i, self.level); // TODO: restrict
+            player.move_self(self.level);
+            match player.collide(self.level, &self.checkpoints[checkpoint_index]) {
                 FrameResult::Death => break,
                 FrameResult::CheckpointHit => checkpoint_index += 1,
                 FrameResult::Nothing => (),
@@ -90,13 +94,18 @@ impl Simulator {
         (player, prev_player, checkpoint_index, frame_count)
     }
 
+    // TODO: this function name is bad
+    pub fn move_own_player(&mut self, inp: &Inputs) {
+        (self.player, _, self.base_checkpoint, self.base_frame) = self.sim_player(inp);
+    }
+
     pub fn check_if_hit_final(&self, inp: &Inputs) -> bool {
         let result = self.sim_player(inp);
         result.2 == self.checkpoints.len() - 1
     }
 }
 
-impl<'a> FitnessFunction<Inputs, OrdFloat64> for &'a Simulator {
+impl FitnessFunction<Inputs, OrdFloat64> for Simulator<'_> {
     fn fitness_of(&self, inp: &Inputs) -> OrdFloat64 {
         let (player, prev_player, checkpoint_index, frame_count) = self.sim_player(inp);
         let checkpoint = self.checkpoints[checkpoint_index];
