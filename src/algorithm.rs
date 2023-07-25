@@ -102,6 +102,7 @@ fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs
             .uniform_at_random();
         for (p, t) in population.iter_mut().zip(to_add.individuals().iter()) {
             p.extend(t);
+            // TODO: wow! this seems like it sucks!
             if p.len() > 50 {
                 simulator.move_own_player(&p[0..25].to_vec());
                 inputs.extend_from_slice(&p[0..25]);
