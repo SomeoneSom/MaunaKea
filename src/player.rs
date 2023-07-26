@@ -37,6 +37,9 @@ impl MovementPrecomputer {
             (position.y - self.bounds.ul.y) as i32,
         );
         let width = (self.bounds.dr.x - self.bounds.ul.x) as i32 + 1;
+        if ((point_i.0 + point_i.1 * width) * 4 + dir) < 0 {
+            println!("{position:?} {direction:?}");
+        }
         ((point_i.0 + point_i.1 * width) * 4 + dir) as usize
     }
 
@@ -175,7 +178,7 @@ impl Player {
         let truncated = f64::round(angle * 1000f64) / 1000f64;
         let adjusted = Point::new(
             truncated.to_radians().sin() as f32,
-            truncated.to_radians().cos() as f32,
+            -truncated.to_radians().cos() as f32,
         );
         self.retained_timer -= 1;
         let target = Point::new(60f32 * adjusted.x, 80f32 * adjusted.y);
@@ -235,11 +238,7 @@ impl Player {
         .abs();
         let mut to_move = level.precomputed.get_solid_prerounded(&pos_r, dir) as f32;
         if to_move > pixels_i {
-            to_move = pixels_i
-                + match dir {
-                    Direction::Left | Direction::Right => pos_r.x - pos.x,
-                    Direction::Up | Direction::Down => pos_r.y - pos.y,
-                };
+            to_move = pixels_f;
         }
         let (x, y) = match dir {
             Direction::Left => (-to_move * DELTATIME_RECIP, 0f32),

@@ -53,7 +53,7 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
 // NOTE: not handling the error here because of absurd error type
 fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs {
     let initial_population = build_population()
-        .with_genome_builder(ValueEncodedGenomeBuilder::new(5, 0f64, 359.99999999999994))
+        .with_genome_builder(ValueEncodedGenomeBuilder::new(2, 0f64, 359.99999999999994))
         .of_size(50) // TODO: allow for an option to change this please
         .uniform_at_random();
     let mut simulator = Simulator::new(player, level, checkpoints);
@@ -63,8 +63,8 @@ fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs
             .with_evaluation(simulator.clone())
             .with_selection(MaximizeSelector::new(0.85, 12)) //  TODO: add options for this too
             .with_crossover(SinglePointCrossBreeder::new())
-            .with_mutation(RandomValueMutator::new(0.2, 0f64, 359.99999999999994)) // TODO: ditto
-            .with_reinsertion(ElitistReinserter::new(simulator.clone(), true, 0.85)) // TODO: again
+            .with_mutation(RandomValueMutator::new(0.02, 0f64, 359.99999999999994)) // TODO: ditto
+            .with_reinsertion(ElitistReinserter::new(simulator.clone(), false, 0.85)) // TODO: again
             .with_initial_population(initial_population)
             .build(),
     )
@@ -91,6 +91,7 @@ fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs
         frame_count += 1;
         let mut population = (*result.evaluated_population.individuals()).clone();
         let hit_final = simulator.check_if_hit_final(&result.best_solution.solution.genome);
+        println!("{:?}", result.best_solution.solution.genome);
         if hit_final {
             // TODO: make breaking criteria more correct
             inputs.extend_from_slice(&result.best_solution.solution.genome);
@@ -109,6 +110,7 @@ fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs
                 *p = p[25..].to_vec();
             }
         }
+        println!("{:?}", inputs);
         ga_sim = simulate(
             // TODO: all the options need to be checked here too
             genetic_algorithm()

@@ -101,15 +101,15 @@ impl<'a> Simulator<'a> {
 
     pub fn check_if_hit_final(&self, inp: &Inputs) -> bool {
         let result = self.sim_player(inp);
-        result.2 == self.checkpoints.len() - 1
+        result.2 == self.checkpoints.len()
     }
 }
 
 impl FitnessFunction<Inputs, OrdFloat64> for Simulator<'_> {
     fn fitness_of(&self, inp: &Inputs) -> OrdFloat64 {
         let (player, prev_player, checkpoint_index, frame_count) = self.sim_player(inp);
-        let checkpoint = self.checkpoints[checkpoint_index];
-        if checkpoint_index == self.checkpoints.len() - 1 {
+        if checkpoint_index == self.checkpoints.len() {
+            let checkpoint = self.checkpoints[checkpoint_index - 1];
             let (mut accurate_distance, touched) =
                 checkpoint.accurate_distance(player.pos(), prev_player.pos());
             if !touched {
@@ -120,6 +120,7 @@ impl FitnessFunction<Inputs, OrdFloat64> for Simulator<'_> {
             ))
         } else {
             // NOTE: this doesnt have closestDist or atFrame, i might need to add those later
+            let checkpoint = self.checkpoints[checkpoint_index];
             let checkpoint_center = checkpoint.center();
             let player_center = match player.hitbox.rect() {
                 Some(rect) => rect,
