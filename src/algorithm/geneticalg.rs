@@ -81,13 +81,13 @@ impl<'a> Simulator<'a> {
             prev_player = player.clone();
             player.speed_calc(i, self.level); // TODO: restrict
             player.move_self(self.level);
+            if checkpoint_index == self.checkpoints.len() {
+                break;
+            }
             match player.collide(self.level, &self.checkpoints[checkpoint_index]) {
                 FrameResult::Death => break,
                 FrameResult::CheckpointHit => checkpoint_index += 1,
                 FrameResult::Nothing => (),
-            }
-            if checkpoint_index == self.checkpoints.len() {
-                break;
             }
         }
         //println!("{}", now.elapsed().unwrap().as_secs_f64());

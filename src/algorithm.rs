@@ -97,16 +97,18 @@ fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs
             inputs.extend_from_slice(&result.best_solution.solution.genome);
             break inputs;
         }
+        // TODO: wow! this seems like it sucks!
+        if result.best_solution.solution.genome.len() > 50 {
+            simulator.move_own_player(&result.best_solution.solution.genome[0..25].to_vec());
+            inputs.extend_from_slice(&result.best_solution.solution.genome[0..25]);
+        }
         let to_add = build_population()
             .with_genome_builder(ValueEncodedGenomeBuilder::new(1, 0f64, 359.99999999999994))
             .of_size(population.len())
             .uniform_at_random();
         for (p, t) in population.iter_mut().zip(to_add.individuals().iter()) {
             p.extend(t);
-            // TODO: wow! this seems like it sucks!
             if p.len() > 50 {
-                simulator.move_own_player(&p[0..25].to_vec());
-                inputs.extend_from_slice(&p[0..25]);
                 *p = p[25..].to_vec();
             }
         }

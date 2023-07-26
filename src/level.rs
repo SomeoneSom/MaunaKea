@@ -233,8 +233,8 @@ impl Level {
                 if let Some(c) = row.chars().nth(x) {
                     if c != '0' && c != '\r' {
                         let tile = Collider::Rectangular(Rect::new_xywh(
-                            (x as f32 + self.bounds.ul.x) * 8f32,
-                            (y as f32 + self.bounds.ul.y) * 8f32,
+                            x as f32 * 8f32 + self.bounds.ul.x,
+                            y as f32 * 8f32 + self.bounds.ul.y,
                             8f32,
                             8f32,
                         ));
