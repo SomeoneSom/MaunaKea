@@ -22,7 +22,7 @@ impl Fitness for OrdFloat64 {
 }
 
 pub type Inputs = Vec<f64>;
-pub type InputsPop = (Inputs, Option<Mutex<OrdFloat64>>);
+pub type InputsPop = (Inputs, Mutex<Option<OrdFloat64>>);
 
 /*#[derive(Clone, Debug)]
 struct PlayerSim<'a> {
