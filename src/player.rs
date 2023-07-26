@@ -37,7 +37,9 @@ impl MovementPrecomputer {
             (position.y - self.bounds.ul.y) as i32,
         );
         let width = (self.bounds.dr.x - self.bounds.ul.x) as i32 + 1;
-        if ((point_i.0 + point_i.1 * width) * 4 + dir) < 0 {
+        // TODO: remove
+        let value = (point_i.0 + point_i.1 * width) * 4 + dir;
+        if value < 0 || value > 1036800 {
             println!("{position:?} {direction:?}");
         }
         ((point_i.0 + point_i.1 * width) * 4 + dir) as usize
@@ -221,24 +223,32 @@ impl Player {
         let pixels_f = speed * DELTATIME;
         let pixels_i = match dir {
             Direction::Left | Direction::Right => {
-                if pos_r.x == f32::round(pos.x + pixels_f) {
-                    pixels_f.floor()
+                if pos_r.x == f32::round(pos.x + pixels_f.fract()) {
+                    f32::copysign(pixels_f.abs().floor(), pixels_f)
                 } else {
-                    pixels_f.ceil()
+                    f32::copysign(pixels_f.abs().ceil(), pixels_f)
                 }
             }
             Direction::Up | Direction::Down => {
-                if pos_r.y == f32::round(pos.y + pixels_f) {
-                    pixels_f.floor()
+                if pos_r.y == f32::round(pos.y + pixels_f.fract()) {
+                    f32::copysign(pixels_f.abs().floor(), pixels_f)
                 } else {
-                    pixels_f.ceil()
+                    f32::copysign(pixels_f.abs().ceil(), pixels_f)
                 }
             }
         }
         .abs();
         let mut to_move = level.precomputed.get_solid_prerounded(&pos_r, dir) as f32;
+        let hit: bool;
         if to_move > pixels_i {
             to_move = pixels_f;
+            hit = false;
+        } else {
+            to_move += match dir {
+                    Direction::Left | Direction::Right => pos_r.x - pos.x,
+                    Direction::Up | Direction::Down => pos_r.y - pos.y,
+                };
+            hit = true;
         }
         let (x, y) = match dir {
             Direction::Left => (-to_move * DELTATIME_RECIP, 0f32),
@@ -248,7 +258,7 @@ impl Player {
         };
         self.hitbox.move_collider(x, y);
         self.hurtbox.move_collider(x, y);
-        to_move <= pixels_i
+        hit
     }
 
     #[inline]
