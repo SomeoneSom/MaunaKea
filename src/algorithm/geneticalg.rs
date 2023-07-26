@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::sync::{Mutex, Arc};
 use std::time::SystemTime;
 
 use crate::colliders::Rect;
@@ -22,7 +22,21 @@ impl Fitness for OrdFloat64 {
 }
 
 pub type Inputs = Vec<f64>;
-pub type InputsPop = (Inputs, Mutex<Option<OrdFloat64>>);
+
+#[derive(Clone, Debug)]
+pub struct InputsPop(Inputs, Arc<Mutex<Option<OrdFloat64>>>);
+
+impl PartialEq for InputsPop {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl Genotype for InputsPop {
+    type Dna = f64;
+}
+
+struct InputsBuilder;
 
 /*#[derive(Clone, Debug)]
 struct PlayerSim<'a> {
