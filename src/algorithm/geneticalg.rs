@@ -1,3 +1,4 @@
+use std::sync::Mutex;
 use std::time::SystemTime;
 
 use crate::colliders::Rect;
@@ -21,6 +22,7 @@ impl Fitness for OrdFloat64 {
 }
 
 pub type Inputs = Vec<f64>;
+pub type InputsPop = (Inputs, Mutex<OrdFloat64>);
 
 /*#[derive(Clone, Debug)]
 struct PlayerSim<'a> {
