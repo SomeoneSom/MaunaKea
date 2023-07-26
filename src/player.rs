@@ -224,23 +224,23 @@ impl Player {
         let pixels_i = match dir {
             Direction::Left | Direction::Right => {
                 if pos_r.x == f32::round(pos.x + pixels_f.fract()) {
-                    f32::copysign(pixels_f.abs().floor(), pixels_f)
+                    pixels_f.abs().floor()
                 } else {
-                    f32::copysign(pixels_f.abs().ceil(), pixels_f)
+                    pixels_f.abs().ceil()
                 }
             }
             Direction::Up | Direction::Down => {
                 if pos_r.y == f32::round(pos.y + pixels_f.fract()) {
-                    f32::copysign(pixels_f.abs().floor(), pixels_f)
+                    pixels_f.abs().floor()
                 } else {
-                    f32::copysign(pixels_f.abs().ceil(), pixels_f)
+                    pixels_f.abs().ceil()
                 }
             }
         }
         .abs();
         let mut to_move = level.precomputed.get_solid_prerounded(&pos_r, dir) as f32;
         let hit: bool;
-        if to_move > pixels_i {
+        if to_move >= pixels_i {
             to_move = pixels_f;
             hit = false;
         } else {
@@ -248,11 +248,12 @@ impl Player {
                     Direction::Left | Direction::Right => pos_r.x - pos.x,
                     Direction::Up | Direction::Down => pos_r.y - pos.y,
                 };
+            to_move = f32::copysign(to_move, pixels_f);
             hit = true;
         }
         let (x, y) = match dir {
-            Direction::Left => (-to_move * DELTATIME_RECIP, 0f32),
-            Direction::Up => (0f32, -to_move * DELTATIME_RECIP),
+            Direction::Left => (to_move * DELTATIME_RECIP, 0f32),
+            Direction::Up => (0f32, to_move * DELTATIME_RECIP),
             Direction::Right => (to_move * DELTATIME_RECIP, 0f32),
             Direction::Down => (0f32, to_move * DELTATIME_RECIP),
         };
@@ -430,8 +431,8 @@ mod tests {
         level.precomputed = precomputer;
         let mut player = Player::new(Point::new(0f32, 0f32), Point::new(0f32, 0f32));
         for be_true in 0..=3 {
-            for amount in 0..=128 {
-                let to_move = amount as f32 * DELTATIME_RECIP;
+            for amount in 0..=512 {
+                let to_move = amount as f32 / 4f32 * DELTATIME_RECIP;
                 match be_true {
                     0 => player.speed = Point::new(-to_move, 0f32),
                     1 => player.speed = Point::new(0f32, -to_move),
@@ -440,9 +441,11 @@ mod tests {
                     _ => unreachable!(),
                 }
                 let to_move_expected = if be_true == 0 {
-                    0f32
+                    if amount < 2 { amount as f32 / 4f32 } else { 0f32 }
+                } else if amount < (i32::pow(2, be_true - 1) * 4 + 2) {
+                    amount as f32 / 4f32
                 } else {
-                    amount.min(i32::pow(2, be_true - 1)) as f32
+                    (i32::pow(2, be_true - 1) * 4) as f32 / 4f32
                 };
                 let expected_pos = match be_true {
                     0 => Point::new(-to_move_expected, 0f32),
