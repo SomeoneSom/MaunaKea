@@ -48,34 +48,6 @@ impl GenomeBuilder<InputsPop> for InputsBuilder {
     }
 }
 
-/*#[derive(Clone, Debug)]
-struct PlayerSim<'a> {
-    inputs: Inputs,
-    player: Player,
-    level: &'a Level,
-}
-
-impl<'a> PlayerSim<'a> {
-    fn simulate(&self) {
-        todo!()
-    }
-}
-
-impl<'a> Phenotype<Inputs> for PlayerSim<'a> {
-    fn genes(&self) -> Inputs {
-        self.inputs.clone()
-    }
-
-    // maybe this function is meant to not reset stuff? idk, remove this comment when this has been cleared up
-    fn derive(&self, genes: Inputs) -> Self {
-        Self {
-            inputs: genes,
-            player: self.player.clone(),
-            level: self.level,
-        }
-    }
-}*/
-
 #[derive(Clone, Debug)]
 pub(super) struct Simulator<'a> {
     player: Player,
