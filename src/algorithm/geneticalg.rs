@@ -5,6 +5,7 @@ use crate::level::Level;
 use crate::player::{FrameResult, Player};
 
 use genevo::genetic::{Children, Parents};
+use genevo::operator::prelude::RandomGenomeMutation;
 use genevo::prelude::*;
 use genevo::recombination::discrete::MultiPointCrossover;
 use ordered_float::OrderedFloat;
@@ -51,7 +52,24 @@ impl MultiPointCrossover for InputsPop {
     }
 }
 
-struct InputsBuilder;
+impl RandomGenomeMutation for InputsPop {
+    type Dna = f64;
+
+    fn mutate_genome<R>(
+        genome: Self, mutation_rate: f64, min_value: &<Self as Genotype>::Dna,
+        max_value: &<Self as Genotype>::Dna, rng: &mut R,
+    ) -> Self
+    where
+        R: Rng + Sized,
+    {
+        InputsPop(
+            Inputs::mutate_genome(genome.0, mutation_rate, min_value, max_value, rng),
+            Arc::new(Mutex::new(None)),
+        )
+    }
+}
+
+pub(super) struct InputsBuilder;
 
 impl GenomeBuilder<InputsPop> for InputsBuilder {
     fn build_genome<R>(&self, size: usize, rng: &mut R) -> InputsPop

@@ -4,7 +4,7 @@ mod waterspeed;
 // use std::time::{Duration, Instant};
 use std::num::ParseFloatError;
 
-use geneticalg::{Inputs, Simulator};
+use geneticalg::{Inputs, InputsPop, InputsBuilder, Simulator};
 
 use crate::colliders::Collider;
 use crate::colliders::Rect;
@@ -53,7 +53,7 @@ fn parse_checkpoint(data: &str) -> Result<Vec<Rect>, DataParseError> {
 // NOTE: not handling the error here because of absurd error type
 fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs {
     let initial_population = build_population()
-        .with_genome_builder(ValueEncodedGenomeBuilder::new(2, 0f64, 359.99999999999994))
+        .with_genome_builder(InputsBuilder)
         .of_size(50) // TODO: allow for an option to change this please
         .uniform_at_random();
     let mut simulator = Simulator::new(player, level, checkpoints);
