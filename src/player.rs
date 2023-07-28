@@ -69,10 +69,18 @@ impl MovementPrecomputer {
                     .locate_in_envelope_intersecting(&rect.to_aabb())
                     .collect::<Vec<_>>();
                 let first = match dir {
-                    1 => intersected.iter().min_by(|ca, cb| cb.pos().x.partial_cmp(&ca.pos().x).unwrap()),
-                    2 => intersected.iter().min_by(|ca, cb| cb.pos().y.partial_cmp(&ca.pos().y).unwrap()),
-                    3 => intersected.iter().min_by(|ca, cb| ca.pos().x.partial_cmp(&cb.pos().x).unwrap()),
-                    4 => intersected.iter().min_by(|ca, cb| ca.pos().y.partial_cmp(&cb.pos().y).unwrap()),
+                    1 => intersected
+                        .iter()
+                        .min_by(|ca, cb| cb.pos().x.partial_cmp(&ca.pos().x).unwrap()),
+                    2 => intersected
+                        .iter()
+                        .min_by(|ca, cb| cb.pos().y.partial_cmp(&ca.pos().y).unwrap()),
+                    3 => intersected
+                        .iter()
+                        .min_by(|ca, cb| ca.pos().x.partial_cmp(&cb.pos().x).unwrap()),
+                    4 => intersected
+                        .iter()
+                        .min_by(|ca, cb| ca.pos().y.partial_cmp(&cb.pos().y).unwrap()),
                     _ => unreachable!(),
                 };
                 match first {
@@ -245,9 +253,9 @@ impl Player {
             hit = false;
         } else {
             to_move += match dir {
-                    Direction::Left | Direction::Right => pos_r.x - pos.x,
-                    Direction::Up | Direction::Down => pos_r.y - pos.y,
-                };
+                Direction::Left | Direction::Right => pos_r.x - pos.x,
+                Direction::Up | Direction::Down => pos_r.y - pos.y,
+            };
             to_move = f32::copysign(to_move, pixels_f);
             hit = true;
         }
@@ -441,7 +449,11 @@ mod tests {
                     _ => unreachable!(),
                 }
                 let to_move_expected = if be_true == 0 {
-                    if amount < 2 { amount as f32 / 4f32 } else { 0f32 }
+                    if amount < 2 {
+                        amount as f32 / 4f32
+                    } else {
+                        0f32
+                    }
                 } else if amount < (i32::pow(2, be_true - 1) * 4 + 2) {
                     amount as f32 / 4f32
                 } else {

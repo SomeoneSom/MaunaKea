@@ -77,11 +77,9 @@ fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs
             let result = ga_sim.step();
             match result {
                 // TODO: actually handle this stuff
-                Ok(SimResult::Intermediate(step)) => println!(
-                    "{}, {}",
-                    frame_count,
-                    step.iteration
-                ),
+                Ok(SimResult::Intermediate(step)) => {
+                    println!("{}, {}", frame_count, step.iteration)
+                }
                 Ok(SimResult::Final(step, processing_time, duration, stop_reason)) => {
                     break step.result
                 }
