@@ -26,7 +26,7 @@ impl Fitness for OrdFloat64 {
 pub type Inputs = Vec<f64>;
 
 #[derive(Clone, Debug)]
-pub struct InputsPop(Inputs, Arc<Mutex<Option<OrdFloat64>>>);
+pub(super) struct InputsPop(pub Inputs, pub Arc<Mutex<Option<OrdFloat64>>>);
 
 impl PartialEq for InputsPop {
     fn eq(&self, other: &Self) -> bool {

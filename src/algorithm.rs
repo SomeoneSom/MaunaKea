@@ -71,7 +71,6 @@ fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs
     .until(GenerationLimit::new(20)) // TODO: yet again
     .build();
     let mut frame_count: u32 = 5;
-    let mut inputs = vec![];
     loop {
         let result = loop {
             let result = ga_sim.step();
@@ -88,29 +87,20 @@ fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs
         };
         frame_count += 1;
         let mut population = (*result.evaluated_population.individuals()).clone();
-        let hit_final = simulator.check_if_hit_final(&result.best_solution.solution.genome);
+        let hit_final = simulator.check_if_hit_final(&result.best_solution.solution.genome.0);
         println!("{:?}", result.best_solution.solution.genome);
         if hit_final {
             // TODO: make breaking criteria more correct
-            inputs.extend_from_slice(&result.best_solution.solution.genome);
-            break inputs;
-        }
-        // TODO: wow! this seems like it sucks!
-        if result.best_solution.solution.genome.len() > 50 {
-            simulator.move_own_player(&result.best_solution.solution.genome[0..25].to_vec());
-            inputs.extend_from_slice(&result.best_solution.solution.genome[0..25]);
+            break result.best_solution.solution.genome.0;
         }
         let to_add = build_population()
             .with_genome_builder(ValueEncodedGenomeBuilder::new(1, 0f64, 359.99999999999994))
             .of_size(population.len())
             .uniform_at_random();
         for (p, t) in population.iter_mut().zip(to_add.individuals().iter()) {
-            p.extend(t);
-            if p.len() > 50 {
-                *p = p[25..].to_vec();
-            }
+            p.0.extend(t);
+            *p.1.get_mut().unwrap() = None;
         }
-        println!("{:?}", inputs);
         ga_sim = simulate(
             // TODO: all the options need to be checked here too
             genetic_algorithm()
