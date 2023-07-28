@@ -38,6 +38,16 @@ impl Genotype for InputsPop {
 
 struct InputsBuilder;
 
+impl GenomeBuilder<InputsPop> for InputsBuilder {
+    fn build_genome<R>(&self, size: usize, rng: &mut R) -> InputsPop
+        where R: Rng + Sized
+    {
+        InputsPop((0..size).map(|_| {
+            rng.gen_range(0f64..360f64)
+        }).collect(), Arc::new(Mutex::new(None)))
+    }
+}
+
 /*#[derive(Clone, Debug)]
 struct PlayerSim<'a> {
     inputs: Inputs,
