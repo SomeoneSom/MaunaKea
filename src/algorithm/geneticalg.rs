@@ -1,11 +1,12 @@
 use std::sync::{Arc, Mutex};
-use std::time::SystemTime;
 
 use crate::colliders::Rect;
 use crate::level::Level;
 use crate::player::{FrameResult, Player};
 
+use genevo::genetic::{Children, Parents};
 use genevo::prelude::*;
+use genevo::recombination::discrete::MultiPointCrossover;
 use ordered_float::OrderedFloat;
 
 #[derive(PartialEq, PartialOrd, Eq, Ord, Clone, Copy, Debug)]
@@ -34,6 +35,20 @@ impl PartialEq for InputsPop {
 
 impl Genotype for InputsPop {
     type Dna = f64;
+}
+
+impl MultiPointCrossover for InputsPop {
+    type Dna = f64;
+
+    fn crossover<R>(parents: Parents<Self>, num_cut_points: usize, rng: &mut R) -> Children<Self>
+    where
+        R: Rng + Sized,
+    {
+        Inputs::crossover(parents.iter().map(|p| p.0).collect(), num_cut_points, rng)
+            .iter()
+            .map(|c| InputsPop(*c, Arc::new(Mutex::new(None))))
+            .collect()
+    }
 }
 
 struct InputsBuilder;
@@ -105,33 +120,42 @@ impl<'a> Simulator<'a> {
     }
 }
 
-impl FitnessFunction<Inputs, OrdFloat64> for Simulator<'_> {
-    fn fitness_of(&self, inp: &Inputs) -> OrdFloat64 {
-        let (player, prev_player, checkpoint_index, frame_count) = self.sim_player(inp);
-        if checkpoint_index == self.checkpoints.len() {
-            let checkpoint = self.checkpoints[checkpoint_index - 1];
-            let (mut accurate_distance, touched) =
-                checkpoint.accurate_distance(player.pos(), prev_player.pos());
-            if !touched {
-                accurate_distance = 3.16666f64;
+impl FitnessFunction<InputsPop, OrdFloat64> for Simulator<'_> {
+    fn fitness_of(&self, inp: &InputsPop) -> OrdFloat64 {
+        let mut fitness = inp.1.get_mut().unwrap();
+        if fitness.is_none() {
+            let (player, prev_player, checkpoint_index, frame_count) = self.sim_player(&inp.0);
+            if checkpoint_index == self.checkpoints.len() {
+                let checkpoint = self.checkpoints[checkpoint_index - 1];
+                let (mut accurate_distance, touched) =
+                    checkpoint.accurate_distance(player.pos(), prev_player.pos());
+                if !touched {
+                    accurate_distance = 3.16666f64;
+                }
+                *fitness = Some(OrdFloat64(OrderedFloat(
+                    checkpoint_index as f64 * 10000f64
+                        - frame_count as f64 * 8f64
+                        - accurate_distance,
+                )));
+            } else {
+                // NOTE: this doesnt have closestDist or atFrame, i might need to add those later
+                let checkpoint = self.checkpoints[checkpoint_index];
+                let checkpoint_center = checkpoint.center();
+                let player_center = match player.hitbox.rect() {
+                    Some(rect) => rect,
+                    None => unreachable!(),
+                }
+                .center();
+                *fitness = Some(OrdFloat64(OrderedFloat(
+                    checkpoint_index as f64 * 10000f64
+                        - checkpoint_center.distance(player_center) as f64
+                        - frame_count as f64,
+                )));
             }
-            OrdFloat64(OrderedFloat(
-                checkpoint_index as f64 * 10000f64 - frame_count as f64 * 8f64 - accurate_distance,
-            ))
-        } else {
-            // NOTE: this doesnt have closestDist or atFrame, i might need to add those later
-            let checkpoint = self.checkpoints[checkpoint_index];
-            let checkpoint_center = checkpoint.center();
-            let player_center = match player.hitbox.rect() {
-                Some(rect) => rect,
-                None => unreachable!(),
-            }
-            .center();
-            OrdFloat64(OrderedFloat(
-                checkpoint_index as f64 * 10000f64
-                    - checkpoint_center.distance(player_center) as f64
-                    - frame_count as f64,
-            ))
+        }
+        match fitness {
+            None => panic!(),
+            Some(f) => *f,
         }
     }
 
