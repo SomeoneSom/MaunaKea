@@ -45,10 +45,15 @@ impl MultiPointCrossover for InputsPop {
     where
         R: Rng + Sized,
     {
-        Inputs::crossover(parents.iter().map(|p| p.0).collect(), num_cut_points, rng)
-            .iter()
-            .map(|c| InputsPop(*c, Arc::new(Mutex::new(None))))
-            .collect()
+        // TODO: cloning here is slow, just stop
+        Inputs::crossover(
+            parents.iter().map(|p| p.0.clone()).collect(),
+            num_cut_points,
+            rng,
+        )
+        .iter()
+        .map(|c| InputsPop(c.clone(), Arc::new(Mutex::new(None))))
+        .collect()
     }
 }
 
@@ -140,7 +145,7 @@ impl<'a> Simulator<'a> {
 
 impl FitnessFunction<InputsPop, OrdFloat64> for Simulator<'_> {
     fn fitness_of(&self, inp: &InputsPop) -> OrdFloat64 {
-        let mut fitness = inp.1.get_mut().unwrap();
+        let mut fitness = inp.1.lock().unwrap();
         if fitness.is_none() {
             let (player, prev_player, checkpoint_index, frame_count) = self.sim_player(&inp.0);
             if checkpoint_index == self.checkpoints.len() {
@@ -171,10 +176,7 @@ impl FitnessFunction<InputsPop, OrdFloat64> for Simulator<'_> {
                 )));
             }
         }
-        match fitness {
-            None => panic!(),
-            Some(f) => *f,
-        }
+        fitness.unwrap()
     }
 
     fn average(&self, a: &[OrdFloat64]) -> OrdFloat64 {

@@ -4,7 +4,7 @@ mod waterspeed;
 // use std::time::{Duration, Instant};
 use std::num::ParseFloatError;
 
-use geneticalg::{Inputs, InputsPop, InputsBuilder, Simulator};
+use geneticalg::{Inputs, InputsBuilder, InputsPop, Simulator};
 
 use crate::colliders::Collider;
 use crate::colliders::Rect;
@@ -99,7 +99,7 @@ fn initial_path(level: &Level, player: Player, checkpoints: Vec<Rect>) -> Inputs
             .uniform_at_random();
         for (p, t) in population.iter_mut().zip(to_add.individuals().iter()) {
             p.0.extend(t);
-            *p.1.get_mut().unwrap() = None;
+            *p.1.lock().unwrap() = None;
         }
         ga_sim = simulate(
             // TODO: all the options need to be checked here too
